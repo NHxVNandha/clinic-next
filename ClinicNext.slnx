@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/backend/">
+    <Project Path="backend/ClinicNext.Api/ClinicNext.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ClinicNext.Api.IntegrationTests/ClinicNext.Api.IntegrationTests.csproj" />
+  </Folder>
+</Solution>
