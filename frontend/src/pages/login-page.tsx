@@ -4,7 +4,7 @@ import { useLogin } from '../hooks/use-auth'
 import { parseApiError } from '../lib/api-error'
 
 export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
-  const [email, setEmail] = useState('admin@test.local')
+  const [email, setEmail] = useState('admin@clinicnext.local')
   const [password, setPassword] = useState('Password123!')
   const [errors, setErrors] = useState<Record<string, string[]>>({})
   const [summary, setSummary] = useState<string>('')
