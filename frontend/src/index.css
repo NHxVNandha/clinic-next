@@ -4508,6 +4508,10 @@ button.filter-chip:hover {
   padding: 10px 12px;
 }
 
+.settings-grid-wrap {
+  margin-top: 12px;
+}
+
 .settings-logo-dropzone {
   display: grid;
   place-items: center;

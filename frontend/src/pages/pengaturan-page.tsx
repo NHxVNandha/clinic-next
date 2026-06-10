@@ -23,6 +23,7 @@ export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
   const [activeTab, setActiveTab] = useState<SettingTab>('clinic')
   const [search, setSearch] = useState('')
   const settings = useMasterSetting(1, 100, '', canFetch)
+  const userSummary = useMasterUser(1, 1, '', canFetch)
   const users = useMasterUser(1, 20, search, canFetch && activeTab === 'users')
   const rows = settings.data?.data.items ?? []
   const [form, setForm] = useState({ clinicName: '', taxId: '', phone: '', address: '' })
@@ -72,7 +73,7 @@ export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
 
       <MetricGrid>
         <StatCard icon={Hospital} label="Clinic Profile" value={formValues.clinicName} footer="Identitas utama sistem" />
-        <StatCard icon={Users} label="Active Users" value={users.data?.data.total ?? 0} tone="secondary" footer="Berdasarkan endpoint user" />
+        <StatCard icon={Users} label="Active Users" value={userSummary.data?.data.total ?? 0} tone="secondary" footer="Berdasarkan endpoint user" />
         <StatCard icon={ShieldCheck} label="Security Mode" value="Role Based" tone="tertiary" footer="Akses mengikuti role aplikasi" />
         <StatCard icon={Cloud} label="Backup Status" value="Manual" tone="neutral" footer="Endpoint backup belum tersedia" />
       </MetricGrid>
@@ -116,7 +117,7 @@ export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
           {activeTab === 'users' ? (
             <SectionCard title="Active Users" description="Daftar pengguna dari master user." actions={<button className="icon-btn" onClick={() => users.refetch()}><RefreshCw size={16} /> Refresh</button>}>
               <input className="search-input search-dominant" placeholder="Cari user..." value={search} onChange={(event) => setSearch(event.target.value)} />
-              <div style={{ marginTop: 12 }}><DataGrid rows={(users.data?.data.items ?? []) as Record<string, unknown>[]} columns={userColumns} loading={users.isLoading || users.isFetching} compact storageKey="pengaturan-users" /></div>
+              <div className="settings-grid-wrap"><DataGrid rows={(users.data?.data.items ?? []) as Record<string, unknown>[]} columns={userColumns} loading={users.isLoading || users.isFetching} compact storageKey="pengaturan-users" /></div>
             </SectionCard>
           ) : null}
 
