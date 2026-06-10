@@ -179,6 +179,13 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
     { label: 'Kode Dokter', value: pickValue(detailSource, ['kdDokter']) || '-' },
     { label: 'ID Internal', value: pickValue(detailSource, ['id']) || '-' },
   ]
+  const statusCounts = useMemo(() => ({
+    menunggu: filteredItems.filter((item) => String(item.status ?? '') === '1').length,
+    dilayani: filteredItems.filter((item) => String(item.status ?? '') === '2').length,
+    selesai: filteredItems.filter((item) => String(item.status ?? '') === '3').length,
+    dibatalkan: filteredItems.filter((item) => String(item.status ?? '') === '4').length,
+  }), [filteredItems])
+  const todayLabel = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date())
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -278,7 +285,17 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
 
   return (
     <section className="page-card">
-      <PageHeader title="Pendaftaran Pasien" description="Pendaftaran pasien berbasis API real-time." eyebrow="Patient Registration">
+      <PageHeader
+        title="Pendaftaran Pasien"
+        description={`Hari ini, ${todayLabel}. Kelola kedatangan pasien dan alur registrasi.`}
+        eyebrow="Patient Registration"
+        actions={(
+          <div className="registration-header-actions">
+            <button className="icon-btn btn-primary" disabled={!canCreate} title={!canCreate ? createAccess.reason : 'Registrasi pasien baru'} onClick={() => setCreateNewPatientModalOpen(true)}><UserPlus size={16} /> Registrasi Baru</button>
+            <button className="icon-btn" disabled={!canCreate} title={!canCreate ? createAccess.reason : 'Registrasi pasien existing'} onClick={() => setCreateExistingModalOpen(true)}><Users size={16} /> Pasien Existing</button>
+          </div>
+        )}
+      >
         <div className="header-insight">
           <span className="header-insight-item">Alur: Registrasi → Pelayanan → Kasir</span>
           <span className="header-insight-item">Shortcut pencarian: tekan '/'</span>
@@ -300,24 +317,46 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
         />
         {query.isFetching ? <span className="kbd-hint">Memuat data...</span> : null}
       </div>
-      <div className="filter-chip-wrap">
-        <button className={`filter-chip ${statusFilter === '1' ? 'active' : ''}`} onClick={() => { setStatusFilter('1'); setPage(1) }}>Menunggu</button>
-        <button className={`filter-chip ${statusFilter === '2' ? 'active' : ''}`} onClick={() => { setStatusFilter('2'); setPage(1) }}>Dilayani</button>
-        <button className={`filter-chip ${statusFilter === '3' ? 'active' : ''}`} onClick={() => { setStatusFilter('3'); setPage(1) }}>Selesai</button>
-        <button className={`filter-chip ${statusFilter === '4' ? 'active' : ''}`} onClick={() => { setStatusFilter('4'); setPage(1) }}>Dibatalkan</button>
-        <button className={`filter-chip ${statusFilter === '' ? 'active' : ''}`} onClick={() => { setStatusFilter(''); setPage(1) }}>Semua</button>
-      </div>
-
       <div className="stats-grid">
         <article className="stat-card">
           <small>Total Pendaftaran</small>
           <strong>{statusFilter ? filteredItems.length : data?.total ?? 0}</strong>
         </article>
         <article className="stat-card">
-          <small>Baris Terpilih</small>
-          <strong>{selected?.idRegistrasi ?? '-'}</strong>
+          <small>Menunggu</small>
+          <strong>{statusCounts.menunggu}</strong>
+        </article>
+        <article className="stat-card">
+          <small>Dilayani / Checked-in</small>
+          <strong>{statusCounts.dilayani + statusCounts.selesai}</strong>
+        </article>
+        <article className="stat-card">
+          <small>Dibatalkan</small>
+          <strong>{statusCounts.dibatalkan}</strong>
         </article>
       </div>
+
+      <section className="registration-queue-card">
+        <div className="registration-queue-head">
+          <div>
+            <h2>Antrian Registrasi</h2>
+            <p>Menampilkan {filteredItems.length} data pada halaman ini{selected ? `, terpilih ${selected.idRegistrasi}` : ''}.</p>
+          </div>
+          <div className="registration-queue-actions">
+            <button className="icon-btn" onClick={() => { const today = new Date().toISOString().slice(0, 10); setSearch(today); setPage(1) }}><CalendarDays size={14} /> Hari Ini</button>
+            <button className="icon-btn" onClick={async () => { await query.refetch(); toast.success('Data pendaftaran diperbarui.') }}><RefreshCw size={14} /> Refresh</button>
+          </div>
+        </div>
+        <div className="registration-filter-strip">
+          <span>Filter status</span>
+          <div className="filter-chip-wrap">
+            <button className={`filter-chip ${statusFilter === '1' ? 'active' : ''}`} onClick={() => { setStatusFilter('1'); setPage(1) }}>Menunggu</button>
+            <button className={`filter-chip ${statusFilter === '2' ? 'active' : ''}`} onClick={() => { setStatusFilter('2'); setPage(1) }}>Dilayani</button>
+            <button className={`filter-chip ${statusFilter === '3' ? 'active' : ''}`} onClick={() => { setStatusFilter('3'); setPage(1) }}>Selesai</button>
+            <button className={`filter-chip ${statusFilter === '4' ? 'active' : ''}`} onClick={() => { setStatusFilter('4'); setPage(1) }}>Dibatalkan</button>
+            <button className={`filter-chip ${statusFilter === '' ? 'active' : ''}`} onClick={() => { setStatusFilter(''); setPage(1) }}>Semua</button>
+          </div>
+        </div>
       {activeLoading ? (
         <div style={{ display: 'grid', gap: 8, marginBottom: 10 }}>
           <div className="skeleton-block" />
@@ -343,13 +382,6 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
         </div>
       ) : null}
 
-      <div className="top-actions" style={{ marginTop: 10 }}>
-        <button className="icon-btn icon-only btn-primary-soft" disabled={!canCreate} title={!canCreate ? createAccess.reason : 'Tambah pendaftaran pasien existing'} onClick={() => setCreateExistingModalOpen(true)} aria-label="Tambah pendaftaran pasien existing"><Users size={14} /></button>
-        <button className="icon-btn icon-only btn-primary-soft" disabled={!canCreate} title={!canCreate ? createAccess.reason : 'Tambah pendaftaran pasien baru'} onClick={() => setCreateNewPatientModalOpen(true)} aria-label="Tambah pendaftaran pasien baru"><UserPlus size={14} /></button>
-        <button className="icon-btn icon-only" onClick={() => { const today = new Date().toISOString().slice(0, 10); setSearch(today); setPage(1) }} title="Preset hari ini" aria-label="Preset hari ini"><CalendarDays size={14} /></button>
-        <button className="icon-btn icon-only" onClick={async () => { await query.refetch(); toast.success('Data pendaftaran diperbarui.') }} title="Refresh data" aria-label="Refresh data"><RefreshCw size={14} /></button>
-      </div>
-
       <div className="pager-row">
         <button className="icon-btn icon-only" title="Halaman sebelumnya" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage((prev) => prev - 1)}>
           <ChevronLeft size={14} />
@@ -361,6 +393,7 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
           <ChevronRight size={14} />
         </button>
       </div>
+      </section>
 
       <FormModal
         open={createExistingModalOpen}
