@@ -7,6 +7,7 @@ import { ActionAuditNote } from '../components/action-audit-note'
 import { useActionAudit } from '../hooks/use-action-audit'
 import { DataGrid } from '../components/data-grid'
 import { FieldLabel } from '../components/field-label'
+import { PageHeader } from '../components/page-header'
 
 function renderRecordTable(records: Record<string, unknown>[]) {
   if (!records.length) {
@@ -67,13 +68,13 @@ export function RekamMedisPage({ canFetch }: { canFetch: boolean }) {
 
   return (
     <section className="page-card">
-      <h1>Rekam Medis</h1>
-      <p>Direktori form, histori rekam medis, dan data surat per form.</p>
-      <div className="header-insight">
-        <span className="header-insight-item">Filter pasien dan registrasi untuk mempercepat pelacakan</span>
-        <span className="header-insight-item">Gunakan detail form untuk validasi data klinis</span>
-        <span className="header-insight-item">Riwayat aksi membantu penelusuran perubahan</span>
-      </div>
+      <PageHeader title="Database Rekam Medis" description="Direktori form, histori rekam medis, dan data surat per form." eyebrow="Medical Records">
+        <div className="header-insight">
+          <span className="header-insight-item">Filter pasien dan registrasi untuk mempercepat pelacakan</span>
+          <span className="header-insight-item">Gunakan detail form untuk validasi data klinis</span>
+          <span className="header-insight-item">Riwayat aksi membantu penelusuran perubahan</span>
+        </div>
+      </PageHeader>
 
       <div className="toolbar-row">
         <FieldLabel text="Filter ID Pasien" htmlFor="rekam-medis-filter-pasien" className="toolbar-field">

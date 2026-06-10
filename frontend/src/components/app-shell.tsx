@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Command } from 'cmdk'
-import { LogOut, Minimize2, Moon, Search, Sun } from 'lucide-react'
+import { Bell, CircleHelp, LogOut, Minimize2, Moon, Search, Sun } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { appRoutes } from '../routes'
 import { clearAccessToken, clearAuthUser, getAuthUser } from '../lib/storage'
@@ -95,7 +95,9 @@ export function AppShell({ onLogout }: { onLogout: () => void }) {
   }, [themeMode])
 
   const visibleRoutes = useMemo(() => appRoutes.filter((route) => canAccessRoute(route.allowedRoles)), [])
-  const userRole = useMemo(() => String(getAuthUser()?.role || '').toLowerCase(), [])
+  const authUser = useMemo(() => getAuthUser(), [])
+  const userRole = useMemo(() => String(authUser?.role || '').toLowerCase(), [authUser?.role])
+  const userName = useMemo(() => String(authUser?.name || authUser?.email || 'Admin Utama'), [authUser?.email, authUser?.name])
   const auditSummary = useMemo(() => ({
     modules: auditSnapshot.length,
     total: auditSnapshot.reduce((sum, item) => sum + item.entries.length, 0),
@@ -155,7 +157,10 @@ export function AppShell({ onLogout }: { onLogout: () => void }) {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand">Clinic Next</div>
+        <div className="brand-block">
+          <div className="brand">MediFlow Admin</div>
+          <p>Health Management System</p>
+        </div>
         <nav aria-label="Navigasi utama aplikasi">
           {visibleRoutes.map((route) => {
             const Icon = route.icon
@@ -172,18 +177,33 @@ export function AppShell({ onLogout }: { onLogout: () => void }) {
             )
           })}
         </nav>
+        <div className="sidebar-user">
+          <div className="avatar-token">{userName.slice(0, 2).toUpperCase()}</div>
+          <div>
+            <strong>{userName}</strong>
+            <span>{userRole || 'Administrator'}</span>
+          </div>
+        </div>
       </aside>
       <div className="main-wrap">
         <header className="topbar">
+          <button type="button" className="topbar-search" onClick={() => setIsCommandOpen(true)} title="Cari menu (Ctrl+K)" aria-label="Buka pencarian menu cepat">
+            <Search size={16} />
+            <span>Cari pasien, menu, atau jadwal...</span>
+            <kbd>Ctrl K</kbd>
+          </button>
           <div className="topbar-meta">
             {isDummyMode ? <span className="mode-badge">Dummy Mode Aktif</span> : null}
             {isBypassLogin ? <span className="mode-badge">Bypass Login Aktif</span> : null}
             {userRole ? <span className="readonly-badge">Role: {userRole}</span> : null}
           </div>
-          <button type="button" className="icon-btn icon-only" onClick={() => setIsCommandOpen(true)} title="Cari menu (Ctrl+K)" aria-label="Buka pencarian menu cepat">
-            <Search size={16} />
-          </button>
           <div className="top-actions">
+            <button type="button" className="icon-btn icon-only" title="Notifikasi" aria-label="Notifikasi">
+              <Bell size={16} />
+            </button>
+            <button type="button" className="icon-btn icon-only" title="Bantuan" aria-label="Bantuan">
+              <CircleHelp size={16} />
+            </button>
             <button type="button" className="icon-btn icon-only" onClick={() => setIsAuditOpen((prev) => !prev)} title="Lihat audit sesi" aria-label="Buka audit sesi">
               <span style={{ fontWeight: 700 }}>{auditSummary.total}</span>
             </button>

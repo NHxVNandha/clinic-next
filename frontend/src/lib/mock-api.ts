@@ -1,4 +1,4 @@
-import type { AxiosAdapter, AxiosRequestConfig, AxiosResponse } from 'axios'
+import type { AxiosAdapter, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 
 type ApiEnvelope<T> = { success: boolean; message: string; traceId: string; data: T }
 
@@ -166,7 +166,7 @@ function withFilter<T extends Record<string, unknown>>(rows: T[], search?: strin
 }
 
 function response(config: AxiosRequestConfig, data: unknown, status = 200): AxiosResponse {
-  return { data, status, statusText: 'OK', headers: {}, config: config as any }
+  return { data, status, statusText: 'OK', headers: {}, config: config as InternalAxiosRequestConfig }
 }
 
 export const mockApiAdapter: AxiosAdapter = async (config) => {
@@ -442,8 +442,8 @@ export const mockApiAdapter: AxiosAdapter = async (config) => {
     const detailId = Number(parts[5] || '0')
     state.pengeluaran = state.pengeluaran.map((row) => {
       if (Number(row.id || 0) !== id) return row
-      const detail = (Array.isArray(row.detail) ? row.detail : []).filter((d: any) => Number(d.detailId || 0) !== detailId)
-      const total = detail.reduce((sum: number, d: any) => sum + Number(d.nominal || 0), 0)
+      const detail = (Array.isArray(row.detail) ? row.detail : []).filter((d: Record<string, unknown>) => Number(d.detailId || 0) !== detailId)
+      const total = detail.reduce((sum: number, d: Record<string, unknown>) => sum + Number(d.nominal || 0), 0)
       return { ...row, detail, total }
     })
     return response(config, ok({ id, detailId }, 'Detail pengeluaran berhasil dihapus.'))

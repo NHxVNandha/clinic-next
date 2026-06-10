@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 
 type ComboboxOption = {
   value: string
@@ -35,7 +35,8 @@ export function SearchableCombobox({
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
-  const listId = useMemo(() => `combobox-list-${Math.random().toString(36).slice(2, 9)}`, [])
+  const reactId = useId()
+  const listId = `combobox-list-${reactId.replace(/:/g, '')}`
 
   const recentValues = useMemo(() => {
     if (!recentKey) return [] as string[]
@@ -46,7 +47,7 @@ export function SearchableCombobox({
     } catch {
       return []
     }
-  }, [recentKey, value])
+  }, [recentKey])
 
   const filtered = useMemo(() => {
     const recent = recentValues

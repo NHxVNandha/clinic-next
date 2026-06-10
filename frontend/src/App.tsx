@@ -8,9 +8,9 @@ import { isBypassLogin } from './lib/runtime-flags'
 import { appRoutes } from './routes'
 import { canAccessRoute } from './lib/access'
 
-const PlaceholderPage = lazy(async () => {
-  const module = await import('./pages/placeholder-page')
-  return { default: module.PlaceholderPage }
+const DashboardPage = lazy(async () => {
+  const module = await import('./pages/dashboard-page')
+  return { default: module.DashboardPage }
 })
 
 const PendaftaranPage = lazy(async () => {
@@ -48,6 +48,11 @@ const UnauthorizedPage = lazy(async () => {
   return { default: module.UnauthorizedPage }
 })
 
+const PengaturanPage = lazy(async () => {
+  const module = await import('./pages/pengaturan-page')
+  return { default: module.PengaturanPage }
+})
+
 function guard(path: string, element: ReactElement) {
   const route = appRoutes.find((item) => item.path === path)
   if (!route || canAccessRoute(route.allowedRoles)) return element
@@ -55,7 +60,7 @@ function guard(path: string, element: ReactElement) {
 }
 
 function App() {
-  const [tokenVersion, setTokenVersion] = useState(0)
+  const [, setTokenVersion] = useState(0)
   const token = getAccessToken()
   const auth = useMe(!isBypassLogin && Boolean(token))
 
@@ -64,7 +69,7 @@ function App() {
     if (!token) return false
     if (auth.isError) return false
     return true
-  }, [token, auth.isError, tokenVersion])
+  }, [token, auth.isError])
 
   if (!isAuthenticated) {
     return <LoginPage onSuccess={() => setTokenVersion((prev) => prev + 1)} />
@@ -74,13 +79,14 @@ function App() {
     <Suspense fallback={<div className="route-loading">Memuat halaman...</div>}>
       <Routes>
         <Route element={<AppShell onLogout={() => setTokenVersion((prev) => prev + 1)} />}>
-          <Route path="/dashboard" element={<PlaceholderPage title="Dashboard" subtitle="Monitoring performa klinik secara real-time" />} />
+          <Route path="/dashboard" element={<DashboardPage canFetch={isBypassLogin || Boolean(token)} />} />
           <Route path="/pendaftaran" element={guard('/pendaftaran', <PendaftaranPage canFetch={isBypassLogin || Boolean(token)} />)} />
           <Route path="/pelayanan" element={guard('/pelayanan', <PelayananPage canFetch={isBypassLogin || Boolean(token)} />)} />
           <Route path="/kasir" element={guard('/kasir', <KasirPage canFetch={isBypassLogin || Boolean(token)} />)} />
           <Route path="/laporan" element={<LaporanPage canFetch={isBypassLogin || Boolean(token)} />} />
           <Route path="/master" element={guard('/master', <MasterPage canFetch={isBypassLogin || Boolean(token)} />)} />
           <Route path="/rekam-medis" element={guard('/rekam-medis', <RekamMedisPage canFetch={isBypassLogin || Boolean(token)} />)} />
+          <Route path="/pengaturan" element={guard('/pengaturan', <PengaturanPage canFetch={isBypassLogin || Boolean(token)} />)} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -48,8 +48,11 @@ export function DataGrid<T>({ rows, columns, loading, height = 460, onRowClicked
 
   useEffect(() => {
     if (!toolsStorageKey) return
-    const raw = localStorage.getItem(toolsStorageKey)
-    setShowAdvancedTools(raw === '1')
+    const timer = window.setTimeout(() => {
+      const raw = localStorage.getItem(toolsStorageKey)
+      setShowAdvancedTools(raw === '1')
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [toolsStorageKey])
 
   useEffect(() => {

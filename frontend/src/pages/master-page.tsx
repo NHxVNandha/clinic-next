@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useSearchParams } from 'react-router-dom'
 import { DataGrid } from '../components/data-grid'
+import { PageHeader } from '../components/page-header'
 import { useMasterDiagnosa, useMasterDokter, useMasterJasa, useMasterPasien } from '../hooks/use-master'
 import { FormFeedback } from '../components/form-feedback'
 import { FormModal } from '../components/form-modal'
@@ -425,7 +426,8 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
 
   useEffect(() => {
     if (mode !== 'dokter' && !activeLoading && page > totalPage) {
-      setPage(totalPage)
+      const timer = window.setTimeout(() => setPage(totalPage), 0)
+      return () => window.clearTimeout(timer)
     }
   }, [mode, activeLoading, page, totalPage])
 
@@ -443,13 +445,13 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
 
   return (
     <section className="page-card">
-      <h1>Master</h1>
-      <p>Data referensi utama klinik.</p>
-      <div className="header-insight">
-        <span className="header-insight-item">Pastikan data master valid sebelum transaksi</span>
-        <span className="header-insight-item">Tab aktif menentukan sumber data tabel</span>
-        <span className="header-insight-item">Perubahan tersimpan langsung ke API</span>
-      </div>
+      <PageHeader title="Master Data Management" description="Data referensi utama klinik." eyebrow="Central Registry">
+        <div className="header-insight">
+          <span className="header-insight-item">Pastikan data master valid sebelum transaksi</span>
+          <span className="header-insight-item">Tab aktif menentukan sumber data tabel</span>
+          <span className="header-insight-item">Perubahan tersimpan langsung ke API</span>
+        </div>
+      </PageHeader>
 
       <div className="toolbar-row">
         <div className="tab-switch">

@@ -6,6 +6,7 @@ import { CalendarDays, ChevronLeft, ChevronRight, ExternalLink, RefreshCw, Rotat
 import toast from 'react-hot-toast'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { DataGrid } from '../components/data-grid'
+import { PageHeader } from '../components/page-header'
 import { usePendaftaran } from '../hooks/use-pendaftaran'
 import type { PendaftaranItem } from '../api/pendaftaran'
 import { FormModal } from '../components/form-modal'
@@ -203,7 +204,8 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
 
   useEffect(() => {
     if (!activeLoading && page > totalPage) {
-      setPage(totalPage)
+      const timer = window.setTimeout(() => setPage(totalPage), 0)
+      return () => window.clearTimeout(timer)
     }
   }, [activeLoading, page, totalPage])
 
@@ -276,13 +278,13 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
 
   return (
     <section className="page-card">
-      <h1>Pendaftaran</h1>
-      <p>Pendaftaran pasien berbasis API real-time.</p>
-      <div className="header-insight">
-        <span className="header-insight-item">Alur: Registrasi → Pelayanan → Kasir</span>
-        <span className="header-insight-item">Shortcut pencarian: tekan '/'</span>
-        <span className="header-insight-item">Status terpantau: Menunggu, Dilayani, Selesai, Dibatalkan</span>
-      </div>
+      <PageHeader title="Pendaftaran Pasien" description="Pendaftaran pasien berbasis API real-time." eyebrow="Patient Registration">
+        <div className="header-insight">
+          <span className="header-insight-item">Alur: Registrasi → Pelayanan → Kasir</span>
+          <span className="header-insight-item">Shortcut pencarian: tekan '/'</span>
+          <span className="header-insight-item">Status terpantau: Menunggu, Dilayani, Selesai, Dibatalkan</span>
+        </div>
+      </PageHeader>
       {!canCreate ? <p><span className="readonly-badge">Mode Read-only</span></p> : null}
 
       <div className="toolbar-row toolbar-primary">

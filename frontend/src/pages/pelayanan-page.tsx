@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ColDef, RowClickedEvent } from 'ag-grid-community'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { CalendarDays, ChevronLeft, ChevronRight, ExternalLink, Plus, RefreshCw, RotateCcw, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { DataGrid } from '../components/data-grid'
+import { PageHeader } from '../components/page-header'
 import { FormModal } from '../components/form-modal'
 import { usePelayanan } from '../hooks/use-pelayanan'
 import {
@@ -199,7 +200,8 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
 
   useEffect(() => {
     if (!activeLoading && page > totalPage) {
-      setPage(totalPage)
+      const timer = window.setTimeout(() => setPage(totalPage), 0)
+      return () => window.clearTimeout(timer)
     }
   }, [activeLoading, page, totalPage])
 
@@ -284,7 +286,7 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
     }
   }
 
-  async function deleteDetailItem(kind: 'tindakan' | 'resep' | 'alkes' | 'laboratorium' | 'radiologi', detailId: number) {
+  const deleteDetailItem = useCallback(async (kind: 'tindakan' | 'resep' | 'alkes' | 'laboratorium' | 'radiologi', detailId: number) => {
     if (!selected) return
     const label = kind === 'tindakan' ? 'tindakan' : kind === 'resep' ? 'resep' : kind === 'alkes' ? 'alkes' : kind === 'laboratorium' ? 'laboratorium' : 'radiologi'
     const confirmed = await confirmThemedAction({
@@ -332,7 +334,7 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
       await radiologi.refetch()
       logAction(`Radiologi dihapus dari ${selected.idRegistrasi} (${new Date().toLocaleString('id-ID')}).`)
     }
-  }
+  }, [alkes, deleteAlkesMutation, deleteLaboratoriumMutation, deleteRadiologiMutation, deleteResepMutation, deleteTindakanMutation, laboratorium, logAction, radiologi, resep, selected, tindakan])
 
   const columns = useMemo<ColDef<PelayananItem>[]>(
     () => [
@@ -412,32 +414,32 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
     { field: 'qty', headerName: 'Qty', minWidth: 90 },
     { field: 'harga', headerName: 'Harga', minWidth: 130 },
     { colId: 'aksi', headerName: 'Aksi', minWidth: 90, sortable: false, filter: false, cellRenderer: (params: { data?: Record<string, unknown> }) => <button className="icon-btn icon-only btn-critical" disabled={!canManageDetail} title={!canManageDetail ? detailAccess.reason : undefined} onClick={() => deleteDetailItem('tindakan', Number(params.data?.detailId ?? 0))}><Trash2 size={14} /></button> },
-  ], [canManageDetail, detailAccess.reason])
+  ], [canManageDetail, deleteDetailItem, detailAccess.reason])
 
   const resepColumns = useMemo<ColDef<Record<string, unknown>>[]>(() => [
     { field: 'namaObat', headerName: 'Nama Obat', minWidth: 220 },
     { field: 'dosis', headerName: 'Dosis', minWidth: 170 },
     { field: 'qty', headerName: 'Qty', minWidth: 90 },
     { colId: 'aksi', headerName: 'Aksi', minWidth: 90, sortable: false, filter: false, cellRenderer: (params: { data?: Record<string, unknown> }) => <button className="icon-btn icon-only btn-critical" disabled={!canManageDetail} title={!canManageDetail ? detailAccess.reason : undefined} onClick={() => deleteDetailItem('resep', Number(params.data?.detailId ?? 0))}><Trash2 size={14} /></button> },
-  ], [canManageDetail, detailAccess.reason])
+  ], [canManageDetail, deleteDetailItem, detailAccess.reason])
 
   const alkesColumns = useMemo<ColDef<Record<string, unknown>>[]>(() => [
     { field: 'nama', headerName: 'Nama', minWidth: 240 },
     { field: 'qty', headerName: 'Qty', minWidth: 90 },
     { colId: 'aksi', headerName: 'Aksi', minWidth: 90, sortable: false, filter: false, cellRenderer: (params: { data?: Record<string, unknown> }) => <button className="icon-btn icon-only btn-critical" disabled={!canManageDetail} title={!canManageDetail ? detailAccess.reason : undefined} onClick={() => deleteDetailItem('alkes', Number(params.data?.detailId ?? 0))}><Trash2 size={14} /></button> },
-  ], [canManageDetail, detailAccess.reason])
+  ], [canManageDetail, deleteDetailItem, detailAccess.reason])
 
   const laboratoriumColumns = useMemo<ColDef<Record<string, unknown>>[]>(() => [
     { field: 'nama', headerName: 'Nama Pemeriksaan', minWidth: 260 },
     { field: 'qty', headerName: 'Qty', minWidth: 90 },
     { colId: 'aksi', headerName: 'Aksi', minWidth: 90, sortable: false, filter: false, cellRenderer: (params: { data?: Record<string, unknown> }) => <button className="icon-btn icon-only btn-critical" disabled={!canManageDetail} title={!canManageDetail ? detailAccess.reason : undefined} onClick={() => deleteDetailItem('laboratorium', Number(params.data?.detailId ?? 0))}><Trash2 size={14} /></button> },
-  ], [canManageDetail, detailAccess.reason])
+  ], [canManageDetail, deleteDetailItem, detailAccess.reason])
 
   const radiologiColumns = useMemo<ColDef<Record<string, unknown>>[]>(() => [
     { field: 'nama', headerName: 'Nama Radiologi', minWidth: 260 },
     { field: 'qty', headerName: 'Qty', minWidth: 90 },
     { colId: 'aksi', headerName: 'Aksi', minWidth: 90, sortable: false, filter: false, cellRenderer: (params: { data?: Record<string, unknown> }) => <button className="icon-btn icon-only btn-critical" disabled={!canManageDetail} title={!canManageDetail ? detailAccess.reason : undefined} onClick={() => deleteDetailItem('radiologi', Number(params.data?.detailId ?? 0))}><Trash2 size={14} /></button> },
-  ], [canManageDetail, detailAccess.reason])
+  ], [canManageDetail, deleteDetailItem, detailAccess.reason])
 
   const onRowClicked = (event: RowClickedEvent<PelayananItem>) => {
     setSelected(event.data ?? null)
@@ -532,13 +534,13 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
 
   return (
     <section className="page-card">
-      <h1>Pelayanan</h1>
-      <p>Antrian pelayanan pasien berbasis API real-time.</p>
-      <div className="header-insight">
-        <span className="header-insight-item">Prioritas: pasien menunggu dengan keluhan aktif</span>
-        <span className="header-insight-item">Detail tindakan/resep dapat ditambah per registrasi</span>
-        <span className="header-insight-item">Shortcut pencarian: tekan '/'</span>
-      </div>
+      <PageHeader title="Antrian Pelayanan" description="Antrian pelayanan pasien berbasis API real-time." eyebrow="Service Queue">
+        <div className="header-insight">
+          <span className="header-insight-item">Prioritas: pasien menunggu dengan keluhan aktif</span>
+          <span className="header-insight-item">Detail tindakan/resep dapat ditambah per registrasi</span>
+          <span className="header-insight-item">Shortcut pencarian: tekan '/'</span>
+        </div>
+      </PageHeader>
       {!canManageDetail ? <p><span className="readonly-badge">Mode Read-only</span></p> : null}
 
       <div className="toolbar-row toolbar-primary">

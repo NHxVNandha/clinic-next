@@ -6,8 +6,11 @@ export async function runActionWithFeedback<T>(action: () => Promise<T>, success
     const result = await action()
     toast.success(successMessage)
     return result
-  } catch (error: any) {
-    const parsed = parseApiError(error?.response?.data)
+  } catch (error: unknown) {
+    const responseData = typeof error === 'object' && error && 'response' in error
+      ? (error.response as { data?: unknown } | undefined)?.data
+      : undefined
+    const parsed = parseApiError(responseData)
     toast.error(parsed.message)
     return null
   }

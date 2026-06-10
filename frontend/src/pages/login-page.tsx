@@ -18,8 +18,11 @@ export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
       await loginMutation.mutateAsync({ email, password })
       toast.success('Login berhasil.')
       onSuccess()
-    } catch (error: any) {
-      const parsed = parseApiError(error?.response?.data)
+    } catch (error: unknown) {
+      const responseData = typeof error === 'object' && error && 'response' in error
+        ? (error.response as { data?: unknown } | undefined)?.data
+        : undefined
+      const parsed = parseApiError(responseData)
       setErrors(parsed.fieldErrors)
       setSummary(parsed.message)
       toast.error(parsed.message)
@@ -29,8 +32,8 @@ export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
   return (
     <div className="auth-layout">
       <form className="auth-card" onSubmit={submit}>
-        <h1>Clinic Next</h1>
-        <p>Masuk untuk melanjutkan ke dashboard klinik.</p>
+        <h1>MediFlow Admin</h1>
+        <p>Masuk untuk melanjutkan ke dashboard Health Management System.</p>
         {summary ? <div className="error-summary">{summary}</div> : null}
         <label>
           Email

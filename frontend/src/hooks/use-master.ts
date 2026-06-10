@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getMasterDiagnosa, getMasterDokter, getMasterJasa, getMasterPasien } from '../api/master'
+import { getMasterDiagnosa, getMasterDokter, getMasterJasa, getMasterPasien, getMasterSetting, getMasterUser } from '../api/master'
 
 export function useMasterDokter(search: string, enabled: boolean) {
   return useQuery({
@@ -32,6 +32,24 @@ export function useMasterDiagnosa(page: number, pageSize: number, search: string
   return useQuery({
     queryKey: ['master', 'diagnosa', page, pageSize, search],
     queryFn: () => getMasterDiagnosa({ page, pageSize, search: search || undefined }),
+    enabled,
+    placeholderData: (previousData) => previousData,
+  })
+}
+
+export function useMasterSetting(page: number, pageSize: number, search: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['master', 'setting', page, pageSize, search],
+    queryFn: () => getMasterSetting({ page, pageSize, search: search || undefined }),
+    enabled,
+    placeholderData: (previousData) => previousData,
+  })
+}
+
+export function useMasterUser(page: number, pageSize: number, search: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['master', 'user', page, pageSize, search],
+    queryFn: () => getMasterUser({ page, pageSize, search: search || undefined }),
     enabled,
     placeholderData: (previousData) => previousData,
   })

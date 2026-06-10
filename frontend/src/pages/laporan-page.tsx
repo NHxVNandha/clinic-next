@@ -3,6 +3,7 @@ import type { ColDef } from 'ag-grid-community'
 import { ChevronLeft, ChevronRight, Filter, RotateCcw } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { DataGrid } from '../components/data-grid'
+import { PageHeader } from '../components/page-header'
 import { useLaporanPendaftaran, useLaporanPembayaran, useLaporanTindakan } from '../hooks/use-laporan'
 import { useDebouncedValue } from '../hooks/use-debounced-value'
 import { getStatusMeta } from '../lib/status-meta'
@@ -85,7 +86,8 @@ export function LaporanPage({ canFetch }: { canFetch: boolean }) {
 
   useEffect(() => {
     if (!activeLoading && page > totalPage) {
-      setPage(totalPage)
+      const timer = window.setTimeout(() => setPage(totalPage), 0)
+      return () => window.clearTimeout(timer)
     }
   }, [activeLoading, page, totalPage])
 
@@ -160,13 +162,13 @@ export function LaporanPage({ canFetch }: { canFetch: boolean }) {
 
   return (
     <section className="page-card">
-      <h1>Laporan</h1>
-      <p>Rekap data tindakan, pembayaran, dan pendaftaran.</p>
-      <div className="header-insight">
-        <span className="header-insight-item">Pilih mode laporan sesuai kebutuhan operasional</span>
-        <span className="header-insight-item">Filter status membantu audit proses harian</span>
-        <span className="header-insight-item">Hasil mengikuti data API terbaru</span>
-      </div>
+      <PageHeader title="Laporan & Analitik" description="Rekap data tindakan, pembayaran, dan pendaftaran." eyebrow="Reporting Analytics">
+        <div className="header-insight">
+          <span className="header-insight-item">Pilih mode laporan sesuai kebutuhan operasional</span>
+          <span className="header-insight-item">Filter status membantu audit proses harian</span>
+          <span className="header-insight-item">Hasil mengikuti data API terbaru</span>
+        </div>
+      </PageHeader>
 
       <div className="toolbar-row toolbar-primary">
         <div className="tab-switch">

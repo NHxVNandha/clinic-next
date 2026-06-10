@@ -5,6 +5,7 @@ import { Ban, ChevronLeft, ChevronRight, Eye, Plus, RefreshCw, RotateCcw, UserCh
 import toast from 'react-hot-toast'
 import { useSearchParams } from 'react-router-dom'
 import { DataGrid } from '../components/data-grid'
+import { PageHeader } from '../components/page-header'
 import { useInvoicePreview, usePembayaran } from '../hooks/use-kasir'
 import {
   bayarSisaPembayaran,
@@ -327,7 +328,7 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
         </button>
       ),
     },
-  ], [canManagePengeluaran, deletePengeluaranDetailMutation.isPending, kasirPengeluaranAccess.reason, logAction, pengeluaran, pengeluaranDetail, selectedPengeluaranId])
+  ], [canManagePengeluaran, deletePengeluaranDetailMutation, kasirPengeluaranAccess.reason, logAction, pengeluaran, pengeluaranDetail, selectedPengeluaranId])
 
   const onRowClicked = (event: RowClickedEvent<PembayaranItem>) => {
     const row = event.data ?? null
@@ -479,13 +480,15 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
 
   useEffect(() => {
     if (!activeLoading && page > totalPage) {
-      setPage(totalPage)
+      const timer = window.setTimeout(() => setPage(totalPage), 0)
+      return () => window.clearTimeout(timer)
     }
   }, [activeLoading, page, totalPage])
 
   useEffect(() => {
     if (!(pengeluaran.isLoading || pengeluaran.isFetching) && pengeluaranPage > pengeluaranTotalPage) {
-      setPengeluaranPage(pengeluaranTotalPage)
+      const timer = window.setTimeout(() => setPengeluaranPage(pengeluaranTotalPage), 0)
+      return () => window.clearTimeout(timer)
     }
   }, [pengeluaran.isLoading, pengeluaran.isFetching, pengeluaranPage, pengeluaranTotalPage])
 
@@ -503,13 +506,13 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
 
   return (
     <section className="page-card">
-      <h1>Kasir</h1>
-      <p>Pembayaran pasien dan preview invoice berbasis API real-time.</p>
-      <div className="header-insight">
-        <span className="header-insight-item">Gunakan pencarian untuk invoice/registrasi spesifik</span>
-        <span className="header-insight-item">Verifikasi status sebelum aksi penting</span>
-        <span className="header-insight-item">Shortcut pencarian: tekan '/'</span>
-      </div>
+      <PageHeader title="Kasir & Billing" description="Pembayaran pasien dan preview invoice berbasis API real-time." eyebrow="Cashier Operations">
+        <div className="header-insight">
+          <span className="header-insight-item">Gunakan pencarian untuk invoice/registrasi spesifik</span>
+          <span className="header-insight-item">Verifikasi status sebelum aksi penting</span>
+          <span className="header-insight-item">Shortcut pencarian: tekan '/'</span>
+        </div>
+      </PageHeader>
       {!(canManagePayments || canManagePengeluaran) ? <p><span className="readonly-badge">Mode Read-only</span></p> : null}
 
       <div className="toolbar-row toolbar-primary">
