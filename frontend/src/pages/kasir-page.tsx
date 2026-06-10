@@ -153,6 +153,14 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
   const activeLoading = query.isLoading || query.isFetching
   const totalPage = Math.max(1, Math.ceil((data?.total ?? 0) / (data?.pageSize ?? 20)))
   const pengeluaranTotalPage = Math.max(1, Math.ceil((pengeluaranData?.total ?? 0) / (pengeluaranData?.pageSize ?? 20)))
+  const billingSummary = useMemo(() => {
+    const rows = data?.items ?? []
+    const totalTransaksi = rows.reduce((sum, item) => sum + Number(item.grandtotal ?? item.total ?? 0), 0)
+    const lunas = rows.filter((item) => Number(item.sisa ?? 0) <= 0)
+    const pending = rows.filter((item) => Number(item.sisa ?? 0) > 0)
+    const pendingAmount = pending.reduce((sum, item) => sum + Number(item.sisa ?? 0), 0)
+    return { totalTransaksi, lunas: lunas.length, pending: pending.length, pendingAmount }
+  }, [data?.items])
 
   const columns = useMemo<ColDef<PembayaranItem>[]>(
     () => [
@@ -506,7 +514,17 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
 
   return (
     <section className="page-card">
-      <PageHeader title="Kasir & Billing" description="Pembayaran pasien dan preview invoice berbasis API real-time." eyebrow="Cashier Operations">
+      <PageHeader
+        title="Kasir & Billing"
+        description="Kelola pembayaran pasien, invoice, dan rekapitulasi transaksi harian."
+        eyebrow="Cashier Operations"
+        actions={(
+          <div className="billing-header-actions">
+            <button className="icon-btn" onClick={() => window.print()}>Cetak Laporan Harian</button>
+            <button className="icon-btn btn-primary" disabled={!canManagePayments} title={!canManagePayments ? kasirPaymentAccess.reason : 'Tambah pembayaran'} onClick={() => setCreatePaymentModalOpen(true)}><Wallet size={16} /> Invoice Manual</button>
+          </div>
+        )}
+      >
         <div className="header-insight">
           <span className="header-insight-item">Gunakan pencarian untuk invoice/registrasi spesifik</span>
           <span className="header-insight-item">Verifikasi status sebelum aksi penting</span>
@@ -529,12 +547,20 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
       </div>
       <div className="stats-grid">
         <article className="stat-card">
-          <small>Total Pembayaran</small>
-          <strong>{data?.total ?? 0}</strong>
+          <small>Total Transaksi</small>
+          <strong>{new Intl.NumberFormat('id-ID', { notation: 'compact', maximumFractionDigits: 1 }).format(billingSummary.totalTransaksi)}</strong>
         </article>
         <article className="stat-card">
-          <small>Invoice Terpilih</small>
-          <strong>{selected?.noInvoice ?? '-'}</strong>
+          <small>Lunas Hari Ini</small>
+          <strong>{billingSummary.lunas}</strong>
+        </article>
+        <article className="stat-card">
+          <small>Menunggu Pembayaran</small>
+          <strong>{billingSummary.pending}</strong>
+        </article>
+        <article className="stat-card">
+          <small>Outstanding</small>
+          <strong>{new Intl.NumberFormat('id-ID', { notation: 'compact', maximumFractionDigits: 1 }).format(billingSummary.pendingAmount)}</strong>
         </article>
       </div>
       {activeLoading ? (
@@ -545,31 +571,33 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
         </div>
       ) : null}
 
-      <DataGrid storageKey="kasir-main" rows={data?.items ?? []} columns={columns} loading={activeLoading} selectedRowId={selected?.idRegistrasi ?? null} selectedRowField="idRegistrasi" onRowClicked={onRowClicked} />
-      {!activeLoading && (data?.items?.length ?? 0) === 0 ? (
-        <div className="empty-state">
-          <p className="empty-note">Belum ada transaksi kasir ditemukan. Coba ubah filter pencarian.</p>
-          {search.trim() ? <button className="icon-btn icon-only" title="Reset filter" aria-label="Reset filter" onClick={() => { setSearch(''); setPage(1) }}><RotateCcw size={14} /></button> : null}
+      <section className="billing-queue-card">
+        <div className="billing-queue-head">
+          <div>
+            <h2>Antrian Pembayaran</h2>
+            <p>Invoice terpilih: {selected?.noInvoice ?? 'belum ada'}.</p>
+          </div>
+          <span className="billing-live-badge">Live</span>
         </div>
-      ) : null}
+        <DataGrid storageKey="kasir-main" rows={data?.items ?? []} columns={columns} loading={activeLoading} selectedRowId={selected?.idRegistrasi ?? null} selectedRowField="idRegistrasi" onRowClicked={onRowClicked} />
+        {!activeLoading && (data?.items?.length ?? 0) === 0 ? (
+          <div className="empty-state">
+            <p className="empty-note">Belum ada transaksi kasir ditemukan. Coba ubah filter pencarian.</p>
+            {search.trim() ? <button className="icon-btn icon-only" title="Reset filter" aria-label="Reset filter" onClick={() => { setSearch(''); setPage(1) }}><RotateCcw size={14} /></button> : null}
+          </div>
+        ) : null}
 
-      <div className="top-actions" style={{ marginTop: 10 }}>
-        <button className="icon-btn icon-only btn-primary-soft" disabled={!canManagePayments} title={!canManagePayments ? kasirPaymentAccess.reason : 'Tambah pembayaran'} onClick={() => setCreatePaymentModalOpen(true)} aria-label="Tambah pembayaran"><Wallet size={14} /></button>
-        <button className="icon-btn icon-only btn-primary-soft" disabled={!canManagePengeluaran} title={!canManagePengeluaran ? kasirPengeluaranAccess.reason : 'Tambah pengeluaran'} onClick={() => setCreatePengeluaranModalOpen(true)} aria-label="Tambah pengeluaran"><Plus size={14} /></button>
-        <button className="icon-btn icon-only" onClick={async () => { await query.refetch(); toast.success('Data kasir diperbarui.') }} title="Refresh data" aria-label="Refresh data"><RefreshCw size={14} /></button>
-      </div>
+        <div className="billing-queue-actions">
+          <button className="icon-btn btn-primary-soft" disabled={!canManagePengeluaran} title={!canManagePengeluaran ? kasirPengeluaranAccess.reason : 'Tambah pengeluaran'} onClick={() => setCreatePengeluaranModalOpen(true)}><Plus size={14} /> Tambah Pengeluaran</button>
+          <button className="icon-btn" onClick={async () => { await query.refetch(); toast.success('Data kasir diperbarui.') }}><RefreshCw size={14} /> Refresh</button>
+        </div>
 
-      <div className="pager-row">
-        <button className="icon-btn icon-only" title="Halaman sebelumnya" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage((prev) => prev - 1)}>
-          <ChevronLeft size={14} />
-        </button>
-        <span>
-          Halaman {page} / {totalPage}
-        </span>
-        <button className="icon-btn icon-only" title="Halaman berikutnya" aria-label="Halaman berikutnya" disabled={page >= totalPage} onClick={() => setPage((prev) => prev + 1)}>
-          <ChevronRight size={14} />
-        </button>
-      </div>
+        <div className="pager-row">
+          <button className="icon-btn icon-only" title="Halaman sebelumnya" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage((prev) => prev - 1)}><ChevronLeft size={14} /></button>
+          <span>Halaman {page} / {totalPage}</span>
+          <button className="icon-btn icon-only" title="Halaman berikutnya" aria-label="Halaman berikutnya" disabled={page >= totalPage} onClick={() => setPage((prev) => prev + 1)}><ChevronRight size={14} /></button>
+        </div>
+      </section>
 
       <ActionAuditNote
         message={lastAction}

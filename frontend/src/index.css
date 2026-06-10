@@ -3448,6 +3448,89 @@ body {
   padding: 14px 20px;
 }
 
+.billing-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.billing-header-actions .icon-btn {
+  min-height: 44px;
+  padding-inline: 16px;
+}
+
+.billing-queue-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.billing-queue-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-muted) 62%, var(--surface));
+  padding: 20px 24px;
+}
+
+.billing-queue-head h2,
+.billing-queue-head p {
+  margin: 0;
+}
+
+.billing-queue-head h2 {
+  color: var(--text);
+  font-size: 1.18rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.billing-queue-head p {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+}
+
+.billing-live-badge {
+  border-radius: 999px;
+  background: var(--primary-fixed);
+  color: var(--primary-fixed-text);
+  padding: 5px 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.billing-queue-card .grid-shell {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.billing-queue-card .empty-state {
+  margin: 16px 24px;
+}
+
+.billing-queue-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  padding: 12px 24px;
+}
+
+.billing-queue-card .pager-row {
+  margin-top: 0;
+  background: var(--surface-muted);
+  padding: 14px 24px;
+}
+
 @media (max-width: 1100px) {
   .service-queue-layout {
     grid-template-columns: 1fr;
