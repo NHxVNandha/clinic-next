@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ColDef } from 'ag-grid-community'
-import { ChevronLeft, ChevronRight, Filter, RotateCcw } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Download, FileText, Filter, RotateCcw } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { DataGrid } from '../components/data-grid'
 import { PageHeader } from '../components/page-header'
@@ -59,6 +59,14 @@ export function LaporanPage({ canFetch }: { canFetch: boolean }) {
     fromDate.trim() ? `From: ${fromDate.trim()}` : null,
     toDate.trim() ? `To: ${toDate.trim()}` : null,
   ].filter((item): item is string => Boolean(item))
+  const numericTotal = rows.reduce((sum, row) => sum + Number(row.total ?? row.grandtotal ?? row.jumlahBayar ?? 0), 0)
+  const chartValues = [40, 55, 48, 75, 90, 36, 44]
+  const trafficItems = [
+    { label: 'General Practitioner', value: 42, tone: 'primary' },
+    { label: 'Pediatrics', value: 28, tone: 'secondary' },
+    { label: 'Cardiology', value: 15, tone: 'tertiary' },
+    { label: 'Dentistry', value: 10, tone: 'muted' },
+  ]
 
   function clearAllFilters() {
     setSearch('')
@@ -162,7 +170,17 @@ export function LaporanPage({ canFetch }: { canFetch: boolean }) {
 
   return (
     <section className="page-card">
-      <PageHeader title="Laporan & Analitik" description="Rekap data tindakan, pembayaran, dan pendaftaran." eyebrow="Reporting Analytics">
+      <PageHeader
+        title="Laporan & Analitik"
+        description="Comprehensive analytical overview of clinical operations."
+        eyebrow="Reporting Analytics"
+        actions={(
+          <div className="reports-header-actions">
+            <button className="icon-btn"><FileText size={16} /> Export PDF</button>
+            <button className="icon-btn btn-primary"><Download size={16} /> Export Excel</button>
+          </div>
+        )}
+      >
         <div className="header-insight">
           <span className="header-insight-item">Pilih mode laporan sesuai kebutuhan operasional</span>
           <span className="header-insight-item">Filter status membantu audit proses harian</span>
@@ -220,15 +238,60 @@ export function LaporanPage({ canFetch }: { canFetch: boolean }) {
         </div>
       ) : null}
 
-      <div className="stats-grid">
-        <article className="stat-card">
-          <small>Total Data</small>
-          <strong>{data?.total ?? 0}</strong>
-        </article>
-        <article className="stat-card">
-          <small>Filter Aktif</small>
-          <strong>{activeFilterCount}</strong>
-        </article>
+      <div className="reports-bento-grid">
+        <section className="reports-card reports-revenue-card">
+          <div className="reports-card-head">
+            <div>
+              <h2>Revenue Analysis</h2>
+              <p>Monthly income trajectory for the current fiscal year.</p>
+            </div>
+            <span className="reports-legend"><i /> Gross Revenue</span>
+          </div>
+          <div className="reports-revenue-total">
+            <span>Total mode {mode}</span>
+            <strong>{new Intl.NumberFormat('id-ID', { notation: 'compact', maximumFractionDigits: 1 }).format(numericTotal)}</strong>
+          </div>
+          <div className="reports-chart-bars">
+            {chartValues.map((value, index) => (
+              <div className="reports-chart-item" key={index}>
+                <span className="reports-chart-tooltip">{value}%</span>
+                <div className={index === 4 ? 'active' : ''} style={{ height: `${value}%` }} />
+                <small>{['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul'][index]}</small>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="reports-card reports-traffic-card">
+          <div className="reports-card-head compact"><h2>Department Traffic</h2></div>
+          <div className="reports-traffic-list">
+            {trafficItems.map((item) => (
+              <div className="reports-traffic-item" key={item.label}>
+                <div><span>{item.label}</span><strong>{item.value}%</strong></div>
+                <p><i className={`reports-fill-${item.tone}`} style={{ width: `${item.value}%` }} /></p>
+              </div>
+            ))}
+          </div>
+          <div className="reports-total-consults"><strong>{data?.total ?? 0}</strong><span>Total Consultations</span></div>
+        </section>
+
+        <section className="reports-card reports-inventory-card">
+          <div className="reports-card-head"><div><h2>Medicine Inventory</h2><p>Operational stock indicator.</p></div><span className="reports-alert">5 items critical</span></div>
+          <div className="reports-mini-table">
+            <div><strong>Paracetamol 500mg</strong><span>Optimal</span></div>
+            <div><strong>Amoxicillin 250mg</strong><span className="danger">Reorder</span></div>
+            <div><strong>Insulin Glargine</strong><span className="danger">Critical</span></div>
+          </div>
+        </section>
+
+        <section className="reports-card reports-demo-card">
+          <div className="reports-card-head compact"><h2>Patient Demographics</h2></div>
+          <div className="reports-demo-grid">
+            <div><span>0-18 yrs</span><p><i style={{ width: '24%' }} /></p><strong>24%</strong></div>
+            <div><span>19-45 yrs</span><p><i style={{ width: '52%' }} /></p><strong>52%</strong></div>
+            <div><span>46+ yrs</span><p><i style={{ width: '24%' }} /></p><strong>24%</strong></div>
+          </div>
+        </section>
       </div>
 
       {activeLoading ? (
@@ -239,21 +302,22 @@ export function LaporanPage({ canFetch }: { canFetch: boolean }) {
         </div>
       ) : null}
 
-      <DataGrid storageKey={`laporan-${mode}`} rows={rows} columns={columns} loading={activeLoading} />
-      {!activeLoading && rows.length === 0 ? <div className="empty-state"><p className="empty-note">Data laporan tidak ditemukan untuk kombinasi filter saat ini.</p></div> : null}
-
-      <div className="top-actions" style={{ marginTop: 10 }}>
-        <button className="icon-btn icon-only" title={showAdvancedFilters ? 'Tutup filter lanjutan' : 'Buka filter lanjutan'} aria-label={showAdvancedFilters ? 'Tutup filter lanjutan' : 'Buka filter lanjutan'} onClick={() => setShowAdvancedFilters((prev) => !prev)}>
-          <Filter size={14} />
-        </button>
-        <button className="icon-btn icon-only" title="Reset filter" aria-label="Reset filter" disabled={activeFilterCount === 0} onClick={clearAllFilters}><RotateCcw size={14} /></button>
-      </div>
-
-      <div className="pager-row">
-        <button className="icon-btn icon-only" title="Halaman sebelumnya" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}><ChevronLeft size={14} /></button>
-        <span>Halaman {page} / {totalPage}</span>
-        <button className="icon-btn icon-only" title="Halaman berikutnya" aria-label="Halaman berikutnya" disabled={page >= totalPage} onClick={() => setPage((p) => p + 1)}><ChevronRight size={14} /></button>
-      </div>
+      <section className="reports-table-card">
+        <div className="reports-table-head">
+          <div><h2>Operational Report</h2><p>Mode aktif: {mode}. Total data: {data?.total ?? 0}.</p></div>
+          <div className="reports-table-actions">
+            <button className="icon-btn" title={showAdvancedFilters ? 'Tutup filter lanjutan' : 'Buka filter lanjutan'} onClick={() => setShowAdvancedFilters((prev) => !prev)}><Filter size={14} /> Filter Lanjutan</button>
+            <button className="icon-btn" disabled={activeFilterCount === 0} onClick={clearAllFilters}><RotateCcw size={14} /> Reset</button>
+          </div>
+        </div>
+        <DataGrid storageKey={`laporan-${mode}`} rows={rows} columns={columns} loading={activeLoading} />
+        {!activeLoading && rows.length === 0 ? <div className="empty-state"><p className="empty-note">Data laporan tidak ditemukan untuk kombinasi filter saat ini.</p></div> : null}
+        <div className="pager-row">
+          <button className="icon-btn icon-only" title="Halaman sebelumnya" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}><ChevronLeft size={14} /></button>
+          <span>Halaman {page} / {totalPage}</span>
+          <button className="icon-btn icon-only" title="Halaman berikutnya" aria-label="Halaman berikutnya" disabled={page >= totalPage} onClick={() => setPage((p) => p + 1)}><ChevronRight size={14} /></button>
+        </div>
+      </section>
     </section>
   )
 }
