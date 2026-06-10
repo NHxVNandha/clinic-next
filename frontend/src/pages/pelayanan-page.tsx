@@ -100,6 +100,12 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
     if (!statusFilter) return rows
     return rows.filter((item) => String(item.status ?? '') === statusFilter)
   }, [data?.items, statusFilter])
+  const queueCounts = useMemo(() => ({
+    waiting: filteredItems.filter((item) => String(item.status ?? '') === '1').length,
+    treatment: filteredItems.filter((item) => String(item.status ?? '') === '2').length,
+    finished: filteredItems.filter((item) => String(item.status ?? '') === '3').length,
+    cancelled: filteredItems.filter((item) => String(item.status ?? '') === '4').length,
+  }), [filteredItems])
   const totalPage = Math.max(1, Math.ceil((data?.total ?? 0) / (data?.pageSize ?? 20)))
   const activeFilterCount = (search.trim() ? 1 : 0) + (statusFilter ? 1 : 0)
 
@@ -556,63 +562,77 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
         />
         {query.isFetching ? <span className="kbd-hint">Memuat data...</span> : null}
       </div>
-      <div className="filter-chip-wrap">
-        <button className={`filter-chip ${statusFilter === '1' ? 'active' : ''}`} onClick={() => { setStatusFilter('1'); setPage(1) }}>Menunggu</button>
-        <button className={`filter-chip ${statusFilter === '2' ? 'active' : ''}`} onClick={() => { setStatusFilter('2'); setPage(1) }}>Dilayani</button>
-        <button className={`filter-chip ${statusFilter === '3' ? 'active' : ''}`} onClick={() => { setStatusFilter('3'); setPage(1) }}>Selesai</button>
-        <button className={`filter-chip ${statusFilter === '4' ? 'active' : ''}`} onClick={() => { setStatusFilter('4'); setPage(1) }}>Dibatalkan</button>
-        <button className={`filter-chip ${statusFilter === '' ? 'active' : ''}`} onClick={() => { setStatusFilter(''); setPage(1) }}>Semua</button>
-      </div>
+      <div className="service-queue-layout">
+        <aside className="service-side-panel">
+          <section>
+            <h2>Departments</h2>
+            <button className="service-department active"><span>Poli Umum</span><strong>{queueCounts.waiting + queueCounts.treatment}</strong></button>
+            <button className="service-department"><span>Dental Clinic</span><strong>{Math.max(0, queueCounts.finished)}</strong></button>
+            <button className="service-department"><span>Cardiology</span><strong>{Math.max(0, queueCounts.cancelled)}</strong></button>
+            <button className="service-department"><span>Pediatrics</span><strong>{filteredItems.length}</strong></button>
+          </section>
+          <section>
+            <h2>Filter Status</h2>
+            <div className="filter-chip-wrap service-filter-list">
+              <button className={`filter-chip ${statusFilter === '1' ? 'active' : ''}`} onClick={() => { setStatusFilter('1'); setPage(1) }}>Menunggu</button>
+              <button className={`filter-chip ${statusFilter === '2' ? 'active' : ''}`} onClick={() => { setStatusFilter('2'); setPage(1) }}>Dilayani</button>
+              <button className={`filter-chip ${statusFilter === '3' ? 'active' : ''}`} onClick={() => { setStatusFilter('3'); setPage(1) }}>Selesai</button>
+              <button className={`filter-chip ${statusFilter === '4' ? 'active' : ''}`} onClick={() => { setStatusFilter('4'); setPage(1) }}>Dibatalkan</button>
+              <button className={`filter-chip ${statusFilter === '' ? 'active' : ''}`} onClick={() => { setStatusFilter(''); setPage(1) }}>Semua</button>
+            </div>
+          </section>
+          <section>
+            <h2>Doctor Availability</h2>
+            <div className="doctor-availability-item"><span className="doctor-avatar available">DA</span><div><strong>Dokter Aktif</strong><p>Available • Room 102</p></div></div>
+            <div className="doctor-availability-item muted"><span className="doctor-avatar busy">DS</span><div><strong>Dokter Pemeriksa</strong><p>Busy • In Treatment</p></div></div>
+          </section>
+        </aside>
 
-      <div className="stats-grid">
-        <article className="stat-card">
-          <small>Total Pelayanan</small>
-          <strong>{statusFilter ? filteredItems.length : data?.total ?? 0}</strong>
-        </article>
-        <article className="stat-card">
-          <small>Baris Terpilih</small>
-          <strong>{selected?.idRegistrasi ?? '-'}</strong>
-        </article>
-      </div>
-      {activeLoading ? (
-        <div style={{ display: 'grid', gap: 8, marginBottom: 10 }}>
-          <div className="skeleton-block" />
-          <div className="skeleton-block" />
-          <div className="skeleton-block" />
+        <div className="service-main-panel">
+          <div className="service-live-tabs"><button className="active">Live Queue</button><button>History</button><button>Analytics</button></div>
+          <div className="stats-grid service-stats-grid">
+            <article className="stat-card"><small>Waiting List</small><strong>{queueCounts.waiting}</strong></article>
+            <article className="stat-card"><small>In Treatment</small><strong>{queueCounts.treatment}</strong></article>
+            <article className="stat-card"><small>Finished Today</small><strong>{queueCounts.finished}</strong></article>
+          </div>
+          {activeLoading ? (
+            <div style={{ display: 'grid', gap: 8, marginBottom: 10 }}>
+              <div className="skeleton-block" />
+              <div className="skeleton-block" />
+              <div className="skeleton-block" />
+            </div>
+          ) : null}
+
+          <section className="service-table-card">
+            <div className="service-table-head"><h2>Patient Queue</h2><span><i /> Live Updates</span></div>
+            <DataGrid
+              storageKey="pelayanan-main"
+              rows={filteredItems}
+              columns={columns}
+              loading={activeLoading}
+              selectedRowId={selected?.idRegistrasi ?? null}
+              selectedRowField="idRegistrasi"
+              onRowClicked={onRowClicked}
+            />
+            {!activeLoading && filteredItems.length === 0 ? (
+              <div className="empty-state">
+                <p className="empty-note">Belum ada data pelayanan untuk filter saat ini.</p>
+                {activeFilterCount > 0 ? <button className="icon-btn icon-only" title="Reset filter" aria-label="Reset filter" onClick={() => { setSearch(''); setStatusFilter(''); setPage(1) }}><RotateCcw size={14} /></button> : null}
+              </div>
+            ) : null}
+
+            <div className="service-table-actions">
+              <button className="icon-btn" onClick={() => { const today = new Date().toISOString().slice(0, 10); setSearch(today); setPage(1) }}><CalendarDays size={14} /> Hari Ini</button>
+              <button className="icon-btn" onClick={async () => { await query.refetch(); toast.success('Data pelayanan diperbarui.') }}><RefreshCw size={14} /> Refresh</button>
+            </div>
+
+            <div className="pager-row">
+              <button className="icon-btn icon-only" title="Halaman sebelumnya" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage((prev) => prev - 1)}><ChevronLeft size={14} /></button>
+              <span>Halaman {page} / {totalPage}</span>
+              <button className="icon-btn icon-only" title="Halaman berikutnya" aria-label="Halaman berikutnya" disabled={page >= totalPage} onClick={() => setPage((prev) => prev + 1)}><ChevronRight size={14} /></button>
+            </div>
+          </section>
         </div>
-      ) : null}
-
-      <DataGrid
-        storageKey="pelayanan-main"
-        rows={filteredItems}
-        columns={columns}
-        loading={activeLoading}
-        selectedRowId={selected?.idRegistrasi ?? null}
-        selectedRowField="idRegistrasi"
-        onRowClicked={onRowClicked}
-      />
-      {!activeLoading && filteredItems.length === 0 ? (
-        <div className="empty-state">
-          <p className="empty-note">Belum ada data pelayanan untuk filter saat ini.</p>
-          {activeFilterCount > 0 ? <button className="icon-btn icon-only" title="Reset filter" aria-label="Reset filter" onClick={() => { setSearch(''); setStatusFilter(''); setPage(1) }}><RotateCcw size={14} /></button> : null}
-        </div>
-      ) : null}
-
-      <div className="top-actions" style={{ marginTop: 10 }}>
-        <button className="icon-btn icon-only" onClick={() => { const today = new Date().toISOString().slice(0, 10); setSearch(today); setPage(1) }} title="Preset hari ini" aria-label="Preset hari ini"><CalendarDays size={14} /></button>
-        <button className="icon-btn icon-only" onClick={async () => { await query.refetch(); toast.success('Data pelayanan diperbarui.') }} title="Refresh data" aria-label="Refresh data"><RefreshCw size={14} /></button>
-      </div>
-
-      <div className="pager-row">
-        <button className="icon-btn icon-only" title="Halaman sebelumnya" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage((prev) => prev - 1)}>
-          <ChevronLeft size={14} />
-        </button>
-        <span>
-          Halaman {page} / {totalPage}
-        </span>
-        <button className="icon-btn icon-only" title="Halaman berikutnya" aria-label="Halaman berikutnya" disabled={page >= totalPage} onClick={() => setPage((prev) => prev + 1)}>
-          <ChevronRight size={14} />
-        </button>
       </div>
 
       <ActionAuditNote
