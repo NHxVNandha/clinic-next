@@ -43,6 +43,8 @@ export function RekamMedisPage({ canFetch }: { canFetch: boolean }) {
   const forms = useRekamMedisForms(canFetch)
   const history = useRekamMedisHistory(params, canFetch)
   const formData = useRekamMedisByForm(selectedForm, params, canFetch)
+  const historyRows = history.data?.data ?? []
+  const formRows = formData.data?.data ?? []
 
   useEffect(() => {
     const next = new URLSearchParams()
@@ -113,10 +115,18 @@ export function RekamMedisPage({ canFetch }: { canFetch: boolean }) {
         }}
       />
 
-      <div className="rm-layout">
-        <article className="preview-box detail-soft">
-          <h2>Form Tersedia</h2>
-          {forms.isLoading ? (
+      <div className="stats-grid medical-record-stats">
+        <article className="stat-card"><small>Total Histori</small><strong>{historyRows.length}</strong></article>
+        <article className="stat-card"><small>Kunjungan Hari Ini</small><strong>{historyRows.filter((item) => String(item.tanggal ?? '').startsWith(new Date().toISOString().slice(0, 10))).length}</strong></article>
+        <article className="stat-card"><small>Form Tersedia</small><strong>{forms.data?.data?.length ?? 0}</strong></article>
+        <article className="stat-card"><small>Review Data</small><strong>{selectedForm ? formRows.length : 0}</strong></article>
+      </div>
+
+      <div className="medical-record-layout">
+        <aside className="medical-side-panel">
+          <section>
+           <h2>Form Tersedia</h2>
+           {forms.isLoading ? (
             <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
               <div className="skeleton-block" />
               <div className="skeleton-block" />
@@ -129,12 +139,25 @@ export function RekamMedisPage({ canFetch }: { canFetch: boolean }) {
                 </button>
               ))}
             </div>
-          )}
-          {!forms.isLoading && (forms.data?.data?.length ?? 0) === 0 ? <p className="empty-note">Belum ada form rekam medis tersedia.</p> : null}
-        </article>
+           )}
+           {!forms.isLoading && (forms.data?.data?.length ?? 0) === 0 ? <p className="empty-note">Belum ada form rekam medis tersedia.</p> : null}
+          </section>
 
-        <article className="preview-box detail-soft">
-          <h2>Histori Rekam Medis</h2>
+          <section>
+            <h2>Security Status</h2>
+            <div className="medical-security-item"><strong>Role Based Access</strong><span>Aktif</span></div>
+            <div className="medical-security-item"><strong>Session Audit</strong><span>{auditHistory.length} log</span></div>
+          </section>
+        </aside>
+
+        <section className="medical-history-card">
+          <div className="medical-card-head">
+            <div>
+              <h2>Daftar Riwayat Pasien</h2>
+              <p>Filter aktif: {idPasien || 'Semua pasien'} {idRegistrasi ? `• ${idRegistrasi}` : ''}</p>
+            </div>
+            <span>Filter: 7 Hari Terakhir</span>
+          </div>
           {history.isLoading ? (
             <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
               <div className="skeleton-block" />
@@ -142,26 +165,25 @@ export function RekamMedisPage({ canFetch }: { canFetch: boolean }) {
               <div className="skeleton-block" />
             </div>
           ) : history.data?.data?.length ? (
-            <div style={{ display: 'grid', gap: 8 }}>
+            <div className="medical-history-list">
               {history.data.data.map((item) => (
-                <article key={item.id} className="preview-box" style={{ margin: 0, padding: '10px 12px' }}>
-                  <strong>{item.judulRm || item.kodeRm || `RM #${item.id}`}</strong>
-                  <p style={{ margin: '6px 0 2px 0' }}>
-                    Pasien: {item.idPasien || '-'} | Registrasi: {item.idRegistrasi || '-'}
-                  </p>
-                  <p style={{ margin: 0 }}>
-                    Tanggal: {item.tanggal || '-'} {item.jam || ''}
-                  </p>
+                <article key={item.id} className="medical-record-row">
+                  <div className="medical-avatar">{String(item.idPasien || 'RM').slice(-2).toUpperCase()}</div>
+                  <div>
+                    <strong>{item.judulRm || item.kodeRm || `RM #${item.id}`}</strong>
+                    <p>Pasien: {item.idPasien || '-'} • Registrasi: {item.idRegistrasi || '-'}</p>
+                  </div>
+                  <span>{item.tanggal || '-'} {item.jam || ''}</span>
                 </article>
               ))}
             </div>
           ) : (
             <p>Histori tidak ditemukan.</p>
           )}
-        </article>
+        </section>
 
-        <article className="preview-box detail-soft">
-          <h2>Data Form {selectedForm ? `(${selectedForm})` : ''}</h2>
+        <section className="medical-form-card">
+          <div className="medical-card-head"><div><h2>Data Form {selectedForm ? `(${selectedForm})` : ''}</h2><p>Pilih form untuk menampilkan data klinis terstruktur.</p></div></div>
           {!selectedForm ? (
             <p>Pilih form untuk menampilkan data.</p>
           ) : formData.isLoading ? (
@@ -173,7 +195,7 @@ export function RekamMedisPage({ canFetch }: { canFetch: boolean }) {
           ) : (
             renderRecordTable(formData.data?.data ?? [])
           )}
-        </article>
+        </section>
       </div>
     </section>
   )
