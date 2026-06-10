@@ -4404,33 +4404,92 @@ button.filter-chip:hover {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
   gap: 24px;
+  align-items: start;
 }
 
 .settings-tabs {
   display: grid;
   align-content: start;
   gap: 8px;
+  position: sticky;
+  top: 86px;
 }
 
 .settings-tab {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
-  min-height: 46px;
+  min-height: 68px;
   border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--surface) 88%, transparent), color-mix(in srgb, var(--surface-muted) 58%, var(--surface)));
   color: var(--text-muted);
-  padding: 10px 14px;
-  font-weight: 800;
+  padding: 12px;
   text-align: left;
   cursor: pointer;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--primary) 7%, transparent);
+  transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+
+.settings-tab:hover {
+  border-color: color-mix(in srgb, var(--primary) 34%, var(--border));
+  transform: translateY(-1px);
+}
+
+.settings-tab > span:last-child {
+  display: grid;
+  gap: 3px;
+}
+
+.settings-tab strong {
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
+.settings-tab small {
+  color: var(--text-soft);
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.settings-tab-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  color: var(--primary);
 }
 
 .settings-tab.active {
   border-color: var(--primary);
-  background: var(--primary);
+  background:
+    radial-gradient(120% 100% at 0% 0%, color-mix(in srgb, #ffffff 16%, transparent), transparent 62%),
+    linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 80%, #002f72));
   color: var(--primary-contrast);
+  box-shadow: 0 18px 36px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+.settings-tab.active strong,
+.settings-tab.active small,
+.settings-tab.active .settings-tab-icon {
+  color: var(--primary-contrast);
+}
+
+.settings-tab.active .settings-tab-icon {
+  background: color-mix(in srgb, #ffffff 18%, transparent);
+}
+
+.settings-clinic-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 24px;
+  align-items: stretch;
 }
 
 .settings-form-grid {
@@ -4447,6 +4506,43 @@ button.filter-chip:hover {
 .settings-form-grid textarea {
   width: 100%;
   padding: 10px 12px;
+}
+
+.settings-logo-dropzone {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 12px;
+  min-height: 260px;
+  border: 2px dashed color-mix(in srgb, var(--primary) 28%, var(--border));
+  border-radius: 18px;
+  background:
+    radial-gradient(90% 70% at 50% 10%, color-mix(in srgb, var(--primary) 10%, transparent), transparent 70%),
+    color-mix(in srgb, var(--surface-muted) 52%, var(--surface));
+  padding: 24px;
+  text-align: center;
+}
+
+.settings-logo-dropzone p {
+  max-width: 210px;
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.settings-logo-mark {
+  display: grid;
+  place-items: center;
+  width: 78px;
+  height: 78px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--secondary, #006a6a) 72%, var(--primary)));
+  color: var(--primary-contrast);
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  box-shadow: 0 18px 32px color-mix(in srgb, var(--primary) 24%, transparent);
 }
 
 .settings-note-grid {
@@ -4475,8 +4571,74 @@ button.filter-chip:hover {
 }
 
 .settings-toggle-list > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 16px;
+  align-items: center;
   border-bottom: 1px solid var(--border);
   padding: 18px 0;
+}
+
+.settings-toggle-list > div:first-child {
+  padding-top: 0;
+}
+
+.settings-toggle-list > div:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.settings-toggle-list p {
+  margin: 0;
+  color: var(--text-soft);
+}
+
+.settings-toggle-list span {
+  grid-row: span 2;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  padding: 6px 10px;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.settings-backup-panel,
+.settings-danger-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.settings-backup-panel {
+  background: color-mix(in srgb, var(--info-bg) 54%, var(--surface));
+  color: var(--text);
+}
+
+.settings-backup-panel > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.settings-backup-panel svg {
+  color: var(--primary);
+}
+
+.settings-backup-panel p,
+.settings-danger-panel p {
+  margin: 4px 0 0;
+  color: var(--text-soft);
+}
+
+.settings-danger-panel {
+  margin-top: 14px;
+  background: color-mix(in srgb, var(--danger-bg) 46%, var(--surface));
 }
 
 .auth-layout {
@@ -4502,6 +4664,15 @@ button.filter-chip:hover {
 
   .dashboard-grid,
   .settings-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-tabs {
+    position: static;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .settings-clinic-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -4575,6 +4746,23 @@ button.filter-chip:hover {
   .stats-grid,
   .settings-form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .settings-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-backup-panel,
+  .settings-danger-panel,
+  .settings-toggle-list > div {
+    align-items: stretch;
+    flex-direction: column;
+    grid-template-columns: 1fr;
+  }
+
+  .settings-toggle-list span {
+    grid-row: auto;
+    justify-self: start;
   }
 
   .section-card-body,
