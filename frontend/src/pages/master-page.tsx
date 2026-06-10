@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ColDef, RowClickedEvent } from 'ag-grid-community'
 import { useMutation } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ClipboardList, Pencil, Plus, Stethoscope, Trash2, Wrench } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useSearchParams } from 'react-router-dom'
 import { DataGrid } from '../components/data-grid'
@@ -558,9 +558,12 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
         open={dokterModalOpen}
         title={selectedDokter ? 'Edit Dokter' : 'Tambah Dokter'}
         description="Lengkapi data dokter lalu simpan perubahan."
+        icon={Stethoscope}
+        size="sm"
+        footerNote="Data dokter dipakai sebagai referensi pendaftaran, pelayanan, dan laporan klinik."
         onClose={() => setDokterModalOpen(false)}
       >
-        <div className="form-grid" style={{ marginTop: 12 }}>
+        <div className="form-grid">
           <FieldLabel text="Kode Dokter" htmlFor="master-dokter-kode">
             <input id="master-dokter-kode" className="search-input" placeholder="Contoh: DKT-001" value={kdDokter} onChange={(event) => setKdDokter(event.target.value)} />
           </FieldLabel>
@@ -580,9 +583,11 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
         open={jasaModalOpen}
         title={selectedJasa ? 'Edit Jasa' : 'Tambah Jasa'}
         description="Pastikan harga dan status jasa valid sebelum menyimpan."
+        icon={Wrench}
+        size="md"
         onClose={() => setJasaModalOpen(false)}
       >
-        <div className="form-grid" style={{ marginTop: 12 }}>
+        <div className="form-grid">
           <FieldLabel text="ICD9" htmlFor="master-jasa-icd9">
             <input id="master-jasa-icd9" className="search-input" placeholder="Kode ICD9 (opsional)" value={icd9} onChange={(event) => setIcd9(event.target.value)} />
           </FieldLabel>
@@ -643,9 +648,11 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
         open={diagnosaModalOpen}
         title={selectedDiagnosa ? 'Edit Diagnosa' : 'Tambah Diagnosa'}
         description="Kode dan nama diagnosa wajib diisi."
+        icon={ClipboardList}
+        size="md"
         onClose={() => setDiagnosaModalOpen(false)}
       >
-        <div className="form-grid" style={{ marginTop: 12 }}>
+        <div className="form-grid">
           <FieldLabel text="Kode Diagnosa" htmlFor="master-diagnosa-kode">
             <input
               id="master-diagnosa-kode"

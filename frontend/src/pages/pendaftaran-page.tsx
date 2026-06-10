@@ -399,9 +399,18 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
         open={createExistingModalOpen}
         title="Tambah Pendaftaran (Pasien Existing)"
         description="Pilih pasien dan dokter dari referensi. Konfirmasi akan muncul sebelum penyimpanan."
+        icon={Users}
+        size="sm"
         onClose={() => setCreateExistingModalOpen(false)}
       >
-        <div className="form-grid" style={{ marginTop: 12 }}>
+        <div className="modal-info-card">
+          <div className="modal-info-avatar">PX</div>
+          <div>
+            <strong>Registrasi Pasien Lama</strong>
+            <p className="modal-helper-text">Cari pasien dari master, lalu tentukan dokter dan keluhan awal untuk kunjungan baru.</p>
+          </div>
+        </div>
+        <div className="form-grid">
           <FieldLabel text="ID Pasien (Master)" htmlFor="pendaftaran-existing-idpasien">
             <StrictMasterComboboxField
               inputId="pendaftaran-existing-idpasien"
@@ -453,9 +462,16 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
         open={createNewPatientModalOpen}
         title="Tambah Pendaftaran + Pasien Baru"
         description="Lengkapi identitas pasien baru. Konfirmasi akan muncul sebelum penyimpanan."
+        icon={UserPlus}
+        size="md"
+        footerNote="Data pasien baru akan disimpan permanen dan langsung dibuatkan pendaftaran kunjungan."
         onClose={() => setCreateNewPatientModalOpen(false)}
       >
-        <div className="form-grid" style={{ marginTop: 12 }}>
+        <div className="modal-summary-grid">
+          <article className="modal-summary-card"><small>Jenis Form</small><strong>Pasien Baru</strong></article>
+          <article className="modal-summary-card"><small>Validasi</small><strong>NIK + Dokter</strong></article>
+        </div>
+        <div className="form-grid">
           <FieldLabel text="Nama Pasien" htmlFor="pendaftaran-baru-nama">
             <input id="pendaftaran-baru-nama" className="search-input" placeholder="Nama lengkap pasien" value={pasienBaruForm.nama} onChange={(e) => setPasienBaruForm((p) => ({ ...p, nama: e.target.value }))} disabled={!canCreate} />
           </FieldLabel>

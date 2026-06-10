@@ -4645,6 +4645,246 @@ button.filter-chip:hover {
   background: color-mix(in srgb, var(--danger-bg) 46%, var(--surface));
 }
 
+.form-modal-overlay {
+  padding: 24px;
+  background: color-mix(in srgb, var(--inverse-surface, #2d3133) 42%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.form-modal-card {
+  width: min(672px, calc(100vw - 32px));
+  max-height: min(92vh, 921px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 24px 60px color-mix(in srgb, var(--primary) 16%, rgba(15, 23, 42, 0.18));
+  padding: 0;
+}
+
+.form-modal-sm {
+  width: min(540px, calc(100vw - 32px));
+}
+
+.form-modal-lg {
+  width: min(860px, calc(100vw - 32px));
+}
+
+.form-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-muted) 66%, var(--surface));
+  padding: 18px 24px;
+}
+
+.form-modal-header::after {
+  display: none;
+}
+
+.form-modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.form-modal-title-row h3 {
+  margin: 0;
+  color: var(--primary);
+  font-size: 1.22rem;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+}
+
+.form-modal-title-row p {
+  margin: 2px 0 0;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.form-modal-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--primary-fixed);
+  color: var(--primary);
+}
+
+.form-modal-card .modal-body {
+  flex: 1;
+  overflow-y: auto;
+  margin: 0;
+  padding: 24px;
+  gap: 18px;
+}
+
+.form-modal-card .form-grid {
+  margin-top: 0 !important;
+  gap: 18px;
+}
+
+.form-modal-card .field-label {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.form-modal-card input,
+.form-modal-card select,
+.form-modal-card textarea,
+.form-modal-card .search-input {
+  border-color: var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  min-height: 44px;
+}
+
+.form-modal-card input:focus,
+.form-modal-card select:focus,
+.form-modal-card textarea:focus,
+.form-modal-card .search-input:focus {
+  outline: 3px solid var(--focus-ring);
+  border-color: var(--primary);
+}
+
+.form-modal-card .confirm-actions {
+  margin: 0 -24px -24px;
+  border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-muted) 62%, var(--surface));
+  padding: 16px 24px;
+}
+
+.form-modal-footer-note {
+  border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-muted) 62%, var(--surface));
+  color: var(--text-soft);
+  padding: 12px 24px;
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.modal-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.modal-summary-card,
+.modal-info-card,
+.modal-total-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-muted) 62%, var(--surface));
+  padding: 14px;
+}
+
+.modal-summary-card small,
+.modal-total-card small,
+.modal-section-title {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.modal-summary-card strong {
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.modal-total-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 2px solid color-mix(in srgb, var(--primary) 58%, var(--border));
+  background: color-mix(in srgb, var(--primary-fixed) 56%, var(--surface));
+}
+
+.modal-total-card strong {
+  color: var(--primary);
+  font-size: clamp(1.5rem, 4vw, 2.1rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.modal-info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border-color: color-mix(in srgb, var(--primary) 28%, var(--border));
+  background: color-mix(in srgb, var(--primary-fixed) 38%, var(--surface));
+}
+
+.modal-info-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  background: var(--primary-fixed);
+  color: var(--primary);
+  font-weight: 900;
+}
+
+.modal-option-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.modal-option-card {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  min-height: 88px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text-muted);
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.modal-option-card.active {
+  border-color: var(--primary);
+  background: var(--primary-fixed);
+  color: var(--primary);
+}
+
+.modal-form-section {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+}
+
+.modal-helper-text {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
 .auth-layout {
   background: linear-gradient(135deg, #f7f9fb 0%, #eaf0f8 100%);
 }
@@ -4762,6 +5002,44 @@ button.filter-chip:hover {
     align-items: stretch;
     flex-direction: column;
     grid-template-columns: 1fr;
+  }
+
+  .form-modal-overlay {
+    align-items: end;
+    padding: 0;
+  }
+
+  .form-modal-card,
+  .form-modal-sm,
+  .form-modal-lg {
+    width: 100%;
+    max-height: 94vh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .form-modal-header,
+  .form-modal-card .modal-body,
+  .form-modal-footer-note {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .form-modal-card .confirm-actions {
+    margin-left: -16px;
+    margin-right: -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .modal-summary-grid,
+  .modal-option-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-total-card,
+  .modal-info-card {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .settings-toggle-list span {

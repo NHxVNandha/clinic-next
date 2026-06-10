@@ -789,9 +789,25 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
         open={createPaymentModalOpen}
         title="Tambah Pembayaran"
         description="Isi data pembayaran. Konfirmasi akan muncul sebelum penyimpanan."
+        icon={Wallet}
+        size="lg"
+        footerNote="Secure transaction system active. Pastikan nominal dan identitas pasien sudah sesuai sebelum menyimpan."
         onClose={() => setCreatePaymentModalOpen(false)}
       >
-        <div className="form-grid" style={{ marginTop: 12 }}>
+        <div className="modal-summary-grid">
+          <article className="modal-summary-card"><small>Invoice Number</small><strong>{createForm.idRegistrasi || selected?.idRegistrasi || '-'}</strong></article>
+          <article className="modal-summary-card"><small>Patient ID</small><strong>{createForm.idPasien || selected?.idPasien || '-'}</strong></article>
+        </div>
+        <div className="modal-total-card">
+          <div><small>Total Tagihan</small><p className="modal-helper-text">Nominal sebelum diskon dan pembayaran</p></div>
+          <strong>{formatMoney(Number(createForm.total || selected?.total || 0))}</strong>
+        </div>
+        <div className="modal-option-grid" aria-label="Metode pembayaran">
+          <div className="modal-option-card active"><Wallet size={22} /> Tunai</div>
+          <div className="modal-option-card"><Wallet size={22} /> Transfer</div>
+          <div className="modal-option-card"><Wallet size={22} /> QRIS</div>
+        </div>
+        <div className="form-grid">
           <FieldLabel text="ID Registrasi" htmlFor="kasir-create-idregistrasi">
             <input id="kasir-create-idregistrasi" className="search-input" placeholder="Contoh: REG-2026-0001" value={createForm.idRegistrasi} onChange={(e) => setCreateForm((p) => ({ ...p, idRegistrasi: e.target.value.toUpperCase() }))} />
           </FieldLabel>
@@ -873,9 +889,11 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
         open={createPengeluaranModalOpen}
         title="Tambah Pengeluaran"
         description="Isi data pengeluaran, lalu konfirmasi sebelum penyimpanan."
+        icon={Plus}
+        size="sm"
         onClose={() => setCreatePengeluaranModalOpen(false)}
       >
-        <div className="form-grid" style={{ marginTop: 12 }}>
+        <div className="form-grid">
           <FieldLabel text="Tanggal" htmlFor="kasir-pengeluaran-tanggal">
             <input id="kasir-pengeluaran-tanggal" className="search-input" type="date" value={pengeluaranForm.tanggal} onChange={(e) => setPengeluaranForm((p) => ({ ...p, tanggal: e.target.value }))} />
           </FieldLabel>

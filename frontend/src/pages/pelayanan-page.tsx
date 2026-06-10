@@ -756,12 +756,20 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
         open={detailCreateModalOpen}
         title={`Tambah ${detailTab}`}
         description={detailMasterStatus[detailTab].linked ? 'Lengkapi form sesuai tab aktif, lalu konfirmasi untuk menyimpan.' : 'Tab ini belum terhubung ke master, input masih manual sementara.'}
+        icon={Plus}
+        size="md"
         onClose={() => setDetailCreateModalOpen(false)}
       >
-        <p className={`field-helper ${detailMasterStatus[detailTab].linked ? '' : 'readonly-badge'}`} style={{ marginTop: 6 }}>{detailMasterStatus[detailTab].label}</p>
+        <div className="modal-info-card">
+          <div className="modal-info-avatar">{detailTab.slice(0, 2).toUpperCase()}</div>
+          <div>
+            <strong>{detailTabConfig[detailTab].title}</strong>
+            <p className="modal-helper-text">{detailMasterStatus[detailTab].label}</p>
+          </div>
+        </div>
         {detailTab === 'tindakan' ? (
           <>
-            <div className="form-grid" style={{ marginTop: 12 }}>
+            <div className="form-grid">
               <FieldLabel text="Nama Tindakan (Master Jasa)" htmlFor="pelayanan-modal-tindakan-nama">
                 <StrictMasterComboboxField
                   inputId="pelayanan-modal-tindakan-nama"
@@ -796,7 +804,7 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
           </>
         ) : detailTab === 'resep' ? (
           <>
-            <div className="form-grid" style={{ marginTop: 12 }}>
+            <div className="form-grid">
               <FieldLabel text="Nama Obat" htmlFor="pelayanan-modal-resep-nama-obat">
                 <input id="pelayanan-modal-resep-nama-obat" className="search-input" placeholder="Nama obat" value={resepForm.namaObat} onChange={(e) => setResepForm((p) => ({ ...p, namaObat: e.target.value }))} />
               </FieldLabel>
@@ -811,7 +819,7 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
           </>
         ) : detailTab === 'alkes' ? (
           <>
-            <div className="form-grid" style={{ marginTop: 12 }}>
+            <div className="form-grid">
               <FieldLabel text="Nama Alkes" htmlFor="pelayanan-modal-alkes-nama">
                 <input id="pelayanan-modal-alkes-nama" className="search-input" placeholder="Nama alat kesehatan" value={alkesForm.nama} onChange={(e) => setAlkesForm((p) => ({ ...p, nama: e.target.value }))} />
               </FieldLabel>
@@ -823,7 +831,7 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
           </>
         ) : detailTab === 'laboratorium' ? (
           <>
-            <div className="form-grid" style={{ marginTop: 12 }}>
+            <div className="form-grid">
               <FieldLabel text="Nama Pemeriksaan" htmlFor="pelayanan-modal-lab-nama">
                 <input id="pelayanan-modal-lab-nama" className="search-input" placeholder="Nama pemeriksaan laboratorium" value={laboratoriumForm.nama} onChange={(e) => setLaboratoriumForm((p) => ({ ...p, nama: e.target.value }))} />
               </FieldLabel>
@@ -835,7 +843,7 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
           </>
         ) : (
           <>
-            <div className="form-grid" style={{ marginTop: 12 }}>
+            <div className="form-grid">
               <FieldLabel text="Nama Radiologi" htmlFor="pelayanan-modal-rad-nama">
                 <input id="pelayanan-modal-rad-nama" className="search-input" placeholder="Nama pemeriksaan radiologi" value={radiologiForm.nama} onChange={(e) => setRadiologiForm((p) => ({ ...p, nama: e.target.value }))} />
               </FieldLabel>
