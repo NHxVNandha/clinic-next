@@ -445,7 +445,12 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
 
   return (
     <section className="page-card">
-      <PageHeader title="Master Data Management" description="Data referensi utama klinik." eyebrow="Central Registry">
+      <PageHeader
+        title="Master Data Management"
+        description="Configure and maintain central clinic assets and personnel registers."
+        eyebrow="Central Registry"
+        actions={mode !== 'pasien' ? <button className="icon-btn btn-primary" onClick={openCreateModal}><Plus size={16} /> Add New Entry</button> : null}
+      >
         <div className="header-insight">
           <span className="header-insight-item">Pastikan data master valid sebelum transaksi</span>
           <span className="header-insight-item">Tab aktif menentukan sumber data tabel</span>
@@ -453,39 +458,6 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
         </div>
       </PageHeader>
 
-      <div className="toolbar-row">
-        <div className="tab-switch">
-          <button className={`tab-btn ${mode === 'dokter' ? 'active' : ''}`} onClick={() => setMode('dokter')}>Dokter</button>
-          <button className={`tab-btn ${mode === 'pasien' ? 'active' : ''}`} onClick={() => setMode('pasien')}>Pasien</button>
-          <button className={`tab-btn ${mode === 'jasa' ? 'active' : ''}`} onClick={() => setMode('jasa')}>Jasa</button>
-          <button className={`tab-btn ${mode === 'diagnosa' ? 'active' : ''}`} onClick={() => setMode('diagnosa')}>Diagnosa</button>
-        </div>
-        <input
-          ref={searchInputRef}
-          className="search-input"
-          placeholder="Cari data master..."
-          value={search}
-          onChange={(event) => {
-            setSearch(event.target.value)
-            setPage(1)
-          }}
-        />
-      </div>
-
-      <DataGrid
-        storageKey={`master-${mode}`}
-        rows={(activeData ?? []) as Record<string, unknown>[]}
-        columns={columns}
-        loading={activeLoading}
-        onRowClicked={onRowClicked}
-      />
-      {mode !== 'pasien' ? (
-        <div className="top-actions" style={{ marginTop: 10 }}>
-          <button className="icon-btn icon-only btn-primary-soft" title="Tambah data" aria-label="Tambah data" onClick={openCreateModal}><Plus size={14} /></button>
-          <button className="icon-btn icon-only" title="Edit data terpilih" aria-label="Edit data terpilih" onClick={openEditModal} disabled={mode === 'dokter' ? !selectedDokter : mode === 'jasa' ? !selectedJasa : !selectedDiagnosa}><Pencil size={14} /></button>
-          <button className="icon-btn icon-only btn-critical" title="Hapus data terpilih" aria-label="Hapus data terpilih" onClick={deleteSelectedData} disabled={mode === 'dokter' ? !selectedDokter || deleteDokterMutation.isPending : mode === 'jasa' ? !selectedJasa || deleteJasaMutation.isPending : !selectedDiagnosa || deleteDiagnosaMutation.isPending}><Trash2 size={14} /></button>
-        </div>
-      ) : null}
       <div className="stats-grid">
         <article className="stat-card">
           <small>Total Data</small>
@@ -499,22 +471,59 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
           <small>Filter Aktif</small>
           <strong>{activeFilterCount}</strong>
         </article>
+        <article className="stat-card">
+          <small>Tab Aktif</small>
+          <strong>{mode}</strong>
+        </article>
       </div>
-      {!activeLoading && ((activeData ?? []) as Record<string, unknown>[]).length === 0 ? <p className="empty-note">Tidak ada data pada tab ini. Coba ubah kata kunci pencarian atau halaman.</p> : null}
 
-      {mode !== 'dokter' ? (
-        <div className="pager-row">
-          <button className="icon-btn icon-only" title="Halaman sebelumnya" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage((prev) => prev - 1)}>
-            <ChevronLeft size={14} />
-          </button>
-          <span>
-            Halaman {page} / {totalPage}
-          </span>
-          <button className="icon-btn icon-only" title="Halaman berikutnya" aria-label="Halaman berikutnya" disabled={page >= totalPage} onClick={() => setPage((prev) => prev + 1)}>
-            <ChevronRight size={14} />
-          </button>
+      <section className="master-management-card">
+        <div className="master-tabs">
+          <button className={mode === 'dokter' ? 'active' : ''} onClick={() => setMode('dokter')}>Doctors List</button>
+          <button className={mode === 'pasien' ? 'active' : ''} onClick={() => setMode('pasien')}>Patient Registry</button>
+          <button className={mode === 'jasa' ? 'active' : ''} onClick={() => setMode('jasa')}>Treatment & Prices</button>
+          <button className={mode === 'diagnosa' ? 'active' : ''} onClick={() => setMode('diagnosa')}>Diagnosis</button>
         </div>
-      ) : null}
+
+        <div className="master-filter-row">
+          <input
+            ref={searchInputRef}
+            className="search-input search-dominant"
+            placeholder="Cari data master..."
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value)
+              setPage(1)
+            }}
+          />
+          <span>Showing {((activeData ?? []) as Record<string, unknown>[]).length} of {totalItem} records</span>
+        </div>
+
+        <DataGrid
+          storageKey={`master-${mode}`}
+          rows={(activeData ?? []) as Record<string, unknown>[]}
+          columns={columns}
+          loading={activeLoading}
+          onRowClicked={onRowClicked}
+        />
+        {!activeLoading && ((activeData ?? []) as Record<string, unknown>[]).length === 0 ? <p className="empty-note master-empty-note">Tidak ada data pada tab ini. Coba ubah kata kunci pencarian atau halaman.</p> : null}
+
+        {mode !== 'pasien' ? (
+          <div className="master-action-row">
+            <button className="icon-btn btn-primary-soft" title="Tambah data" onClick={openCreateModal}><Plus size={14} /> Tambah</button>
+            <button className="icon-btn" title="Edit data terpilih" onClick={openEditModal} disabled={mode === 'dokter' ? !selectedDokter : mode === 'jasa' ? !selectedJasa : !selectedDiagnosa}><Pencil size={14} /> Edit</button>
+            <button className="icon-btn btn-critical" title="Hapus data terpilih" onClick={deleteSelectedData} disabled={mode === 'dokter' ? !selectedDokter || deleteDokterMutation.isPending : mode === 'jasa' ? !selectedJasa || deleteJasaMutation.isPending : !selectedDiagnosa || deleteDiagnosaMutation.isPending}><Trash2 size={14} /> Hapus</button>
+          </div>
+        ) : null}
+
+        {mode !== 'dokter' ? (
+          <div className="pager-row">
+            <button className="icon-btn icon-only" title="Halaman sebelumnya" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage((prev) => prev - 1)}><ChevronLeft size={14} /></button>
+            <span>Halaman {page} / {totalPage}</span>
+            <button className="icon-btn icon-only" title="Halaman berikutnya" aria-label="Halaman berikutnya" disabled={page >= totalPage} onClick={() => setPage((prev) => prev + 1)}><ChevronRight size={14} /></button>
+          </div>
+        ) : null}
+      </section>
 
       <ActionAuditNote
         message={lastAction}
