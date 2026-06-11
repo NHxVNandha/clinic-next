@@ -34,8 +34,6 @@ import { useDebouncedValue } from '../hooks/use-debounced-value'
 import { useMasterJasa } from '../hooks/use-master'
 import { getStatusMeta } from '../lib/status-meta'
 import { canManagePelayananDetails, getActionAccess } from '../lib/access'
-import { ActionAuditNote } from '../components/action-audit-note'
-import { useActionAudit } from '../hooks/use-action-audit'
 import { confirmThemedAction } from '../lib/sweet-alert'
 import { getAuthUser } from '../lib/storage'
 import { useT } from '../i18n'
@@ -92,8 +90,6 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
   const [laboratoriumForm, setLaboratoriumForm] = useState({ nama: '', qty: '1' })
   const [radiologiForm, setRadiologiForm] = useState({ nama: '', qty: '1' })
   const [detailError, setDetailError] = useState<string | null>(null)
-  const { lastAction, history, logAction, clearHistory, exportText, exportCsv, metrics } = useActionAudit('pelayanan')
-
   const query = usePelayanan({ page, pageSize: 20, search: debouncedSearch || undefined }, canFetch)
   const jasaRef = useMasterJasa(1, 100, '', canFetch)
   const data = query.data?.data
@@ -310,7 +306,6 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
       const result = await runActionWithFeedback(() => deleteTindakanMutation.mutateAsync({ idRegistrasi: selected.idRegistrasi, detailId }), 'Tindakan berhasil dihapus.')
       if (result) {
         await tindakan.refetch()
-        logAction(`Tindakan dihapus dari ${selected.idRegistrasi} (${new Date().toLocaleString('id-ID')}).`)
       }
       return
     }
@@ -318,7 +313,6 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
       const result = await runActionWithFeedback(() => deleteResepMutation.mutateAsync({ idRegistrasi: selected.idRegistrasi, detailId }), 'Resep berhasil dihapus.')
       if (result) {
         await resep.refetch()
-        logAction(`Resep dihapus dari ${selected.idRegistrasi} (${new Date().toLocaleString('id-ID')}).`)
       }
       return
     }
@@ -326,7 +320,6 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
       const result = await runActionWithFeedback(() => deleteAlkesMutation.mutateAsync({ idRegistrasi: selected.idRegistrasi, detailId }), 'Alkes berhasil dihapus.')
       if (result) {
         await alkes.refetch()
-        logAction(`Alkes dihapus dari ${selected.idRegistrasi} (${new Date().toLocaleString('id-ID')}).`)
       }
       return
     }
@@ -334,16 +327,14 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
       const result = await runActionWithFeedback(() => deleteLaboratoriumMutation.mutateAsync({ idRegistrasi: selected.idRegistrasi, detailId }), 'Laboratorium berhasil dihapus.')
       if (result) {
         await laboratorium.refetch()
-        logAction(`Laboratorium dihapus dari ${selected.idRegistrasi} (${new Date().toLocaleString('id-ID')}).`)
       }
       return
     }
     const result = await runActionWithFeedback(() => deleteRadiologiMutation.mutateAsync({ idRegistrasi: selected.idRegistrasi, detailId }), 'Radiologi berhasil dihapus.')
     if (result) {
       await radiologi.refetch()
-      logAction(`Radiologi dihapus dari ${selected.idRegistrasi} (${new Date().toLocaleString('id-ID')}).`)
     }
-  }, [alkes, deleteAlkesMutation, deleteLaboratoriumMutation, deleteRadiologiMutation, deleteResepMutation, deleteTindakanMutation, laboratorium, logAction, radiologi, resep, selected, tindakan])
+  }, [alkes, deleteAlkesMutation, deleteLaboratoriumMutation, deleteRadiologiMutation, deleteResepMutation, deleteTindakanMutation, laboratorium, radiologi, resep, selected, tindakan])
 
   const columns = useMemo<ColDef<PelayananItem>[]>(
     () => [
@@ -628,37 +619,6 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
           </section>
         </div>
       </div>
-
-      <ActionAuditNote
-        message={lastAction}
-        history={history}
-        metrics={metrics}
-        compact
-        allowAdminTools={showSystemInfo}
-        onClear={clearHistory}
-        onCopy={async () => {
-          await navigator.clipboard.writeText(exportText())
-          toast.success('Riwayat pelayanan disalin.')
-        }}
-        onDownload={() => {
-          const blob = new Blob([exportText()], { type: 'text/plain;charset=utf-8' })
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = `audit-pelayanan-${Date.now()}.txt`
-          a.click()
-          URL.revokeObjectURL(url)
-        }}
-        onDownloadCsv={() => {
-          const blob = new Blob([exportCsv()], { type: 'text/csv;charset=utf-8' })
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = `audit-pelayanan-${Date.now()}.csv`
-          a.click()
-          URL.revokeObjectURL(url)
-        }}
-      />
 
       <section className={`preview-box detail-soft ${selected ? 'glass-focus' : 'glass-strong'}`}>
         <h2>Detail Pelayanan</h2>

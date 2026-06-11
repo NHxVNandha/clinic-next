@@ -28,8 +28,6 @@ import { StrictMasterComboboxField } from '../components/strict-master-combobox-
 import { FieldLabel } from '../components/field-label'
 import { normalizeIdRegistrasi } from '../lib/input-normalizers'
 import { canManageDestructiveActions, canManageKasirPayments, canManageKasirPengeluaran, getActionAccess } from '../lib/access'
-import { ActionAuditNote } from '../components/action-audit-note'
-import { useActionAudit } from '../hooks/use-action-audit'
 import { confirmThemedAction } from '../lib/sweet-alert'
 import { getAuthUser } from '../lib/storage'
 import { useT } from '../i18n'
@@ -123,8 +121,6 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
   const [pengeluaranForm, setPengeluaranForm] = useState({ tanggal: '', keterangan: '', nama: '', nominal: '0' })
   const [createErrors, setCreateErrors] = useState<{ header?: string; numbers?: string }>({})
   const [bayarSisaError, setBayarSisaError] = useState<string | null>(null)
-  const { lastAction, history, logAction, clearHistory, exportText, exportCsv, metrics } = useActionAudit('kasir')
-
   const query = usePembayaran({ page, pageSize: 20, search: debouncedSearch || undefined }, canFetch)
   const dokterRef = useMasterDokter('', canFetch)
   const pasienRef = useMasterPasien(1, 100, '', canFetch)
@@ -249,7 +245,6 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
                     const result = await runActionWithFeedback(() => pulangMutation.mutateAsync(row.idRegistrasi), 'Pasien berhasil dipulangkan.')
                     if (result) {
                       await query.refetch()
-                      logAction(`Registrasi ${row.idRegistrasi} dipulangkan dari kasir (${new Date().toLocaleString('id-ID')}).`)
                     }
                   }}
                 ><UserCheck size={14} /><span className="action-label-desktop">Pulangkan</span></button>
@@ -271,7 +266,6 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
                     const result = await runActionWithFeedback(() => cancelPendaftaranMutation.mutateAsync(row.idRegistrasi), 'Registrasi pasien berhasil dibatalkan.')
                     if (result) {
                       await query.refetch()
-                      logAction(`Registrasi ${row.idRegistrasi} dibatalkan dari kasir (${new Date().toLocaleString('id-ID')}).`)
                     }
                   }}
                 ><Ban size={14} /><span className="action-label-desktop">Batalkan</span></button>
@@ -282,7 +276,7 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
       },
       { field: 'tglBayar', headerName: 'Tanggal Bayar', minWidth: 140, hide: true },
     ],
-    [canManage, cancelPendaftaranMutation, logAction, pulangMutation, query],
+    [canManage, cancelPendaftaranMutation, pulangMutation, query],
   )
 
   const invoiceRows = useMemo(() => flattenInvoiceRows(preview.data?.data), [preview.data])
@@ -329,7 +323,6 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
             if (result) {
               await pengeluaran.refetch()
               await pengeluaranDetail.refetch()
-              logAction(`Detail pengeluaran #${detailId} dihapus (${new Date().toLocaleString('id-ID')}).`)
             }
           }}
         >
@@ -337,7 +330,7 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
         </button>
       ),
     },
-  ], [canManagePengeluaran, deletePengeluaranDetailMutation, kasirPengeluaranAccess.reason, logAction, pengeluaran, pengeluaranDetail, selectedPengeluaranId])
+  ], [canManagePengeluaran, deletePengeluaranDetailMutation, kasirPengeluaranAccess.reason, pengeluaran, pengeluaranDetail, selectedPengeluaranId])
 
   const onRowClicked = (event: RowClickedEvent<PembayaranItem>) => {
     const row = event.data ?? null
@@ -441,7 +434,6 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
     if (result) {
       setCreatePaymentModalOpen(false)
       await query.refetch()
-      logAction(`Pembayaran dibuat untuk ${normalizeIdRegistrasi(createForm.idRegistrasi)} (${new Date().toLocaleString('id-ID')}).`)
     }
   }
 
@@ -471,7 +463,6 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
       setCreatePengeluaranModalOpen(false)
       setPengeluaranForm({ tanggal: '', keterangan: '', nama: '', nominal: '0' })
       await pengeluaran.refetch()
-      logAction(`Pengeluaran baru ditambahkan (${new Date().toLocaleString('id-ID')}).`)
     }
   }
 
@@ -594,37 +585,6 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
         </div>
       </section>
 
-      <ActionAuditNote
-        message={lastAction}
-        history={history}
-        metrics={metrics}
-        compact
-        allowAdminTools={showSystemInfo}
-        onClear={clearHistory}
-        onCopy={async () => {
-          await navigator.clipboard.writeText(exportText())
-          toast.success('Riwayat kasir disalin.')
-        }}
-        onDownload={() => {
-          const blob = new Blob([exportText()], { type: 'text/plain;charset=utf-8' })
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = `audit-kasir-${Date.now()}.txt`
-          a.click()
-          URL.revokeObjectURL(url)
-        }}
-        onDownloadCsv={() => {
-          const blob = new Blob([exportCsv()], { type: 'text/csv;charset=utf-8' })
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = `audit-kasir-${Date.now()}.csv`
-          a.click()
-          URL.revokeObjectURL(url)
-        }}
-      />
-
       <section className={`preview-box detail-soft ${selected ? 'glass-focus' : 'glass-strong'}`}>
         <h2>Preview Invoice</h2>
         {selected ? <div className="selected-strip"><p>Dipilih: <strong>{selected.idRegistrasi}</strong> - {getPatientDisplayName(selectedSource)}</p><div className="selected-strip-meta"><span className="detail-badge">{selected.idRegistrasi}</span><span className={`status-pill selected-status-pill ${selectedStatus.className}`}>{selectedStatus.label}</span></div></div> : null}
@@ -704,7 +664,6 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
                 )
                 if (result) {
                   await query.refetch()
-                  logAction(`Pembayaran sisa diproses pada ${selected.idRegistrasi} (${new Date().toLocaleString('id-ID')}).`)
                 }
               }}
               >{bayarSisaMutation.isPending ? <RefreshCw size={14} /> : <Wallet size={14} />}</button>

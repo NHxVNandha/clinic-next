@@ -21,8 +21,6 @@ import { StrictMasterComboboxField } from '../components/strict-master-combobox-
 import { FieldLabel } from '../components/field-label'
 import { formatNik, formatPhone } from '../lib/input-normalizers'
 import { canCreatePendaftaran, getActionAccess } from '../lib/access'
-import { ActionAuditNote } from '../components/action-audit-note'
-import { useActionAudit } from '../hooks/use-action-audit'
 import { confirmThemedAction } from '../lib/sweet-alert'
 import { getAuthUser } from '../lib/storage'
 import { useT } from '../i18n'
@@ -67,8 +65,6 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
   const [pasienBaruForm, setPasienBaruForm] = useState({ nama: '', nik: '', kdDokter: '', noHp: '' })
   const [formError, setFormError] = useState<string | null>(null)
   const [pasienBaruError, setPasienBaruError] = useState<string | null>(null)
-  const { lastAction, history, logAction, clearHistory, exportText, exportCsv, metrics } = useActionAudit('pendaftaran')
-
   const query = usePendaftaran({ page, pageSize: 20, search: debouncedSearch || undefined }, canFetch)
   const dokterRef = useMasterDokter('', canFetch)
   const pasienRef = useMasterPasien(1, 100, '', canFetch)
@@ -241,7 +237,6 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
       setCreateExistingModalOpen(false)
       setForm({ idPasien: '', kdDokter: '', keluhan: '' })
       await query.refetch()
-      logAction(`Pendaftaran existing dibuat (${new Date().toLocaleString('id-ID')}).`)
     }
   }
 
@@ -277,7 +272,6 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
       setCreateNewPatientModalOpen(false)
       setPasienBaruForm({ nama: '', nik: '', kdDokter: '', noHp: '' })
       await query.refetch()
-      logAction(`Pendaftaran pasien baru dibuat (${new Date().toLocaleString('id-ID')}).`)
     }
   }
 
@@ -548,37 +542,12 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
           )}
         </section>
         <aside className="preview-box detail-soft glass-soft">
-          <h2>Activity Logs</h2>
-          <ActionAuditNote
-            message={lastAction}
-            history={history}
-            metrics={metrics}
-            compact
-            allowAdminTools={showSystemInfo}
-            onClear={clearHistory}
-            onCopy={async () => {
-              await navigator.clipboard.writeText(exportText())
-              toast.success('Riwayat pendaftaran disalin.')
-            }}
-            onDownload={() => {
-              const blob = new Blob([exportText()], { type: 'text/plain;charset=utf-8' })
-              const url = URL.createObjectURL(blob)
-              const a = document.createElement('a')
-              a.href = url
-              a.download = `audit-pendaftaran-${Date.now()}.txt`
-              a.click()
-              URL.revokeObjectURL(url)
-            }}
-            onDownloadCsv={() => {
-              const blob = new Blob([exportCsv()], { type: 'text/csv;charset=utf-8' })
-              const url = URL.createObjectURL(blob)
-              const a = document.createElement('a')
-              a.href = url
-              a.download = `audit-pendaftaran-${Date.now()}.csv`
-              a.click()
-              URL.revokeObjectURL(url)
-            }}
-          />
+          <h2>Status Pendaftaran</h2>
+          <p className="empty-note">Gunakan panel detail untuk meninjau data pasien, dokter, dan metadata registrasi yang dipilih.</p>
+          <div className="detail-meta-grid">
+            <article><small>Baris Tampil</small><strong>{filteredItems.length}</strong></article>
+            <article><small>Filter Aktif</small><strong>{activeFilterCount}</strong></article>
+          </div>
         </aside>
       </div>
     </section>

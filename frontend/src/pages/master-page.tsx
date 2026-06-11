@@ -22,8 +22,6 @@ import {
 } from '../api/master'
 import { runActionWithFeedback } from '../lib/action-feedback'
 import { useDebouncedValue } from '../hooks/use-debounced-value'
-import { ActionAuditNote } from '../components/action-audit-note'
-import { useActionAudit } from '../hooks/use-action-audit'
 import { confirmThemedAction } from '../lib/sweet-alert'
 import { FieldLabel } from '../components/field-label'
 import { useT } from '../i18n'
@@ -63,7 +61,6 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
   const [dokterModalOpen, setDokterModalOpen] = useState(false)
   const [jasaModalOpen, setJasaModalOpen] = useState(false)
   const [diagnosaModalOpen, setDiagnosaModalOpen] = useState(false)
-  const { lastAction, history, logAction, clearHistory, exportText, exportCsv, metrics } = useActionAudit('master')
   const [jasaErrors, setJasaErrors] = useState<{ namaJasa?: string; harga?: string; status?: string }>({})
   const [diagnosaErrors, setDiagnosaErrors] = useState<{ kodeDiagnosa?: string; namaDiagnosa?: string; status?: string }>({})
 
@@ -249,7 +246,6 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
       setDokterModalOpen(false)
       resetDokterForm()
       await dokter.refetch()
-      logAction(`Data dokter disimpan (${new Date().toLocaleString('id-ID')}).`)
     }
   }
 
@@ -299,7 +295,6 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
       setJasaModalOpen(false)
       resetJasaForm()
       await jasa.refetch()
-      logAction(`Data jasa disimpan (${new Date().toLocaleString('id-ID')}).`)
     }
   }
 
@@ -347,7 +342,6 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
       setDiagnosaModalOpen(false)
       resetDiagnosaForm()
       await diagnosa.refetch()
-      logAction(`Data diagnosa disimpan (${new Date().toLocaleString('id-ID')}).`)
     }
   }
 
@@ -369,7 +363,6 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
         setDokterModalOpen(false)
         resetDokterForm()
         await dokter.refetch()
-        logAction(`Data dokter dihapus (${new Date().toLocaleString('id-ID')}).`)
       }
       return
     }
@@ -391,7 +384,6 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
         setJasaModalOpen(false)
         resetJasaForm()
         await jasa.refetch()
-        logAction(`Data jasa dihapus (${new Date().toLocaleString('id-ID')}).`)
       }
       return
     }
@@ -412,7 +404,6 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
       setDiagnosaModalOpen(false)
       resetDiagnosaForm()
       await diagnosa.refetch()
-      logAction(`Data diagnosa dihapus (${new Date().toLocaleString('id-ID')}).`)
     }
   }
 
@@ -520,35 +511,6 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
           </div>
         ) : null}
       </section>
-
-      <ActionAuditNote
-        message={lastAction}
-        history={history}
-        metrics={metrics}
-        onClear={clearHistory}
-        onCopy={async () => {
-          await navigator.clipboard.writeText(exportText())
-          toast.success('Riwayat master disalin.')
-        }}
-        onDownload={() => {
-          const blob = new Blob([exportText()], { type: 'text/plain;charset=utf-8' })
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = `audit-master-${Date.now()}.txt`
-          a.click()
-          URL.revokeObjectURL(url)
-        }}
-        onDownloadCsv={() => {
-          const blob = new Blob([exportCsv()], { type: 'text/csv;charset=utf-8' })
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = `audit-master-${Date.now()}.csv`
-          a.click()
-          URL.revokeObjectURL(url)
-        }}
-      />
 
       <FormModal
         open={dokterModalOpen}
