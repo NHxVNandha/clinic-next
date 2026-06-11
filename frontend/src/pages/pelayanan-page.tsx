@@ -5,6 +5,7 @@ import { CalendarDays, ChevronLeft, ChevronRight, ExternalLink, Plus, RefreshCw,
 import toast from 'react-hot-toast'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { DataGrid } from '../components/data-grid'
+import { GridEntityCell } from '../components/grid-entity-cell'
 import { PageHeader } from '../components/page-header'
 import { FormModal } from '../components/form-modal'
 import { usePelayanan } from '../hooks/use-pelayanan'
@@ -378,10 +379,7 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
         wrapText: true,
         autoHeight: true,
         cellRenderer: (params: { value?: string; data?: PelayananItem }) => (
-          <div>
-            <div className="cell-primary">{getPatientDisplayName(params.data as unknown as Record<string, unknown>)}</div>
-            <div className="cell-subline">{String(params.value ?? '-').trim() || '-'}</div>
-          </div>
+          <GridEntityCell primary={getPatientDisplayName(params.data as unknown as Record<string, unknown>)} secondary={String(params.value ?? '-').trim() || '-'} kind="patient" />
         ),
       },
       { field: 'dokterNama', headerName: 'Dokter', minWidth: 180 },

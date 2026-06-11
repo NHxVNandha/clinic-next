@@ -6,6 +6,7 @@ import { CalendarDays, ChevronLeft, ChevronRight, ExternalLink, RefreshCw, Rotat
 import toast from 'react-hot-toast'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { DataGrid } from '../components/data-grid'
+import { GridEntityCell } from '../components/grid-entity-cell'
 import { PageHeader } from '../components/page-header'
 import { usePendaftaran } from '../hooks/use-pendaftaran'
 import type { PendaftaranItem } from '../api/pendaftaran'
@@ -113,10 +114,7 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
         wrapText: true,
         autoHeight: true,
         cellRenderer: (params: { value?: string; data?: PendaftaranItem }) => (
-          <div>
-            <div className="cell-primary">{getPatientDisplayName(params.data as unknown as Record<string, unknown>)}</div>
-            <div className="cell-subline">{String(params.value ?? '-').trim() || '-'}</div>
-          </div>
+          <GridEntityCell primary={getPatientDisplayName(params.data as unknown as Record<string, unknown>)} secondary={String(params.value ?? '-').trim() || '-'} kind="patient" />
         ),
       },
       { field: 'dokterNama', headerName: 'Dokter', minWidth: 180 },

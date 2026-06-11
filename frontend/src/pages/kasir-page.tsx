@@ -5,6 +5,7 @@ import { Ban, ChevronLeft, ChevronRight, Eye, Plus, RefreshCw, RotateCcw, UserCh
 import toast from 'react-hot-toast'
 import { useSearchParams } from 'react-router-dom'
 import { DataGrid } from '../components/data-grid'
+import { GridEntityCell } from '../components/grid-entity-cell'
 import { PageHeader } from '../components/page-header'
 import { useInvoicePreview, usePembayaran } from '../hooks/use-kasir'
 import {
@@ -199,10 +200,7 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
         wrapText: true,
         autoHeight: true,
         cellRenderer: (params: { value?: string; data?: PembayaranItem }) => (
-          <div>
-            <div className="cell-primary">{getPatientDisplayName(params.data as unknown as Record<string, unknown>)}</div>
-            <div className="cell-subline">{String(params.value ?? '-').trim() || '-'}</div>
-          </div>
+          <GridEntityCell primary={getPatientDisplayName(params.data as unknown as Record<string, unknown>)} secondary={String(params.value ?? '-').trim() || '-'} kind="patient" />
         ),
       },
       { field: 'namaDokter', headerName: 'Dokter', minWidth: 180 },

@@ -4,6 +4,7 @@ import type { ColDef } from 'ag-grid-community'
 import { Cloud, DatabaseBackup, Hospital, RefreshCw, Save, ShieldCheck, SlidersHorizontal, Users } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { DataGrid } from '../components/data-grid'
+import { GridEntityCell } from '../components/grid-entity-cell'
 import { FieldLabel } from '../components/field-label'
 import { MetricGrid } from '../components/metric-grid'
 import { PageHeader } from '../components/page-header'
@@ -37,7 +38,7 @@ export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
   }
 
   const userColumns = useMemo<ColDef<Record<string, unknown>>[]>(() => [
-    { field: 'name', headerName: 'User', minWidth: 180, cellRenderer: (params: { value?: string; data?: Record<string, unknown> }) => String(params.value ?? params.data?.nama ?? params.data?.email ?? '-') },
+    { field: 'name', headerName: 'User', minWidth: 220, cellRenderer: (params: { value?: string; data?: Record<string, unknown> }) => <GridEntityCell primary={String(params.value ?? params.data?.nama ?? params.data?.email ?? '-')} secondary={String(params.data?.email ?? '').trim() || undefined} kind="user" /> },
     { field: 'email', headerName: 'Email', minWidth: 220 },
     { field: 'role', headerName: 'Role', minWidth: 140 },
     { field: 'status', headerName: 'Status', minWidth: 120 },

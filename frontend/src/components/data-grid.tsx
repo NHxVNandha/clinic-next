@@ -4,6 +4,7 @@ import type { ColDef, GridApi, GridOptions, RowClickedEvent } from 'ag-grid-comm
 import { Download, Expand, FilterX, Maximize2, RotateCcw, SlidersHorizontal } from 'lucide-react'
 import 'ag-grid-community/styles/ag-grid.css'
 import 'ag-grid-community/styles/ag-theme-quartz.css'
+import { GridEntityCell, type GridEntityKind } from './grid-entity-cell'
 import { getStatusMeta } from '../lib/status-meta'
 import { getAuthUser } from '../lib/storage'
 
@@ -25,6 +26,20 @@ type StoredGridState = {
   filterModel?: unknown
   sortModel?: unknown
   columnState?: unknown
+}
+
+function resolveEntityKind(fieldName: string, headerName: string): GridEntityKind | null {
+  const key = `${fieldName} ${headerName}`.toLowerCase()
+  if (!/(^|\s|_|-)(nama|name|pasien|dokter|jasa|diagnosa|obat|radiologi|pemeriksaan|user)(\s|_|-|$)/.test(key)) return null
+  if (/pasien|patient/.test(key)) return 'patient'
+  if (/dokter|doctor/.test(key)) return 'doctor'
+  if (/diagnosa|diagnosis/.test(key)) return 'diagnosis'
+  if (/obat|resep|medicine/.test(key)) return 'medicine'
+  if (/jasa|tindakan|layanan|alkes|radiologi|pemeriksaan|service/.test(key)) return 'service'
+  if (/user|email|role/.test(key)) return 'user'
+  if (/rekam|record/.test(key)) return 'record'
+  if (fieldName === 'nama' || fieldName === 'name' || headerName === 'nama' || headerName === 'name') return 'default'
+  return null
 }
 
 export function DataGrid<T>({ rows, columns, loading, height = 460, onRowClicked, storageKey, hideUtilityActions, rowSelection = { mode: 'singleRow', checkboxes: false }, compact, selectedRowId, selectedRowField = 'idRegistrasi' }: DataGridProps<T>) {
@@ -184,6 +199,17 @@ export function DataGrid<T>({ rows, columns, loading, height = 460, onRowClicked
           const statusMeta = getStatusMeta(params.value)
           return <span className={`status-pill ${statusMeta.className}`}>{statusMeta.label}</span>
         },
+      }
+    }).map((col) => {
+      if (col.cellRenderer) return col
+      const fieldName = typeof col.field === 'string' ? col.field.toLowerCase() : ''
+      const headerName = typeof col.headerName === 'string' ? col.headerName.toLowerCase() : ''
+      const kind = resolveEntityKind(fieldName, headerName)
+      if (!kind) return col
+      return {
+        ...col,
+        minWidth: Math.max(Number(col.minWidth ?? 0), 210),
+        cellRenderer: (params: { value?: unknown }) => <GridEntityCell primary={params.value} kind={kind} />,
       }
     })
   }, [columns, showAdvancedTools])

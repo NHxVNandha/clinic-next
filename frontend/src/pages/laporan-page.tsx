@@ -3,6 +3,7 @@ import type { ColDef } from 'ag-grid-community'
 import { ChevronLeft, ChevronRight, Download, FileText, Filter, RotateCcw } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { DataGrid } from '../components/data-grid'
+import { GridEntityCell } from '../components/grid-entity-cell'
 import { PageHeader } from '../components/page-header'
 import { useLaporanPendaftaran, useLaporanPembayaran, useLaporanTindakan } from '../hooks/use-laporan'
 import { useDebouncedValue } from '../hooks/use-debounced-value'
@@ -117,7 +118,7 @@ export function LaporanPage({ canFetch }: { canFetch: boolean }) {
         { colId: 'select', headerName: '', width: 44, maxWidth: 44, minWidth: 44, pinned: 'left', checkboxSelection: true, headerCheckboxSelection: false, sortable: false, filter: false, resizable: false },
         { field: 'noInvoice', headerName: 'Invoice', minWidth: 170, pinned: 'left' },
         { field: 'idRegistrasi', headerName: 'Registrasi', minWidth: 180, pinned: 'left', wrapText: true, autoHeight: true, cellRenderer: (params: { value?: string; data?: Record<string, unknown> }) => <div><div className="cell-primary">{String(params.value ?? '-')}</div><div className="cell-subline registrasi-subline">{String(params.data?.tanggal ?? '-')}</div></div> },
-        { field: 'namaPasien', headerName: 'Pasien', minWidth: 180, cellRenderer: (params: { data?: Record<string, unknown> }) => getPatientDisplayName(params.data) },
+        { field: 'namaPasien', headerName: 'Pasien', minWidth: 220, cellRenderer: (params: { data?: Record<string, unknown> }) => <GridEntityCell primary={getPatientDisplayName(params.data)} secondary={String(params.data?.idPasien ?? '').trim() || undefined} kind="patient" /> },
         { field: 'namaDokter', headerName: 'Dokter', minWidth: 180 },
         { field: 'grandtotal', headerName: 'Grand Total', minWidth: 150 },
         { field: 'jumlahBayar', headerName: 'Bayar', minWidth: 120 },
@@ -134,7 +135,7 @@ export function LaporanPage({ canFetch }: { canFetch: boolean }) {
           minWidth: 250,
           wrapText: true,
           autoHeight: true,
-          cellRenderer: (params: { value?: string; data?: Record<string, unknown> }) => <div><div className="cell-primary">{getPatientDisplayName(params.data)}</div><div className="cell-subline">{String(params.value ?? '-').trim() || '-'}</div></div>,
+          cellRenderer: (params: { value?: string; data?: Record<string, unknown> }) => <GridEntityCell primary={getPatientDisplayName(params.data)} secondary={String(params.value ?? '-').trim() || '-'} kind="patient" />,
         },
         { field: 'namaDokter', headerName: 'Dokter', minWidth: 180 },
         {
@@ -152,7 +153,7 @@ export function LaporanPage({ canFetch }: { canFetch: boolean }) {
       { colId: 'select', headerName: '', width: 44, maxWidth: 44, minWidth: 44, pinned: 'left', checkboxSelection: true, headerCheckboxSelection: false, sortable: false, filter: false, resizable: false },
       { field: 'idTransaksi', headerName: 'Transaksi', minWidth: 160, pinned: 'left' },
       { field: 'idRegistrasi', headerName: 'Registrasi', minWidth: 180, pinned: 'left', wrapText: true, autoHeight: true, cellRenderer: (params: { value?: string; data?: Record<string, unknown> }) => <div><div className="cell-primary">{String(params.value ?? '-')}</div><div className="cell-subline registrasi-subline">{String(params.data?.tanggal ?? '-')}</div></div> },
-      { field: 'namaPasien', headerName: 'Pasien', minWidth: 180, cellRenderer: (params: { data?: Record<string, unknown> }) => getPatientDisplayName(params.data) },
+      { field: 'namaPasien', headerName: 'Pasien', minWidth: 220, cellRenderer: (params: { data?: Record<string, unknown> }) => <GridEntityCell primary={getPatientDisplayName(params.data)} secondary={String(params.data?.idPasien ?? '').trim() || undefined} kind="patient" /> },
       { field: 'namaDokter', headerName: 'Dokter', minWidth: 180 },
       { field: 'tanggal', headerName: 'Tanggal', minWidth: 140 },
       { field: 'total', headerName: 'Total', minWidth: 130 },
