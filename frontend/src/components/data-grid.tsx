@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AgGridReact } from 'ag-grid-react'
-import type { ColDef, GridApi, GridOptions, RowClickedEvent } from 'ag-grid-community'
+import type { ColDef, Column, GridApi, GridOptions, IRowNode, RowClickedEvent, ValueFormatterParams } from 'ag-grid-community'
 import { Download, Expand, FilterX, Maximize2, RotateCcw, SlidersHorizontal } from 'lucide-react'
 import 'ag-grid-community/styles/ag-grid.css'
 import 'ag-grid-community/styles/ag-theme-quartz.css'
@@ -8,6 +8,11 @@ import { GridEntityCell, type GridEntityKind } from './grid-entity-cell'
 import { getStatusMeta } from '../lib/status-meta'
 import { getAuthUser } from '../lib/storage'
 import { useT } from '../i18n'
+
+type ExportSnapshot = {
+  headers: string[]
+  rows: string[][]
+}
 
 type DataGridProps<T> = {
   rows: T[]
@@ -41,6 +46,38 @@ function resolveEntityKind(fieldName: string, headerName: string): GridEntityKin
   if (/rekam|record/.test(key)) return 'record'
   if (fieldName === 'nama' || fieldName === 'name' || headerName === 'nama' || headerName === 'name') return 'default'
   return null
+}
+
+function downloadBlob(content: BlobPart, type: string, fileName: string) {
+  const blob = new Blob([content], { type })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = fileName
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+function escapeCsvCell(value: string) {
+  return /[",\n\r]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value
+}
+
+function getFieldValue(data: unknown, field?: string) {
+  if (!field || !data || typeof data !== 'object') return ''
+  return field.split('.').reduce<unknown>((value, key) => {
+    if (!value || typeof value !== 'object') return undefined
+    return (value as Record<string, unknown>)[key]
+  }, data)
+}
+
+function getExportValue<T>(api: GridApi<T>, column: Column, node: IRowNode<T>) {
+  const colDef = column.getColDef()
+  const value = colDef.field ? getFieldValue(node.data, colDef.field) : api.getCellValue({ rowNode: node, colKey: column })
+  if (String(colDef.field ?? '').toLowerCase() === 'status') return getStatusMeta(value as string | number | null | undefined).label
+  if (typeof colDef.valueFormatter === 'function') {
+    return String(colDef.valueFormatter({ value, data: node.data, node, colDef, column, api, context: undefined } as unknown as ValueFormatterParams<T>) ?? '')
+  }
+  return String(value ?? '')
 }
 
 export function DataGrid<T>({ rows, columns, loading, height = 460, onRowClicked, storageKey, hideUtilityActions, rowSelection = { mode: 'singleRow', checkboxes: false }, compact, selectedRowId, selectedRowField = 'idRegistrasi' }: DataGridProps<T>) {
@@ -154,13 +191,64 @@ export function DataGrid<T>({ rows, columns, loading, height = 460, onRowClicked
     queueSaveGridState()
   }, [queueSaveGridState])
 
-  const exportCsv = useCallback(() => {
-    if (!gridApiRef.current) return
-    gridApiRef.current.exportDataAsCsv({
-      fileName: `grid-export-${Date.now()}.csv`,
-      allColumns: false,
+  const getExportSnapshot = useCallback((): ExportSnapshot | null => {
+    const api = gridApiRef.current
+    if (!api) return null
+
+    const displayedColumns = api.getAllDisplayedColumns().filter((column) => {
+      const colDef = column.getColDef()
+      const colId = column.getColId().toLowerCase()
+      if (colId === 'select' || colId === 'aksi' || colId === 'actions') return false
+      if (colDef.checkboxSelection || colDef.headerCheckboxSelection) return false
+      return Boolean(colDef.field || colDef.valueGetter || colDef.headerName)
     })
+
+    const headers = displayedColumns.map((column) => String(column.getColDef().headerName || column.getColId()))
+    const exportRows: string[][] = []
+    api.forEachNodeAfterFilterAndSort((node) => {
+      if (!node.data) return
+      exportRows.push(displayedColumns.map((column) => getExportValue(api, column, node)))
+    })
+
+    return { headers, rows: exportRows }
   }, [])
+
+  const exportCsv = useCallback(() => {
+    const snapshot = getExportSnapshot()
+    if (!snapshot) return
+    const csv = [snapshot.headers, ...snapshot.rows].map((row) => row.map(escapeCsvCell).join(',')).join('\n')
+    downloadBlob(csv, 'text/csv;charset=utf-8', `grid-export-${Date.now()}.csv`)
+  }, [getExportSnapshot])
+
+  const exportExcel = useCallback(async () => {
+    const snapshot = getExportSnapshot()
+    if (!snapshot) return
+    const XLSX = await import('xlsx')
+    const worksheet = XLSX.utils.aoa_to_sheet([snapshot.headers, ...snapshot.rows])
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Data')
+    XLSX.writeFile(workbook, `grid-export-${Date.now()}.xlsx`)
+  }, [getExportSnapshot])
+
+  const exportPdf = useCallback(async () => {
+    const snapshot = getExportSnapshot()
+    if (!snapshot) return
+    const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable'),
+    ])
+    const doc = new jsPDF({ orientation: snapshot.headers.length > 5 ? 'landscape' : 'portrait' })
+    doc.setFontSize(12)
+    doc.text('Data Table Export', 14, 14)
+    autoTable(doc, {
+      head: [snapshot.headers],
+      body: snapshot.rows,
+      startY: 20,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [0, 95, 95] },
+    })
+    doc.save(`grid-export-${Date.now()}.pdf`)
+  }, [getExportSnapshot])
 
   const clearFiltersOnly = useCallback(() => {
     if (!gridApiRef.current) return
@@ -262,7 +350,11 @@ export function DataGrid<T>({ rows, columns, loading, height = 460, onRowClicked
       {!hideUtilityActions ? (
         <div className="top-actions" style={{ marginTop: 8 }}>
           <button className="icon-btn icon-only" title={showAdvancedTools ? t('grid.advanced.hide') : t('grid.advanced.show')} aria-label={showAdvancedTools ? t('grid.advanced.hide') : t('grid.advanced.show')} onClick={() => setShowAdvancedTools((prev) => !prev)}><SlidersHorizontal size={14} /></button>
-          <button className="icon-btn icon-only" title={t('grid.export')} aria-label={t('grid.export')} onClick={exportCsv}><Download size={14} /></button>
+          <div className="grid-export-actions" aria-label={t('grid.export')}>
+            <button className="icon-btn" title={t('grid.exportCsv')} onClick={exportCsv}><Download size={14} /> CSV</button>
+            <button className="icon-btn" title={t('grid.exportExcel')} onClick={exportExcel}>Excel</button>
+            <button className="icon-btn" title={t('grid.exportPdf')} onClick={exportPdf}>PDF</button>
+          </div>
           {showAdvancedTools ? <button className="icon-btn icon-only" title={t('grid.reset')} aria-label={t('grid.reset')} onClick={resetGridState}><RotateCcw size={14} /></button> : null}
           {showAdvancedTools ? <button className="icon-btn icon-only" title={t('grid.clearFilters')} aria-label={t('grid.clearFilters')} onClick={clearFiltersOnly}><FilterX size={14} /></button> : null}
           {showAdvancedTools ? <button className="icon-btn icon-only" title={t('grid.autoSize')} aria-label={t('grid.autoSize')} onClick={autoSizeColumns}><Expand size={14} /></button> : null}

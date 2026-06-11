@@ -317,6 +317,30 @@ body {
   border-left: 1px solid color-mix(in srgb, var(--danger-strong) 28%, var(--border));
 }
 
+.grid-export-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  padding: 3px;
+}
+
+.grid-export-actions .icon-btn {
+  min-height: 28px;
+  border-color: transparent;
+  background: transparent;
+  padding: 5px 9px;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.grid-export-actions .icon-btn:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--primary) 24%, var(--border));
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+}
+
 button {
   font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: 0.88rem;
