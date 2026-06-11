@@ -175,7 +175,7 @@ export function LaporanPage({ canFetch }: { canFetch: boolean }) {
     <section className="page-card">
       <PageHeader
         title={t('laporan.title')}
-        description="Comprehensive analytical overview of clinical operations."
+        description={t('nav.laporan.desc')}
         eyebrow="Reporting Analytics"
         actions={(
           <div className="reports-header-actions">
@@ -183,13 +183,7 @@ export function LaporanPage({ canFetch }: { canFetch: boolean }) {
             <button className="icon-btn btn-primary"><Download size={16} /> Export Excel</button>
           </div>
         )}
-      >
-        <div className="header-insight">
-          <span className="header-insight-item">Pilih mode laporan sesuai kebutuhan operasional</span>
-          <span className="header-insight-item">Filter status membantu audit proses harian</span>
-          <span className="header-insight-item">Hasil mengikuti data API terbaru</span>
-        </div>
-      </PageHeader>
+      />
 
       <div className="toolbar-row toolbar-primary">
         <div className="tab-switch">

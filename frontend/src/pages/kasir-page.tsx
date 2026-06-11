@@ -517,7 +517,7 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
     <section className="page-card">
       <PageHeader
         title={t('kasir.title')}
-        description="Manage patient payments, invoices, and daily transaction recaps."
+        description={t('nav.kasir.desc')}
         eyebrow="Cashier Operations"
         actions={(
           <div className="billing-header-actions">
@@ -525,13 +525,7 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
             <button className="icon-btn btn-primary" disabled={!canManagePayments} title={!canManagePayments ? kasirPaymentAccess.reason : 'Tambah pembayaran'} onClick={() => setCreatePaymentModalOpen(true)}><Wallet size={16} /> Invoice Manual</button>
           </div>
         )}
-      >
-        <div className="header-insight">
-          <span className="header-insight-item">Gunakan pencarian untuk invoice/registrasi spesifik</span>
-          <span className="header-insight-item">Verifikasi status sebelum aksi penting</span>
-          <span className="header-insight-item">Shortcut pencarian: tekan '/'</span>
-        </div>
-      </PageHeader>
+      />
       {!(canManagePayments || canManagePengeluaran) ? <p><span className="readonly-badge">Mode Read-only</span></p> : null}
 
       <div className="toolbar-row toolbar-primary">

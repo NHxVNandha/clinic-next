@@ -56,7 +56,7 @@ export function DashboardPage({ canFetch }: { canFetch: boolean }) {
     <section className="page-card dashboard-page">
       <PageHeader
         title="Dashboard Overview"
-        description={t('dashboard.desc')}
+        description={t('nav.dashboard.desc')}
         eyebrow="MediFlow Admin"
         actions={<Link className="icon-btn btn-primary" to="/pendaftaran">{t('dashboard.newRegistration')}</Link>}
       />

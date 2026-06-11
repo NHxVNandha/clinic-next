@@ -540,13 +540,7 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
 
   return (
     <section className="page-card">
-      <PageHeader title={t('pelayanan.title')} description="Real-time API based patient service queue." eyebrow="Service Queue">
-        <div className="header-insight">
-          <span className="header-insight-item">Prioritas: pasien menunggu dengan keluhan aktif</span>
-          <span className="header-insight-item">Detail tindakan/resep dapat ditambah per registrasi</span>
-          <span className="header-insight-item">Shortcut pencarian: tekan '/'</span>
-        </div>
-      </PageHeader>
+      <PageHeader title={t('pelayanan.title')} description={t('nav.pelayanan.desc')} eyebrow="Service Queue" />
       {!canManageDetail ? <p><span className="readonly-badge">Mode Read-only</span></p> : null}
 
       <div className="toolbar-row toolbar-primary">

@@ -185,8 +185,6 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
     selesai: filteredItems.filter((item) => String(item.status ?? '') === '3').length,
     dibatalkan: filteredItems.filter((item) => String(item.status ?? '') === '4').length,
   }), [filteredItems])
-  const todayLabel = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date())
-
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey) return
@@ -287,7 +285,7 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
     <section className="page-card">
       <PageHeader
         title={t('pendaftaran.title')}
-        description={`Hari ini, ${todayLabel}. Kelola kedatangan pasien dan alur registrasi.`}
+        description={t('nav.pendaftaran.desc')}
         eyebrow={t('pendaftaran.eyebrow')}
         actions={(
           <div className="registration-header-actions">
@@ -295,13 +293,7 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
             <button className="icon-btn" disabled={!canCreate} title={!canCreate ? createAccess.reason : t('pendaftaran.existing')} onClick={() => setCreateExistingModalOpen(true)}><Users size={16} /> {t('pendaftaran.existing')}</button>
           </div>
         )}
-      >
-        <div className="header-insight">
-          <span className="header-insight-item">Flow: {t('nav.pendaftaran')} → {t('nav.pelayanan')} → {t('nav.kasir')}</span>
-          <span className="header-insight-item">Search shortcut: '/'</span>
-          <span className="header-insight-item">{t('common.status')}: {t('status.waiting')}, {t('status.served')}, {t('status.done')}, {t('status.cancelled')}</span>
-        </div>
-      </PageHeader>
+      />
       {!canCreate ? <p><span className="readonly-badge">Mode Read-only</span></p> : null}
 
       <div className="toolbar-row toolbar-primary">

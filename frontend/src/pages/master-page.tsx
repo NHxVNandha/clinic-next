@@ -449,16 +449,10 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
     <section className="page-card">
       <PageHeader
         title={t('master.title')}
-        description="Configure and maintain central clinic assets and personnel registers."
+        description={t('nav.master.desc')}
         eyebrow="Central Registry"
         actions={mode !== 'pasien' ? <button className="icon-btn btn-primary" onClick={openCreateModal}><Plus size={16} /> Add New Entry</button> : null}
-      >
-        <div className="header-insight">
-          <span className="header-insight-item">Pastikan data master valid sebelum transaksi</span>
-          <span className="header-insight-item">Tab aktif menentukan sumber data tabel</span>
-          <span className="header-insight-item">Perubahan tersimpan langsung ke API</span>
-        </div>
-      </PageHeader>
+      />
 
       <div className="stats-grid">
         <article className="stat-card">

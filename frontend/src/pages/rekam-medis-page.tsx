@@ -72,13 +72,7 @@ export function RekamMedisPage({ canFetch }: { canFetch: boolean }) {
 
   return (
     <section className="page-card">
-      <PageHeader title={t('rekam.title')} description="Form directory, medical history, and letter data per form." eyebrow="Medical Records">
-        <div className="header-insight">
-          <span className="header-insight-item">Filter pasien dan registrasi untuk mempercepat pelacakan</span>
-          <span className="header-insight-item">Gunakan detail form untuk validasi data klinis</span>
-          <span className="header-insight-item">Riwayat aksi membantu penelusuran perubahan</span>
-        </div>
-      </PageHeader>
+      <PageHeader title={t('rekam.title')} description={t('nav.rekamMedis.desc')} eyebrow="Medical Records" />
 
       <div className="toolbar-row">
         <FieldLabel text="Filter ID Pasien" htmlFor="rekam-medis-filter-pasien" className="toolbar-field">

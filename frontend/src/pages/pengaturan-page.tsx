@@ -72,7 +72,7 @@ export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
 
   return (
     <section className="page-card settings-page">
-      <PageHeader title={t('pengaturan.title')} description={t('pengaturan.desc')} eyebrow={t('nav.pengaturan')} />
+      <PageHeader title={t('pengaturan.title')} description={t('nav.pengaturan.desc')} eyebrow={t('nav.pengaturan')} />
 
       <MetricGrid>
         <StatCard icon={Hospital} label="Clinic Profile" value={formValues.clinicName} footer="Identitas utama sistem" />
