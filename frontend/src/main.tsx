@@ -30,6 +30,7 @@ import {
 import 'sweetalert2/dist/sweetalert2.min.css'
 import './index.css'
 import App from './App'
+import { LanguageProvider } from './i18n'
 
 ModuleRegistry.registerModules([
   ValidationModule,
@@ -69,8 +70,10 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <App />
-        <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+        <LanguageProvider>
+          <App />
+          <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+        </LanguageProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>,

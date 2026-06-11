@@ -26,6 +26,7 @@ import { ActionAuditNote } from '../components/action-audit-note'
 import { useActionAudit } from '../hooks/use-action-audit'
 import { confirmThemedAction } from '../lib/sweet-alert'
 import { FieldLabel } from '../components/field-label'
+import { useT } from '../i18n'
 
 type MasterMode = 'dokter' | 'pasien' | 'jasa' | 'diagnosa'
 
@@ -35,6 +36,7 @@ function toNumber(value: string, fallback = 0): number {
 }
 
 export function MasterPage({ canFetch }: { canFetch: boolean }) {
+  const { t } = useT()
   const [searchParams, setSearchParams] = useSearchParams()
   const initialModeParam = searchParams.get('mode')
   const initialMode: MasterMode = initialModeParam === 'pasien' || initialModeParam === 'jasa' || initialModeParam === 'diagnosa' ? initialModeParam : 'dokter'
@@ -446,7 +448,7 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
   return (
     <section className="page-card">
       <PageHeader
-        title="Master Data Management"
+        title={t('master.title')}
         description="Configure and maintain central clinic assets and personnel registers."
         eyebrow="Central Registry"
         actions={mode !== 'pasien' ? <button className="icon-btn btn-primary" onClick={openCreateModal}><Plus size={16} /> Add New Entry</button> : null}
@@ -489,7 +491,7 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
           <input
             ref={searchInputRef}
             className="search-input search-dominant"
-            placeholder="Cari data master..."
+            placeholder={t('master.search')}
             value={search}
             onChange={(event) => {
               setSearch(event.target.value)
@@ -506,7 +508,7 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
           loading={activeLoading}
           onRowClicked={onRowClicked}
         />
-        {!activeLoading && ((activeData ?? []) as Record<string, unknown>[]).length === 0 ? <p className="empty-note master-empty-note">Tidak ada data pada tab ini. Coba ubah kata kunci pencarian atau halaman.</p> : null}
+        {!activeLoading && ((activeData ?? []) as Record<string, unknown>[]).length === 0 ? <p className="empty-note master-empty-note">{t('grid.empty')}</p> : null}
 
         {mode !== 'pasien' ? (
           <div className="master-action-row">
@@ -519,7 +521,7 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
         {mode !== 'dokter' ? (
           <div className="pager-row">
             <button className="icon-btn icon-only" title="Halaman sebelumnya" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage((prev) => prev - 1)}><ChevronLeft size={14} /></button>
-            <span>Halaman {page} / {totalPage}</span>
+            <span>{t('common.page')} {page} / {totalPage}</span>
             <button className="icon-btn icon-only" title="Halaman berikutnya" aria-label="Halaman berikutnya" disabled={page >= totalPage} onClick={() => setPage((prev) => prev + 1)}><ChevronRight size={14} /></button>
           </div>
         ) : null}

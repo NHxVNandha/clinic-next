@@ -32,6 +32,7 @@ import { ActionAuditNote } from '../components/action-audit-note'
 import { useActionAudit } from '../hooks/use-action-audit'
 import { confirmThemedAction } from '../lib/sweet-alert'
 import { getAuthUser } from '../lib/storage'
+import { useT } from '../i18n'
 
 function getPatientDisplayName(data?: Record<string, unknown> | null) {
   const value = data?.namaPasien ?? data?.nama_pasien ?? data?.nama ?? data?.pasienNama ?? data?.namaPatient
@@ -86,6 +87,7 @@ function flattenInvoiceRows(value: unknown, parent = ''): Array<{ field: string;
 }
 
 export function KasirPage({ canFetch }: { canFetch: boolean }) {
+  const { t } = useT()
   const canManage = canManageDestructiveActions()
   const canManagePayments = canManageKasirPayments()
   const canManagePengeluaran = canManageKasirPengeluaran()
@@ -514,8 +516,8 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
   return (
     <section className="page-card">
       <PageHeader
-        title="Kasir & Billing"
-        description="Kelola pembayaran pasien, invoice, dan rekapitulasi transaksi harian."
+        title={t('kasir.title')}
+        description="Manage patient payments, invoices, and daily transaction recaps."
         eyebrow="Cashier Operations"
         actions={(
           <div className="billing-header-actions">
@@ -536,7 +538,7 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
         <input
           ref={searchInputRef}
           className="search-input search-dominant"
-          placeholder="Cari invoice, registrasi, pasien..."
+          placeholder={t('kasir.search')}
           value={search}
           onChange={(event) => {
             setSearch(event.target.value)
@@ -573,7 +575,7 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
       <section className="billing-queue-card">
         <div className="billing-queue-head">
           <div>
-            <h2>Antrian Pembayaran</h2>
+            <h2>{t('kasir.queue')}</h2>
             <p>Invoice terpilih: {selected?.noInvoice ?? 'belum ada'}.</p>
           </div>
           <span className="billing-live-badge">Live</span>
@@ -581,19 +583,19 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
         <DataGrid storageKey="kasir-main" rows={data?.items ?? []} columns={columns} loading={activeLoading} selectedRowId={selected?.idRegistrasi ?? null} selectedRowField="idRegistrasi" onRowClicked={onRowClicked} />
         {!activeLoading && (data?.items?.length ?? 0) === 0 ? (
           <div className="empty-state">
-            <p className="empty-note">Belum ada transaksi kasir ditemukan. Coba ubah filter pencarian.</p>
+            <p className="empty-note">{t('grid.empty')}</p>
             {search.trim() ? <button className="icon-btn icon-only" title="Reset filter" aria-label="Reset filter" onClick={() => { setSearch(''); setPage(1) }}><RotateCcw size={14} /></button> : null}
           </div>
         ) : null}
 
         <div className="billing-queue-actions">
-          <button className="icon-btn btn-primary-soft" disabled={!canManagePengeluaran} title={!canManagePengeluaran ? kasirPengeluaranAccess.reason : 'Tambah pengeluaran'} onClick={() => setCreatePengeluaranModalOpen(true)}><Plus size={14} /> Tambah Pengeluaran</button>
-          <button className="icon-btn" onClick={async () => { await query.refetch(); toast.success('Data kasir diperbarui.') }}><RefreshCw size={14} /> Refresh</button>
+          <button className="icon-btn btn-primary-soft" disabled={!canManagePengeluaran} title={!canManagePengeluaran ? kasirPengeluaranAccess.reason : t('kasir.addExpense')} onClick={() => setCreatePengeluaranModalOpen(true)}><Plus size={14} /> {t('kasir.addExpense')}</button>
+          <button className="icon-btn" onClick={async () => { await query.refetch(); toast.success('Data kasir diperbarui.') }}><RefreshCw size={14} /> {t('common.refresh')}</button>
         </div>
 
         <div className="pager-row">
           <button className="icon-btn icon-only" title="Halaman sebelumnya" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage((prev) => prev - 1)}><ChevronLeft size={14} /></button>
-          <span>Halaman {page} / {totalPage}</span>
+          <span>{t('common.page')} {page} / {totalPage}</span>
           <button className="icon-btn icon-only" title="Halaman berikutnya" aria-label="Halaman berikutnya" disabled={page >= totalPage} onClick={() => setPage((prev) => prev + 1)}><ChevronRight size={14} /></button>
         </div>
       </section>

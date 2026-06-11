@@ -2,8 +2,10 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useLogin } from '../hooks/use-auth'
 import { parseApiError } from '../lib/api-error'
+import { useT } from '../i18n'
 
 export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
+  const { t } = useT()
   const [email, setEmail] = useState('admin@clinicnext.local')
   const [password, setPassword] = useState('Password123!')
   const [errors, setErrors] = useState<Record<string, string[]>>({})
@@ -33,7 +35,7 @@ export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
     <div className="auth-layout">
       <form className="auth-card" onSubmit={submit}>
         <h1>MediFlow Admin</h1>
-        <p>Masuk untuk melanjutkan ke dashboard Health Management System.</p>
+        <p>{t('login.desc')}</p>
         {summary ? <div className="error-summary">{summary}</div> : null}
         <label>
           Email
@@ -60,7 +62,7 @@ export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
           {errors.Password ? <small id="login-password-error" className="field-error">{errors.Password[0]}</small> : null}
         </label>
         <button className="btn-primary" disabled={loginMutation.isPending} type="submit">
-          {loginMutation.isPending ? 'Memproses...' : 'Login'}
+          {loginMutation.isPending ? 'Processing...' : t('login.submit')}
         </button>
       </form>
     </div>

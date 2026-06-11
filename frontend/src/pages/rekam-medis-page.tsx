@@ -8,6 +8,7 @@ import { useActionAudit } from '../hooks/use-action-audit'
 import { DataGrid } from '../components/data-grid'
 import { FieldLabel } from '../components/field-label'
 import { PageHeader } from '../components/page-header'
+import { useT } from '../i18n'
 
 function renderRecordTable(records: Record<string, unknown>[]) {
   if (!records.length) {
@@ -32,6 +33,7 @@ function renderRecordTable(records: Record<string, unknown>[]) {
 }
 
 export function RekamMedisPage({ canFetch }: { canFetch: boolean }) {
+  const { t } = useT()
   const [searchParams, setSearchParams] = useSearchParams()
   const searchInputRef = useRef<HTMLInputElement | null>(null)
   const [idPasien, setIdPasien] = useState(searchParams.get('idPasien') || '')
@@ -70,7 +72,7 @@ export function RekamMedisPage({ canFetch }: { canFetch: boolean }) {
 
   return (
     <section className="page-card">
-      <PageHeader title="Database Rekam Medis" description="Direktori form, histori rekam medis, dan data surat per form." eyebrow="Medical Records">
+      <PageHeader title={t('rekam.title')} description="Form directory, medical history, and letter data per form." eyebrow="Medical Records">
         <div className="header-insight">
           <span className="header-insight-item">Filter pasien dan registrasi untuk mempercepat pelacakan</span>
           <span className="header-insight-item">Gunakan detail form untuk validasi data klinis</span>

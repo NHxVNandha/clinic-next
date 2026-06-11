@@ -81,33 +81,6 @@
   --aurora-line: color-mix(in srgb, var(--accent-cool) 42%, var(--accent-warm));
 }
 
-:root[data-density='comfortable'] {
-  --btn-height-compact: 36px;
-  --btn-height-comfortable: 40px;
-  --input-height-comfortable: 40px;
-}
-
-:root[data-density='comfortable'] .content {
-  padding: 20px;
-}
-
-:root[data-density='comfortable'] .page-card {
-  border-radius: 18px;
-  padding: 24px;
-}
-
-:root[data-density='comfortable'] .toolbar-row {
-  margin-top: 16px;
-  margin-bottom: 16px;
-  gap: 10px;
-}
-
-:root[data-density='comfortable'] .preview-box {
-  margin-top: 16px;
-  border-radius: 12px;
-  padding: 14px;
-}
-
 * {
   box-sizing: border-box;
 }
@@ -324,6 +297,18 @@ body {
   min-width: 96px;
   justify-content: center;
   white-space: nowrap;
+}
+
+.language-toggle {
+  gap: 6px;
+  min-width: 58px;
+  justify-content: center;
+}
+
+.language-toggle span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
 }
 
 .top-actions-danger {

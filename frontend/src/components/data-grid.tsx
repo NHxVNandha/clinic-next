@@ -7,6 +7,7 @@ import 'ag-grid-community/styles/ag-theme-quartz.css'
 import { GridEntityCell, type GridEntityKind } from './grid-entity-cell'
 import { getStatusMeta } from '../lib/status-meta'
 import { getAuthUser } from '../lib/storage'
+import { useT } from '../i18n'
 
 type DataGridProps<T> = {
   rows: T[]
@@ -43,6 +44,7 @@ function resolveEntityKind(fieldName: string, headerName: string): GridEntityKin
 }
 
 export function DataGrid<T>({ rows, columns, loading, height = 460, onRowClicked, storageKey, hideUtilityActions, rowSelection = { mode: 'singleRow', checkboxes: false }, compact, selectedRowId, selectedRowField = 'idRegistrasi' }: DataGridProps<T>) {
+  const { t } = useT()
   const shouldAnimateRows = rows.length > 0 && rows.length <= 120
   const gridApiRef = useRef<GridApi<T> | null>(null)
   const persistTimerRef = useRef<number | null>(null)
@@ -254,17 +256,17 @@ export function DataGrid<T>({ rows, columns, loading, height = 460, onRowClicked
           onFilterChanged={queueSaveGridState}
           loading={loading}
           onRowClicked={onRowClicked}
-          overlayNoRowsTemplate="<span style='padding:12px;color:#5b6b76;'>Belum ada data untuk ditampilkan.</span>"
+          overlayNoRowsTemplate={`<span style='padding:12px;color:#5b6b76;'>${t('grid.empty')}</span>`}
         />
       </div>
       {!hideUtilityActions ? (
         <div className="top-actions" style={{ marginTop: 8 }}>
-          <button className="icon-btn icon-only" title={showAdvancedTools ? 'Sembunyikan tools lanjutan' : 'Tampilkan tools lanjutan'} aria-label={showAdvancedTools ? 'Sembunyikan tools lanjutan' : 'Tampilkan tools lanjutan'} onClick={() => setShowAdvancedTools((prev) => !prev)}><SlidersHorizontal size={14} /></button>
-          <button className="icon-btn icon-only" title="Export CSV" aria-label="Export CSV" onClick={exportCsv}><Download size={14} /></button>
-          {showAdvancedTools ? <button className="icon-btn icon-only" title="Reset state grid" aria-label="Reset state grid" onClick={resetGridState}><RotateCcw size={14} /></button> : null}
-          {showAdvancedTools ? <button className="icon-btn icon-only" title="Hapus filter" aria-label="Hapus filter" onClick={clearFiltersOnly}><FilterX size={14} /></button> : null}
-          {showAdvancedTools ? <button className="icon-btn icon-only" title="Auto-size kolom" aria-label="Auto-size kolom" onClick={autoSizeColumns}><Expand size={14} /></button> : null}
-          {showAdvancedTools ? <button className="icon-btn icon-only" title="Fit lebar grid" aria-label="Fit lebar grid" onClick={fitColumnsWidth}><Maximize2 size={14} /></button> : null}
+          <button className="icon-btn icon-only" title={showAdvancedTools ? t('grid.advanced.hide') : t('grid.advanced.show')} aria-label={showAdvancedTools ? t('grid.advanced.hide') : t('grid.advanced.show')} onClick={() => setShowAdvancedTools((prev) => !prev)}><SlidersHorizontal size={14} /></button>
+          <button className="icon-btn icon-only" title={t('grid.export')} aria-label={t('grid.export')} onClick={exportCsv}><Download size={14} /></button>
+          {showAdvancedTools ? <button className="icon-btn icon-only" title={t('grid.reset')} aria-label={t('grid.reset')} onClick={resetGridState}><RotateCcw size={14} /></button> : null}
+          {showAdvancedTools ? <button className="icon-btn icon-only" title={t('grid.clearFilters')} aria-label={t('grid.clearFilters')} onClick={clearFiltersOnly}><FilterX size={14} /></button> : null}
+          {showAdvancedTools ? <button className="icon-btn icon-only" title={t('grid.autoSize')} aria-label={t('grid.autoSize')} onClick={autoSizeColumns}><Expand size={14} /></button> : null}
+          {showAdvancedTools ? <button className="icon-btn icon-only" title={t('grid.fit')} aria-label={t('grid.fit')} onClick={fitColumnsWidth}><Maximize2 size={14} /></button> : null}
         </div>
       ) : null}
     </div>

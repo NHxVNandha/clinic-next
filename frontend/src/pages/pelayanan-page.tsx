@@ -38,6 +38,7 @@ import { ActionAuditNote } from '../components/action-audit-note'
 import { useActionAudit } from '../hooks/use-action-audit'
 import { confirmThemedAction } from '../lib/sweet-alert'
 import { getAuthUser } from '../lib/storage'
+import { useT } from '../i18n'
 import { StrictMasterComboboxField } from '../components/strict-master-combobox-field'
 import { FieldLabel } from '../components/field-label'
 
@@ -71,6 +72,7 @@ function getNumberHint(value: string, minimum: number) {
 }
 
 export function PelayananPage({ canFetch }: { canFetch: boolean }) {
+  const { t } = useT()
   const navigate = useNavigate()
   const canManageDetail = canManagePelayananDetails()
   const detailAccess = getActionAccess('pelayananDetailsManage')
@@ -538,7 +540,7 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
 
   return (
     <section className="page-card">
-      <PageHeader title="Antrian Pelayanan" description="Antrian pelayanan pasien berbasis API real-time." eyebrow="Service Queue">
+      <PageHeader title={t('pelayanan.title')} description="Real-time API based patient service queue." eyebrow="Service Queue">
         <div className="header-insight">
           <span className="header-insight-item">Prioritas: pasien menunggu dengan keluhan aktif</span>
           <span className="header-insight-item">Detail tindakan/resep dapat ditambah per registrasi</span>
@@ -551,7 +553,7 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
         <input
           ref={searchInputRef}
           className="search-input search-dominant"
-          placeholder="Cari registrasi, pasien, dokter..."
+          placeholder={t('pelayanan.search')}
           value={search}
           onChange={(event) => {
             setSearch(event.target.value)
@@ -570,13 +572,13 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
             <button className="service-department"><span>Pediatrics</span><strong>{filteredItems.length}</strong></button>
           </section>
           <section>
-            <h2>Filter Status</h2>
+            <h2>{t('pendaftaran.statusFilter')}</h2>
             <div className="filter-chip-wrap service-filter-list">
-              <button className={`filter-chip ${statusFilter === '1' ? 'active' : ''}`} onClick={() => { setStatusFilter('1'); setPage(1) }}>Menunggu</button>
-              <button className={`filter-chip ${statusFilter === '2' ? 'active' : ''}`} onClick={() => { setStatusFilter('2'); setPage(1) }}>Dilayani</button>
-              <button className={`filter-chip ${statusFilter === '3' ? 'active' : ''}`} onClick={() => { setStatusFilter('3'); setPage(1) }}>Selesai</button>
-              <button className={`filter-chip ${statusFilter === '4' ? 'active' : ''}`} onClick={() => { setStatusFilter('4'); setPage(1) }}>Dibatalkan</button>
-              <button className={`filter-chip ${statusFilter === '' ? 'active' : ''}`} onClick={() => { setStatusFilter(''); setPage(1) }}>Semua</button>
+              <button className={`filter-chip ${statusFilter === '1' ? 'active' : ''}`} onClick={() => { setStatusFilter('1'); setPage(1) }}>{t('status.waiting')}</button>
+              <button className={`filter-chip ${statusFilter === '2' ? 'active' : ''}`} onClick={() => { setStatusFilter('2'); setPage(1) }}>{t('status.served')}</button>
+              <button className={`filter-chip ${statusFilter === '3' ? 'active' : ''}`} onClick={() => { setStatusFilter('3'); setPage(1) }}>{t('status.done')}</button>
+              <button className={`filter-chip ${statusFilter === '4' ? 'active' : ''}`} onClick={() => { setStatusFilter('4'); setPage(1) }}>{t('status.cancelled')}</button>
+              <button className={`filter-chip ${statusFilter === '' ? 'active' : ''}`} onClick={() => { setStatusFilter(''); setPage(1) }}>{t('common.all')}</button>
             </div>
           </section>
           <section>
@@ -614,19 +616,19 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
             />
             {!activeLoading && filteredItems.length === 0 ? (
               <div className="empty-state">
-                <p className="empty-note">Belum ada data pelayanan untuk filter saat ini.</p>
+                <p className="empty-note">{t('grid.empty')}</p>
                 {activeFilterCount > 0 ? <button className="icon-btn icon-only" title="Reset filter" aria-label="Reset filter" onClick={() => { setSearch(''); setStatusFilter(''); setPage(1) }}><RotateCcw size={14} /></button> : null}
               </div>
             ) : null}
 
             <div className="service-table-actions">
               <button className="icon-btn" onClick={() => { const today = new Date().toISOString().slice(0, 10); setSearch(today); setPage(1) }}><CalendarDays size={14} /> Hari Ini</button>
-              <button className="icon-btn" onClick={async () => { await query.refetch(); toast.success('Data pelayanan diperbarui.') }}><RefreshCw size={14} /> Refresh</button>
+              <button className="icon-btn" onClick={async () => { await query.refetch(); toast.success('Data pelayanan diperbarui.') }}><RefreshCw size={14} /> {t('common.refresh')}</button>
             </div>
 
             <div className="pager-row">
               <button className="icon-btn icon-only" title="Halaman sebelumnya" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage((prev) => prev - 1)}><ChevronLeft size={14} /></button>
-              <span>Halaman {page} / {totalPage}</span>
+              <span>{t('common.page')} {page} / {totalPage}</span>
               <button className="icon-btn icon-only" title="Halaman berikutnya" aria-label="Halaman berikutnya" disabled={page >= totalPage} onClick={() => setPage((prev) => prev + 1)}><ChevronRight size={14} /></button>
             </div>
           </section>

@@ -25,6 +25,7 @@ import { ActionAuditNote } from '../components/action-audit-note'
 import { useActionAudit } from '../hooks/use-action-audit'
 import { confirmThemedAction } from '../lib/sweet-alert'
 import { getAuthUser } from '../lib/storage'
+import { useT } from '../i18n'
 
 function getPatientDisplayName(data?: Record<string, unknown> | null) {
   const value = data?.namaPasien ?? data?.nama_pasien ?? data?.nama ?? data?.pasienNama ?? data?.namaPatient
@@ -48,6 +49,7 @@ function formatHumanDate(value: string) {
 }
 
 export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
+  const { t } = useT()
   const canCreate = canCreatePendaftaran()
   const createAccess = getActionAccess('pendaftaranCreate')
   const navigate = useNavigate()
@@ -284,20 +286,20 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
   return (
     <section className="page-card">
       <PageHeader
-        title="Pendaftaran Pasien"
+        title={t('pendaftaran.title')}
         description={`Hari ini, ${todayLabel}. Kelola kedatangan pasien dan alur registrasi.`}
-        eyebrow="Patient Registration"
+        eyebrow={t('pendaftaran.eyebrow')}
         actions={(
           <div className="registration-header-actions">
-            <button className="icon-btn btn-primary" disabled={!canCreate} title={!canCreate ? createAccess.reason : 'Registrasi pasien baru'} onClick={() => setCreateNewPatientModalOpen(true)}><UserPlus size={16} /> Registrasi Baru</button>
-            <button className="icon-btn" disabled={!canCreate} title={!canCreate ? createAccess.reason : 'Registrasi pasien existing'} onClick={() => setCreateExistingModalOpen(true)}><Users size={16} /> Pasien Existing</button>
+            <button className="icon-btn btn-primary" disabled={!canCreate} title={!canCreate ? createAccess.reason : t('pendaftaran.new')} onClick={() => setCreateNewPatientModalOpen(true)}><UserPlus size={16} /> {t('pendaftaran.new')}</button>
+            <button className="icon-btn" disabled={!canCreate} title={!canCreate ? createAccess.reason : t('pendaftaran.existing')} onClick={() => setCreateExistingModalOpen(true)}><Users size={16} /> {t('pendaftaran.existing')}</button>
           </div>
         )}
       >
         <div className="header-insight">
-          <span className="header-insight-item">Alur: Registrasi → Pelayanan → Kasir</span>
-          <span className="header-insight-item">Shortcut pencarian: tekan '/'</span>
-          <span className="header-insight-item">Status terpantau: Menunggu, Dilayani, Selesai, Dibatalkan</span>
+          <span className="header-insight-item">Flow: {t('nav.pendaftaran')} → {t('nav.pelayanan')} → {t('nav.kasir')}</span>
+          <span className="header-insight-item">Search shortcut: '/'</span>
+          <span className="header-insight-item">{t('common.status')}: {t('status.waiting')}, {t('status.served')}, {t('status.done')}, {t('status.cancelled')}</span>
         </div>
       </PageHeader>
       {!canCreate ? <p><span className="readonly-badge">Mode Read-only</span></p> : null}
@@ -306,7 +308,7 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
         <input
           ref={searchInputRef}
           className="search-input search-dominant"
-          placeholder="Cari registrasi, pasien, dokter..."
+          placeholder={t('pendaftaran.search')}
           value={search}
           onChange={(event) => {
             setSearch(event.target.value)
@@ -336,23 +338,23 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
 
       <section className="registration-queue-card">
         <div className="registration-queue-head">
-          <div>
-            <h2>Antrian Registrasi</h2>
+        <div>
+            <h2>{t('pendaftaran.queue')}</h2>
             <p>Menampilkan {filteredItems.length} data pada halaman ini{selected ? `, terpilih ${selected.idRegistrasi}` : ''}.</p>
           </div>
           <div className="registration-queue-actions">
             <button className="icon-btn" onClick={() => { const today = new Date().toISOString().slice(0, 10); setSearch(today); setPage(1) }}><CalendarDays size={14} /> Hari Ini</button>
-            <button className="icon-btn" onClick={async () => { await query.refetch(); toast.success('Data pendaftaran diperbarui.') }}><RefreshCw size={14} /> Refresh</button>
+            <button className="icon-btn" onClick={async () => { await query.refetch(); toast.success('Data pendaftaran diperbarui.') }}><RefreshCw size={14} /> {t('common.refresh')}</button>
           </div>
         </div>
         <div className="registration-filter-strip">
-          <span>Filter status</span>
+          <span>{t('pendaftaran.statusFilter')}</span>
           <div className="filter-chip-wrap">
-            <button className={`filter-chip ${statusFilter === '1' ? 'active' : ''}`} onClick={() => { setStatusFilter('1'); setPage(1) }}>Menunggu</button>
-            <button className={`filter-chip ${statusFilter === '2' ? 'active' : ''}`} onClick={() => { setStatusFilter('2'); setPage(1) }}>Dilayani</button>
-            <button className={`filter-chip ${statusFilter === '3' ? 'active' : ''}`} onClick={() => { setStatusFilter('3'); setPage(1) }}>Selesai</button>
-            <button className={`filter-chip ${statusFilter === '4' ? 'active' : ''}`} onClick={() => { setStatusFilter('4'); setPage(1) }}>Dibatalkan</button>
-            <button className={`filter-chip ${statusFilter === '' ? 'active' : ''}`} onClick={() => { setStatusFilter(''); setPage(1) }}>Semua</button>
+            <button className={`filter-chip ${statusFilter === '1' ? 'active' : ''}`} onClick={() => { setStatusFilter('1'); setPage(1) }}>{t('status.waiting')}</button>
+            <button className={`filter-chip ${statusFilter === '2' ? 'active' : ''}`} onClick={() => { setStatusFilter('2'); setPage(1) }}>{t('status.served')}</button>
+            <button className={`filter-chip ${statusFilter === '3' ? 'active' : ''}`} onClick={() => { setStatusFilter('3'); setPage(1) }}>{t('status.done')}</button>
+            <button className={`filter-chip ${statusFilter === '4' ? 'active' : ''}`} onClick={() => { setStatusFilter('4'); setPage(1) }}>{t('status.cancelled')}</button>
+            <button className={`filter-chip ${statusFilter === '' ? 'active' : ''}`} onClick={() => { setStatusFilter(''); setPage(1) }}>{t('common.all')}</button>
           </div>
         </div>
       {activeLoading ? (
@@ -375,7 +377,7 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
       />
       {!activeLoading && filteredItems.length === 0 ? (
         <div className="empty-state">
-          <p className="empty-note">Belum ada data pendaftaran untuk filter saat ini.</p>
+          <p className="empty-note">{t('grid.empty')}</p>
           {activeFilterCount > 0 ? <button className="icon-btn icon-only" title="Reset filter" aria-label="Reset filter" onClick={() => { setSearch(''); setStatusFilter(''); setPage(1) }}><RotateCcw size={14} /></button> : null}
         </div>
       ) : null}
@@ -385,7 +387,7 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
           <ChevronLeft size={14} />
         </button>
         <span>
-          Halaman {page} / {totalPage}
+          {t('common.page')} {page} / {totalPage}
         </span>
         <button className="icon-btn icon-only" title="Halaman berikutnya" aria-label="Halaman berikutnya" disabled={page >= totalPage} onClick={() => setPage((prev) => prev + 1)}>
           <ChevronRight size={14} />

@@ -1,56 +1,34 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Command } from 'cmdk'
-import { Bell, CircleHelp, LogOut, Minimize2, Moon, Search, Sun } from 'lucide-react'
+import { Bell, CircleHelp, Languages, LogOut, Moon, Search, Sun } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { appRoutes } from '../routes'
 import { clearAccessToken, clearAuthUser, getAuthUser } from '../lib/storage'
 import { isBypassLogin, isDummyMode } from '../lib/runtime-flags'
 import { canAccessRoute } from '../lib/access'
+import { useT, type TranslationKey } from '../i18n'
 
 type ThemeMode = 'light' | 'dark' | 'system'
-type DensityMode = 'compact' | 'comfortable'
-type AuditSnapshot = { module: string; entries: string[] }
 
-const MODULE_ROUTE_FALLBACK: Record<string, string> = {
-  pendaftaran: '/pendaftaran',
-  pelayanan: '/pelayanan',
-  kasir: '/kasir',
-  master: '/master',
-  'rekam-medis': '/rekam-medis',
-}
-
-function readAuditSnapshot(): AuditSnapshot[] {
-  try {
-    const snapshots: AuditSnapshot[] = []
-    for (let i = 0; i < sessionStorage.length; i += 1) {
-      const key = sessionStorage.key(i)
-      if (!key || !key.startsWith('audit-')) continue
-      const module = key.replace('audit-', '')
-      const raw = sessionStorage.getItem(key)
-      if (!raw) continue
-      const parsed = JSON.parse(raw) as string[]
-      if (!Array.isArray(parsed) || parsed.length === 0) continue
-      snapshots.push({ module, entries: parsed })
-    }
-    return snapshots.sort((a, b) => a.module.localeCompare(b.module))
-  } catch {
-    return []
-  }
+const routeTextKeys: Record<string, { label: TranslationKey; desc: TranslationKey }> = {
+  '/dashboard': { label: 'nav.dashboard', desc: 'nav.dashboard.desc' },
+  '/pendaftaran': { label: 'nav.pendaftaran', desc: 'nav.pendaftaran.desc' },
+  '/pelayanan': { label: 'nav.pelayanan', desc: 'nav.pelayanan.desc' },
+  '/kasir': { label: 'nav.kasir', desc: 'nav.kasir.desc' },
+  '/laporan': { label: 'nav.laporan', desc: 'nav.laporan.desc' },
+  '/master': { label: 'nav.master', desc: 'nav.master.desc' },
+  '/rekam-medis': { label: 'nav.rekamMedis', desc: 'nav.rekamMedis.desc' },
+  '/pengaturan': { label: 'nav.pengaturan', desc: 'nav.pengaturan.desc' },
 }
 
 export function AppShell({ onLogout }: { onLogout: () => void }) {
   const navigate = useNavigate()
+  const { language, toggleLanguage, t } = useT()
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     const stored = localStorage.getItem('clinic-next-theme')
     return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system'
   })
-  const [densityMode, setDensityMode] = useState<DensityMode>(() => {
-    const stored = localStorage.getItem('clinic-next-density')
-    return stored === 'compact' || stored === 'comfortable' ? stored : 'compact'
-  })
   const [isCommandOpen, setIsCommandOpen] = useState(false)
-  const [isAuditOpen, setIsAuditOpen] = useState(false)
-  const [auditSnapshot, setAuditSnapshot] = useState<AuditSnapshot[]>(() => readAuditSnapshot())
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -73,21 +51,6 @@ export function AppShell({ onLogout }: { onLogout: () => void }) {
     }
   }, [themeMode])
 
-  useEffect(() => {
-    localStorage.setItem('clinic-next-density', densityMode)
-    document.documentElement.dataset.density = densityMode
-  }, [densityMode])
-
-  useEffect(() => {
-    const refreshAudit = () => setAuditSnapshot(readAuditSnapshot())
-    window.addEventListener('clinic-audit-updated', refreshAudit)
-    window.addEventListener('storage', refreshAudit)
-    return () => {
-      window.removeEventListener('clinic-audit-updated', refreshAudit)
-      window.removeEventListener('storage', refreshAudit)
-    }
-  }, [])
-
   const nextTheme = useMemo<ThemeMode>(() => {
     if (themeMode === 'light') return 'dark'
     if (themeMode === 'dark') return 'system'
@@ -98,68 +61,13 @@ export function AppShell({ onLogout }: { onLogout: () => void }) {
   const authUser = useMemo(() => getAuthUser(), [])
   const userRole = useMemo(() => String(authUser?.role || '').toLowerCase(), [authUser?.role])
   const userName = useMemo(() => String(authUser?.name || authUser?.email || 'Admin Utama'), [authUser?.email, authUser?.name])
-  const auditSummary = useMemo(() => ({
-    modules: auditSnapshot.length,
-    total: auditSnapshot.reduce((sum, item) => sum + item.entries.length, 0),
-  }), [auditSnapshot])
-
-  function resolveModuleRoute(moduleKey: string): string | null {
-    const direct = visibleRoutes.find((route) => route.path === `/${moduleKey}`)
-    if (direct) return direct.path
-    const fallbackPath = MODULE_ROUTE_FALLBACK[moduleKey]
-    if (!fallbackPath) return null
-    return visibleRoutes.some((route) => route.path === fallbackPath) ? fallbackPath : null
-  }
-
-  function downloadGlobalAudit(type: 'txt' | 'csv') {
-    if (auditSnapshot.length === 0) return
-    if (type === 'txt') {
-      const lines = auditSnapshot.flatMap((item) => [
-        `[${item.module}]`,
-        ...item.entries.map((entry, index) => `${index + 1}. ${entry}`),
-        '',
-      ])
-      const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `audit-sesi-global-${Date.now()}.txt`
-      a.click()
-      URL.revokeObjectURL(url)
-      return
-    }
-    const rows = auditSnapshot.flatMap((item) => item.entries.map((entry, index) => `${item.module},${index + 1},"${entry.replace(/"/g, '""')}"`))
-    const csv = ['module,no,message', ...rows].join('\n')
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `audit-sesi-global-${Date.now()}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  function clearGlobalAudit() {
-    try {
-      const keysToRemove: string[] = []
-      for (let i = 0; i < sessionStorage.length; i += 1) {
-        const key = sessionStorage.key(i)
-        if (key && key.startsWith('audit-')) keysToRemove.push(key)
-      }
-      keysToRemove.forEach((key) => sessionStorage.removeItem(key))
-      setAuditSnapshot([])
-      window.dispatchEvent(new CustomEvent('clinic-audit-updated'))
-    } catch {
-      // ignore storage issue
-    }
-  }
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand-block">
-          <div className="brand">MediFlow Admin</div>
-          <p>Health Management System</p>
+          <div className="brand-block">
+            <div className="brand">MediFlow Admin</div>
+          <p>{t('app.subtitle')}</p>
         </div>
         <nav aria-label="Navigasi utama aplikasi">
           {visibleRoutes.map((route) => {
@@ -169,10 +77,10 @@ export function AppShell({ onLogout }: { onLogout: () => void }) {
                 key={route.path}
                 to={route.path}
                 className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                title={route.description}
+                title={t(routeTextKeys[route.path]?.desc ?? 'nav.dashboard.desc')}
               >
                 <Icon size={16} />
-                <span>{route.label}</span>
+                <span>{t(routeTextKeys[route.path]?.label ?? 'nav.dashboard')}</span>
               </NavLink>
             )
           })}
@@ -187,31 +95,29 @@ export function AppShell({ onLogout }: { onLogout: () => void }) {
       </aside>
       <div className="main-wrap">
         <header className="topbar">
-          <button type="button" className="topbar-search" onClick={() => setIsCommandOpen(true)} title="Cari menu (Ctrl+K)" aria-label="Buka pencarian menu cepat">
+          <button type="button" className="topbar-search" onClick={() => setIsCommandOpen(true)} title={`${t('command.label')} (Ctrl+K)`} aria-label={t('topbar.openSearch')}>
             <Search size={16} />
-            <span>Cari pasien, menu, atau jadwal...</span>
+            <span>{t('topbar.search')}</span>
             <kbd>Ctrl K</kbd>
           </button>
           <div className="topbar-meta">
-            {isDummyMode ? <span className="mode-badge">Dummy Mode Aktif</span> : null}
-            {isBypassLogin ? <span className="mode-badge">Bypass Login Aktif</span> : null}
-            {userRole ? <span className="readonly-badge">Role: {userRole}</span> : null}
+            {isDummyMode ? <span className="mode-badge">{t('badge.dummy')}</span> : null}
+            {isBypassLogin ? <span className="mode-badge">{t('badge.bypass')}</span> : null}
+            {userRole ? <span className="readonly-badge">{t('role.label')}: {userRole}</span> : null}
           </div>
           <div className="top-actions">
-            <button type="button" className="icon-btn icon-only" title="Notifikasi" aria-label="Notifikasi">
+            <button type="button" className="icon-btn icon-only" title={t('topbar.notifications')} aria-label={t('topbar.notifications')}>
               <Bell size={16} />
             </button>
-            <button type="button" className="icon-btn icon-only" title="Bantuan" aria-label="Bantuan">
+            <button type="button" className="icon-btn icon-only" title={t('topbar.help')} aria-label={t('topbar.help')}>
               <CircleHelp size={16} />
             </button>
-            <button type="button" className="icon-btn icon-only" onClick={() => setIsAuditOpen((prev) => !prev)} title="Lihat audit sesi" aria-label="Buka audit sesi">
-              <span style={{ fontWeight: 700 }}>{auditSummary.total}</span>
-            </button>
-            <button type="button" className="icon-btn icon-only" onClick={() => setThemeMode(nextTheme)} title={`Ganti mode tema (${themeMode})`} aria-label={`Ganti mode tema, saat ini ${themeMode}`}>
+            <button type="button" className="icon-btn icon-only" onClick={() => setThemeMode(nextTheme)} title={`${t('topbar.theme')} (${themeMode})`} aria-label={`${t('topbar.theme')}, ${themeMode}`}>
               {themeMode === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
             </button>
-            <button type="button" className="icon-btn icon-only" onClick={() => setDensityMode((prev) => (prev === 'compact' ? 'comfortable' : 'compact'))} title={`Ganti kerapatan tampilan (${densityMode})`} aria-label={`Ganti kerapatan tampilan, saat ini ${densityMode}`}>
-              <Minimize2 size={16} />
+            <button type="button" className="icon-btn language-toggle" onClick={toggleLanguage} title={t('topbar.language')} aria-label={t('topbar.language')}>
+              <Languages size={16} />
+              <span>{language.toUpperCase()}</span>
             </button>
             <button
               type="button"
@@ -221,56 +127,25 @@ export function AppShell({ onLogout }: { onLogout: () => void }) {
                 clearAuthUser()
                 onLogout()
               }}
-              title="Logout"
-              aria-label="Logout"
+              title={t('topbar.logout')}
+              aria-label={t('topbar.logout')}
             >
               <LogOut size={16} />
             </button>
           </div>
         </header>
         <main className="content" id="main-content" tabIndex={-1}>
-          {isAuditOpen ? (
-            <section className="preview-box" style={{ marginBottom: 12 }}>
-              <div className="top-actions">
-                <h2 style={{ margin: 0 }}>Audit Sesi Global</h2>
-                <button className="icon-btn" disabled={auditSnapshot.length === 0} onClick={() => downloadGlobalAudit('txt')}>TXT</button>
-                <button className="icon-btn" disabled={auditSnapshot.length === 0} onClick={() => downloadGlobalAudit('csv')}>CSV</button>
-                <button className="icon-btn" disabled={auditSnapshot.length === 0} onClick={clearGlobalAudit}>Clear</button>
-                <button className="icon-btn" onClick={() => setIsAuditOpen(false)}>Tutup</button>
-              </div>
-              <p className="kbd-hint">Modul aktif: {auditSummary.modules} | Total aksi: {auditSummary.total}</p>
-              {auditSnapshot.length > 0 ? (
-                <div className="filter-chip-wrap" style={{ marginTop: 8 }}>
-                  {auditSnapshot.map((item) => (
-                    <button
-                      key={item.module}
-                      className="filter-chip"
-                      onClick={() => {
-                        const route = resolveModuleRoute(item.module)
-                        if (!route) return
-                        navigate(route)
-                        setIsAuditOpen(false)
-                      }}
-                      title={`Buka modul ${item.module}`}
-                    >
-                      {item.module}: {item.entries[0]}
-                    </button>
-                  ))}
-                </div>
-              ) : <p className="empty-note">Belum ada aksi tercatat pada sesi ini.</p>}
-            </section>
-          ) : null}
           <Outlet />
         </main>
       </div>
 
-      <Command.Dialog className="command-dialog" open={isCommandOpen} onOpenChange={setIsCommandOpen} label="Cari menu">
+      <Command.Dialog className="command-dialog" open={isCommandOpen} onOpenChange={setIsCommandOpen} label={t('command.label')}>
         <div className="command-input-wrap">
           <Search size={16} />
-          <Command.Input placeholder="Cari menu, contoh: kasir..." className="command-input" aria-label="Input pencarian menu" />
+          <Command.Input placeholder={t('command.placeholder')} className="command-input" aria-label={t('command.label')} />
         </div>
         <Command.List className="command-list">
-          <Command.Empty>Menu tidak ditemukan.</Command.Empty>
+          <Command.Empty>{t('command.empty')}</Command.Empty>
           {visibleRoutes.map((route) => (
             <Command.Item
               key={route.path}
@@ -281,8 +156,8 @@ export function AppShell({ onLogout }: { onLogout: () => void }) {
               className="command-item"
             >
               <div>
-                <p>{route.label}</p>
-                <small>{route.description}</small>
+                <p>{t(routeTextKeys[route.path]?.label ?? 'nav.dashboard')}</p>
+                <small>{t(routeTextKeys[route.path]?.desc ?? 'nav.dashboard.desc')}</small>
               </div>
             </Command.Item>
           ))}

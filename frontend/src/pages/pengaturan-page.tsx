@@ -13,6 +13,7 @@ import { StatCard } from '../components/stat-card'
 import { upsertMasterSetting, type MasterSetting } from '../api/master'
 import { useMasterSetting, useMasterUser } from '../hooks/use-master'
 import { runActionWithFeedback } from '../lib/action-feedback'
+import { useT } from '../i18n'
 
 type SettingTab = 'clinic' | 'users' | 'roles' | 'backup' | 'system'
 
@@ -21,6 +22,7 @@ function settingValue(rows: MasterSetting[], key: string, fallback = '') {
 }
 
 export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
+  const { t } = useT()
   const [activeTab, setActiveTab] = useState<SettingTab>('clinic')
   const [search, setSearch] = useState('')
   const settings = useMasterSetting(1, 100, '', canFetch)
@@ -70,7 +72,7 @@ export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
 
   return (
     <section className="page-card settings-page">
-      <PageHeader title="System Configuration" description="Kelola identitas klinik, akses pengguna, dan preferensi sistem." eyebrow="Pengaturan Sistem" />
+      <PageHeader title={t('pengaturan.title')} description={t('pengaturan.desc')} eyebrow={t('nav.pengaturan')} />
 
       <MetricGrid>
         <StatCard icon={Hospital} label="Clinic Profile" value={formValues.clinicName} footer="Identitas utama sistem" />
@@ -116,7 +118,7 @@ export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
           ) : null}
 
           {activeTab === 'users' ? (
-            <SectionCard title="Active Users" description="Daftar pengguna dari master user." actions={<button className="icon-btn" onClick={() => users.refetch()}><RefreshCw size={16} /> Refresh</button>}>
+            <SectionCard title="Active Users" description="User list from master user endpoint." actions={<button className="icon-btn" onClick={() => users.refetch()}><RefreshCw size={16} /> {t('common.refresh')}</button>}>
               <input className="search-input search-dominant" placeholder="Cari user..." value={search} onChange={(event) => setSearch(event.target.value)} />
               <div className="settings-grid-wrap"><DataGrid rows={(users.data?.data.items ?? []) as Record<string, unknown>[]} columns={userColumns} loading={users.isLoading || users.isFetching} compact storageKey="pengaturan-users" /></div>
             </SectionCard>

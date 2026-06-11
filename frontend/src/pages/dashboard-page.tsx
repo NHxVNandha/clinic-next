@@ -8,6 +8,7 @@ import { usePendaftaran } from '../hooks/use-pendaftaran'
 import { usePelayanan } from '../hooks/use-pelayanan'
 import { usePembayaran } from '../hooks/use-kasir'
 import type { PembayaranItem } from '../api/kasir'
+import { useT } from '../i18n'
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
@@ -32,6 +33,7 @@ function statusLabel(value: unknown) {
 }
 
 export function DashboardPage({ canFetch }: { canFetch: boolean }) {
+  const { t } = useT()
   const pendaftaran = usePendaftaran({ page: 1, pageSize: 8 }, canFetch)
   const pelayanan = usePelayanan({ page: 1, pageSize: 8 }, canFetch)
   const kasir = usePembayaran({ page: 1, pageSize: 8 }, canFetch)
@@ -54,20 +56,20 @@ export function DashboardPage({ canFetch }: { canFetch: boolean }) {
     <section className="page-card dashboard-page">
       <PageHeader
         title="Dashboard Overview"
-        description="Selamat datang kembali, berikut ringkasan operasional klinik hari ini."
+        description={t('dashboard.desc')}
         eyebrow="MediFlow Admin"
-        actions={<Link className="icon-btn btn-primary" to="/pendaftaran">Pendaftaran Baru</Link>}
+        actions={<Link className="icon-btn btn-primary" to="/pendaftaran">{t('dashboard.newRegistration')}</Link>}
       />
 
       <MetricGrid>
-        <StatCard icon={Users} label="Total Pasien Hari Ini" value={activeRegistrations} trend="Live" footer="Dari antrean pendaftaran aktif" />
-        <StatCard icon={CalendarClock} label="Daftar Tunggu" value={waitingCount} tone="danger" trend="Prioritas" footer="Pasien menunggu pelayanan" />
-        <StatCard icon={Stethoscope} label="Pelayanan Aktif" value={pelayanan.data?.data.total ?? 0} tone="secondary" trend="On duty" footer="Registrasi dalam modul pelayanan" />
-        <StatCard icon={CreditCard} label="Estimasi Revenue" value={formatCurrency(dailyRevenue)} tone="tertiary" trend={<TrendingUp size={14} />} footer="Berdasarkan transaksi termuat" />
+        <StatCard icon={Users} label={t('dashboard.patientsToday')} value={activeRegistrations} trend="Live" footer={t('nav.pendaftaran.desc')} />
+        <StatCard icon={CalendarClock} label={t('dashboard.waitingList')} value={waitingCount} tone="danger" trend="Priority" footer={t('nav.pelayanan.desc')} />
+        <StatCard icon={Stethoscope} label={t('dashboard.activeService')} value={pelayanan.data?.data.total ?? 0} tone="secondary" trend="On duty" footer={t('nav.pelayanan.desc')} />
+        <StatCard icon={CreditCard} label={t('dashboard.revenue')} value={formatCurrency(dailyRevenue)} tone="tertiary" trend={<TrendingUp size={14} />} footer={t('nav.kasir.desc')} />
       </MetricGrid>
 
       <div className="dashboard-bento-grid">
-        <SectionCard title="Statistik Kunjungan" description="Visual mingguan untuk memantau beban layanan." className="dashboard-chart-card">
+        <SectionCard title={t('dashboard.visits')} description="Weekly visual to monitor service load." className="dashboard-chart-card">
           <div className="dashboard-chart-summary">
             <div>
               <span className="dashboard-kicker">Total Kunjungan</span>
@@ -85,7 +87,7 @@ export function DashboardPage({ canFetch }: { canFetch: boolean }) {
           </div>
         </SectionCard>
 
-        <SectionCard title="Department Traffic" description="Distribusi beban operasional hari ini." className="dashboard-traffic-card">
+        <SectionCard title={t('dashboard.traffic')} description="Today's operational load distribution." className="dashboard-traffic-card">
           <div className="traffic-list">
             {departmentTraffic.map((item) => (
               <div className="traffic-item" key={item.label}>
@@ -100,7 +102,7 @@ export function DashboardPage({ canFetch }: { canFetch: boolean }) {
           </div>
         </SectionCard>
 
-        <SectionCard title="Aktivitas Terbaru" description="Log aktivitas dari data pendaftaran terbaru." className="dashboard-activity-card">
+        <SectionCard title={t('dashboard.activity')} description="Recent activity from registration data." className="dashboard-activity-card">
           <div className="activity-list">
             {pendaftaranRows.length > 0 ? pendaftaranRows.slice(0, 5).map((item) => (
               <div className="activity-item" key={item.idRegistrasi ?? item.id}>
@@ -110,12 +112,12 @@ export function DashboardPage({ canFetch }: { canFetch: boolean }) {
                   <p>{String((item as Record<string, unknown>).namaPasien ?? item.idPasien ?? 'Pasien')} terdaftar untuk pelayanan.</p>
                 </div>
               </div>
-            )) : <p className="empty-note">Belum ada aktivitas pendaftaran termuat.</p>}
+            )) : <p className="empty-note">{t('grid.empty')}</p>}
           </div>
         </SectionCard>
       </div>
 
-      <SectionCard title="Upcoming Appointments" description="Daftar cepat pelayanan terbaru untuk koordinasi front office dan klinis." actions={<Link className="icon-btn" to="/pelayanan">Lihat Pelayanan <ArrowUpRight size={14} /></Link>}>
+      <SectionCard title={t('dashboard.appointments')} description="Latest services for front office and clinical coordination." actions={<Link className="icon-btn" to="/pelayanan">{t('nav.pelayanan')} <ArrowUpRight size={14} /></Link>}>
         <div className="stitch-table-wrap">
           <table className="stitch-table dashboard-appointment-table">
             <thead>

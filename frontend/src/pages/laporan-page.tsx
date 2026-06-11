@@ -8,6 +8,7 @@ import { PageHeader } from '../components/page-header'
 import { useLaporanPendaftaran, useLaporanPembayaran, useLaporanTindakan } from '../hooks/use-laporan'
 import { useDebouncedValue } from '../hooks/use-debounced-value'
 import { getStatusMeta } from '../lib/status-meta'
+import { useT } from '../i18n'
 import { FieldLabel } from '../components/field-label'
 
 type LaporanMode = 'tindakan' | 'pembayaran' | 'pendaftaran'
@@ -19,6 +20,7 @@ function getPatientDisplayName(data?: Record<string, unknown> | null) {
 }
 
 export function LaporanPage({ canFetch }: { canFetch: boolean }) {
+  const { t } = useT()
   const [searchParams, setSearchParams] = useSearchParams()
   const initialModeParam = searchParams.get('mode')
   const initialMode: LaporanMode = initialModeParam === 'pembayaran' || initialModeParam === 'pendaftaran' ? initialModeParam : 'tindakan'
@@ -172,7 +174,7 @@ export function LaporanPage({ canFetch }: { canFetch: boolean }) {
   return (
     <section className="page-card">
       <PageHeader
-        title="Laporan & Analitik"
+        title={t('laporan.title')}
         description="Comprehensive analytical overview of clinical operations."
         eyebrow="Reporting Analytics"
         actions={(
@@ -198,7 +200,7 @@ export function LaporanPage({ canFetch }: { canFetch: boolean }) {
         <input
           ref={searchInputRef}
           className="search-input search-dominant"
-          placeholder="Cari laporan..."
+          placeholder={t('laporan.search')}
           value={search}
           onChange={(event) => {
             setSearch(event.target.value)
@@ -315,7 +317,7 @@ export function LaporanPage({ canFetch }: { canFetch: boolean }) {
         {!activeLoading && rows.length === 0 ? <div className="empty-state"><p className="empty-note">Data laporan tidak ditemukan untuk kombinasi filter saat ini.</p></div> : null}
         <div className="pager-row">
           <button className="icon-btn icon-only" title="Halaman sebelumnya" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}><ChevronLeft size={14} /></button>
-          <span>Halaman {page} / {totalPage}</span>
+          <span>{t('common.page')} {page} / {totalPage}</span>
           <button className="icon-btn icon-only" title="Halaman berikutnya" aria-label="Halaman berikutnya" disabled={page >= totalPage} onClick={() => setPage((p) => p + 1)}><ChevronRight size={14} /></button>
         </div>
       </section>

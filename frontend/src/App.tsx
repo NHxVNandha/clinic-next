@@ -7,6 +7,7 @@ import { useMe } from './hooks/use-auth'
 import { isBypassLogin } from './lib/runtime-flags'
 import { appRoutes } from './routes'
 import { canAccessRoute } from './lib/access'
+import { useT } from './i18n'
 
 const DashboardPage = lazy(async () => {
   const module = await import('./pages/dashboard-page')
@@ -60,6 +61,7 @@ function guard(path: string, element: ReactElement) {
 }
 
 function App() {
+  const { t } = useT()
   const [, setTokenVersion] = useState(0)
   const token = getAccessToken()
   const auth = useMe(!isBypassLogin && Boolean(token))
@@ -76,7 +78,7 @@ function App() {
   }
 
   return (
-    <Suspense fallback={<div className="route-loading">Memuat halaman...</div>}>
+    <Suspense fallback={<div className="route-loading">{t('loading.route')}</div>}>
       <Routes>
         <Route element={<AppShell onLogout={() => setTokenVersion((prev) => prev + 1)} />}>
           <Route path="/dashboard" element={<DashboardPage canFetch={isBypassLogin || Boolean(token)} />} />
