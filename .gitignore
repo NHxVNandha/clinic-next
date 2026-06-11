@@ -31,3 +31,5 @@ Thumbs.db
 *.suo
 *.user
 *.sw?
+
+.vercel
