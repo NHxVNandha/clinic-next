@@ -46,6 +46,8 @@ export function DashboardPage({ canFetch }: { canFetch: boolean }) {
   const completedCount = pelayananRows.filter((item) => String(item.status ?? '') === '3').length
   const activeRegistrations = pendaftaran.data?.data.total ?? 0
   const chartValues = [42, 58, 47, 74, 88, 63, 52]
+  const monthlyChartValues = [46, 64, 52, 78, 70, 86]
+  const monthlyChartLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun']
   const departmentTraffic = [
     { label: 'Poli Umum', value: Math.max(34, Math.min(72, pelayananRows.length * 8 || 42)), tone: 'primary' },
     { label: 'Tindakan', value: Math.max(18, Math.min(52, completedCount * 12 || 28)), tone: 'secondary' },
@@ -84,6 +86,23 @@ export function DashboardPage({ canFetch }: { canFetch: boolean }) {
                 <span>{['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'][index]}</span>
               </div>
             ))}
+          </div>
+          <div className="dashboard-monthly-chart" aria-label="Grafik kunjungan bulanan">
+            <div className="dashboard-monthly-head">
+              <div>
+                <span className="dashboard-kicker">Tren Bulanan</span>
+                <strong>6 bulan terakhir</strong>
+              </div>
+              <span>Stabil naik</span>
+            </div>
+            <div className="monthly-bars">
+              {monthlyChartValues.map((height, index) => (
+                <div className="monthly-bar-item" key={monthlyChartLabels[index]} title={`${height}% kapasitas`}>
+                  <span className="monthly-bar-track"><span className="monthly-bar-fill" style={{ height: `${height}%` }} /></span>
+                  <small>{monthlyChartLabels[index]}</small>
+                </div>
+              ))}
+            </div>
           </div>
         </SectionCard>
 
