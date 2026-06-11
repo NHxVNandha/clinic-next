@@ -1,11 +1,10 @@
-import { Activity, CircleUserRound, FileText, Pill, Stethoscope, Users } from 'lucide-react'
+import { Activity, CircleUserRound, FileText, Pill, Users } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
-export type GridEntityKind = 'patient' | 'doctor' | 'service' | 'diagnosis' | 'medicine' | 'user' | 'record' | 'default'
+export type GridEntityKind = 'patient' | 'service' | 'diagnosis' | 'medicine' | 'user' | 'record' | 'default'
 
 const iconByKind: Record<GridEntityKind, LucideIcon> = {
   patient: Users,
-  doctor: Stethoscope,
   service: Activity,
   diagnosis: FileText,
   medicine: Pill,
@@ -38,7 +37,7 @@ export function GridEntityCell({
   return (
     <div className={`grid-entity-cell entity-${kind}`}>
       <span className="grid-entity-avatar" aria-hidden="true">
-        <span>{getEntityInitials(text, kind === 'patient' ? 'PX' : kind === 'doctor' ? 'DR' : 'NA')}</span>
+        <span>{getEntityInitials(text, kind === 'patient' ? 'PX' : 'NA')}</span>
         <i><Icon size={10} /></i>
       </span>
       <span className="grid-entity-main">

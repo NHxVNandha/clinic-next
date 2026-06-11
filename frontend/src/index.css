@@ -1716,13 +1716,11 @@ button.filter-chip:hover {
   white-space: nowrap;
 }
 
-.grid-entity-cell.entity-doctor .grid-entity-avatar,
 .grid-entity-cell.entity-service .grid-entity-avatar {
   background: var(--secondary-container);
   color: var(--on-secondary-container);
 }
 
-.grid-entity-cell.entity-doctor .grid-entity-avatar i,
 .grid-entity-cell.entity-service .grid-entity-avatar i {
   background: var(--secondary);
   color: var(--on-secondary);

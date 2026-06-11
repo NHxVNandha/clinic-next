@@ -32,7 +32,7 @@ function resolveEntityKind(fieldName: string, headerName: string): GridEntityKin
   const key = `${fieldName} ${headerName}`.toLowerCase()
   if (!/(^|\s|_|-)(nama|name|pasien|dokter|jasa|diagnosa|obat|radiologi|pemeriksaan|user)(\s|_|-|$)/.test(key)) return null
   if (/pasien|patient/.test(key)) return 'patient'
-  if (/dokter|doctor/.test(key)) return 'doctor'
+  if (/dokter|doctor/.test(key)) return null
   if (/diagnosa|diagnosis/.test(key)) return 'diagnosis'
   if (/obat|resep|medicine/.test(key)) return 'medicine'
   if (/jasa|tindakan|layanan|alkes|radiologi|pemeriksaan|service/.test(key)) return 'service'
