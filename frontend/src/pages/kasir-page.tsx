@@ -219,16 +219,18 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
       {
         colId: 'aksi',
         headerName: 'Aksi',
-        minWidth: 110,
+        width: 224,
+        minWidth: 224,
+        maxWidth: 240,
         pinned: 'right',
         sortable: false,
         filter: false,
+        suppressSizeToFit: true,
         cellRenderer: (params: { data?: PembayaranItem }) => {
           const row = params.data
           if (!row) return null
           return (
-            <div className="top-actions row-actions">
-              <span className="top-actions top-actions-danger">
+            <div className="top-actions row-actions billing-row-actions">
               {canManage ? (
                 <button
                   className="icon-btn btn-primary-soft"
@@ -272,7 +274,6 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
                   }}
                 ><Ban size={14} /><span className="action-label-desktop">Batalkan</span></button>
               ) : null}
-              </span>
             </div>
           )
         },

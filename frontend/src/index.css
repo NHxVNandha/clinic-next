@@ -313,6 +313,19 @@ body {
   justify-content: flex-start;
 }
 
+.billing-row-actions {
+  width: 100%;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+
+.billing-row-actions .icon-btn {
+  flex: 0 0 auto;
+  min-width: 96px;
+  justify-content: center;
+  white-space: nowrap;
+}
+
 .top-actions-danger {
   margin-left: 4px;
   padding-left: 8px;
