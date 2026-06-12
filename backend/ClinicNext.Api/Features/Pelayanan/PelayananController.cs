@@ -1008,7 +1008,7 @@ public class PelayananController : ControllerBase
 
     private int? GetCurrentUserId()
     {
-        var sub = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        var sub = User.FindFirstValue(JwtRegisteredClaimNames.Sub) ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (int.TryParse(sub, out var userId))
         {
             return userId;
