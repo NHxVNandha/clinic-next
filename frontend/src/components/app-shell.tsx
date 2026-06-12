@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Command } from 'cmdk'
 import { Bell, CircleHelp, Languages, LogOut, Moon, Search, Sun } from 'lucide-react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { appRoutes } from '../routes'
 import { getAuthUser } from '../lib/storage'
 import { isBypassLogin, isDummyMode } from '../lib/runtime-flags'
@@ -24,6 +24,7 @@ const routeTextKeys: Record<string, { label: TranslationKey; desc: TranslationKe
 
 export function AppShell({ onLogout }: { onLogout: () => void }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { language, toggleLanguage, t } = useT()
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     const stored = localStorage.getItem('clinic-next-theme')
@@ -137,7 +138,10 @@ export function AppShell({ onLogout }: { onLogout: () => void }) {
           </div>
         </header>
         <main className="content" id="main-content" tabIndex={-1}>
-          <Outlet />
+          <div key={location.pathname} className="route-transition-shell">
+            <span className="route-scanline" aria-hidden="true" />
+            <Outlet />
+          </div>
         </main>
       </div>
 

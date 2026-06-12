@@ -423,6 +423,57 @@ button.filter-chip:focus-visible {
   padding: 14px;
 }
 
+.route-transition-shell {
+  position: relative;
+  isolation: isolate;
+  animation: route-clinical-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.route-scanline {
+  position: absolute;
+  z-index: 20;
+  top: 0;
+  bottom: 0;
+  left: -18%;
+  width: 16%;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent-cool) 22%, transparent), transparent);
+  filter: blur(1px);
+  opacity: 0;
+  animation: route-scanline-sweep 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes route-clinical-in {
+  from {
+    opacity: 0;
+    transform: translate3d(18px, 10px, 0) scale(0.992);
+    filter: saturate(0.86);
+  }
+  58% {
+    opacity: 1;
+    filter: saturate(1.08);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: saturate(1);
+  }
+}
+
+@keyframes route-scanline-sweep {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(760%);
+  }
+}
+
 .page-card {
   background: color-mix(in srgb, var(--surface) 92%, transparent);
   border: 1px solid color-mix(in srgb, var(--border-strong) 72%, var(--border));
