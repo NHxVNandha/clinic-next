@@ -3,7 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/app-shell'
 import { LoginPage } from './pages/login-page'
 import { ForgotPasswordPage } from './pages/forgot-password-page'
-import { RegisterClinicPage } from './pages/register-clinic-page'
+import { RegisterAccountPage } from './pages/register-account-page'
 import { getAccessToken } from './lib/storage'
 import { useMe } from './hooks/use-auth'
 import { isBypassLogin } from './lib/runtime-flags'
@@ -81,7 +81,8 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage onSuccess={() => setTokenVersion((prev) => prev + 1)} />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/register-clinic" element={<RegisterClinicPage />} />
+          <Route path="/register" element={<RegisterAccountPage />} />
+          <Route path="/register-clinic" element={<Navigate to="/register" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </Suspense>
@@ -93,6 +94,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Navigate to="/dashboard" replace />} />
         <Route path="/forgot-password" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/register" element={<Navigate to="/dashboard" replace />} />
         <Route path="/register-clinic" element={<Navigate to="/dashboard" replace />} />
         <Route element={<AppShell onLogout={() => setTokenVersion((prev) => prev + 1)} />}>
           <Route path="/dashboard" element={<DashboardPage canFetch={isBypassLogin || Boolean(token)} />} />

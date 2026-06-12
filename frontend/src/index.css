@@ -1068,14 +1068,14 @@ button.filter-chip:focus-visible {
   width: min(440px, 100%);
   display: grid;
   gap: 24px;
-  border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
-  border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--border) 56%, transparent);
+  border-radius: 18px;
   background:
-    linear-gradient(180deg, color-mix(in srgb, #ffffff 72%, transparent), transparent 42%),
-    color-mix(in srgb, var(--surface) 96%, transparent);
-  box-shadow: 0 22px 54px color-mix(in srgb, var(--primary) 10%, transparent), 0 2px 0 color-mix(in srgb, #ffffff 70%, transparent) inset;
+    linear-gradient(180deg, color-mix(in srgb, #ffffff 56%, transparent), transparent 48%),
+    color-mix(in srgb, var(--surface) 88%, transparent);
+  box-shadow: 0 18px 42px color-mix(in srgb, var(--primary) 8%, transparent);
   padding: clamp(24px, 4vw, 36px);
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(10px);
 }
 
 .auth-shell {
@@ -1102,14 +1102,26 @@ button.filter-chip:focus-visible {
   padding: clamp(40px, 7vw, 84px);
 }
 
+.auth-brand-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  mix-blend-mode: overlay;
+  opacity: 0.42;
+  filter: saturate(0.9) contrast(1.05);
+}
+
 .auth-brand-panel::before {
   content: '';
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(120deg, color-mix(in srgb, #ffffff 16%, transparent), transparent 42%),
-    radial-gradient(62% 44% at 82% 18%, color-mix(in srgb, var(--accent-cool) 44%, transparent), transparent 72%);
-  opacity: 0.7;
+    linear-gradient(120deg, color-mix(in srgb, #ffffff 12%, transparent), transparent 42%),
+    radial-gradient(62% 44% at 82% 18%, color-mix(in srgb, var(--accent-cool) 36%, transparent), transparent 72%),
+    color-mix(in srgb, var(--primary) 42%, transparent);
+  opacity: 0.86;
 }
 
 .auth-brand-pattern {
@@ -1224,7 +1236,7 @@ button.filter-chip:focus-visible {
 
 .auth-form {
   display: grid;
-  gap: 18px;
+  gap: 16px;
 }
 
 .auth-card label:not(.auth-check-row) {
@@ -1240,13 +1252,13 @@ button.filter-chip:focus-visible {
 .auth-input-wrap {
   display: flex;
   align-items: center;
-  gap: 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
+  gap: 12px;
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
   color: var(--text-muted);
-  min-height: 48px;
-  padding: 0 12px;
+  min-height: 50px;
+  padding: 0 16px;
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
@@ -1263,7 +1275,17 @@ button.filter-chip:focus-visible {
   background: transparent;
   color: var(--text);
   font-size: 0.96rem;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: normal;
+  padding: 12px 0;
   text-transform: none;
+}
+
+.auth-input-wrap input:-webkit-autofill {
+  -webkit-text-fill-color: var(--text);
+  box-shadow: 0 0 0 1000px color-mix(in srgb, var(--surface) 86%, transparent) inset;
+  font-weight: 400;
 }
 
 .auth-input-wrap input::placeholder {
@@ -1407,10 +1429,8 @@ button.filter-chip:focus-visible {
 .auth-support-panel {
   display: grid;
   gap: 8px;
-  border: 1px solid color-mix(in srgb, var(--primary) 20%, var(--border));
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--primary-fixed) 42%, var(--surface));
-  padding: 16px;
+  border-left: 3px solid color-mix(in srgb, var(--primary) 42%, var(--border));
+  padding: 2px 0 2px 14px;
 }
 
 .auth-support-panel strong {
@@ -1442,6 +1462,13 @@ button.filter-chip:focus-visible {
   color: var(--text);
   padding: 12px;
   resize: vertical;
+}
+
+.auth-helper-text {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
 }
 
 .auth-textarea:focus {

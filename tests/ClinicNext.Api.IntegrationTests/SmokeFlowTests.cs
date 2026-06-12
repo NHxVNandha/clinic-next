@@ -35,6 +35,40 @@ public class SmokeFlowTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
+    public async Task Register_Creates_User_With_Non_Admin_Role()
+    {
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/register", new
+        {
+            name = "Operator Baru",
+            email = "operator@test.local",
+            password = "Password123!",
+            confirmPassword = "Password123!"
+        });
+
+        var raw = await response.Content.ReadAsStringAsync();
+        Assert.True(response.StatusCode == HttpStatusCode.OK, $"Unexpected status {(int)response.StatusCode}. Body: {raw}");
+
+        var json = JsonSerializer.Deserialize<JsonElement>(raw);
+        var data = json.GetProperty("data");
+        Assert.Equal("operator@test.local", data.GetProperty("email").GetString());
+        Assert.Equal(2, data.GetProperty("roleId").GetInt32());
+    }
+
+    [Fact]
+    public async Task Register_Rejects_Duplicate_Email()
+    {
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/register", new
+        {
+            name = "Admin Duplicate",
+            email = "admin@test.local",
+            password = "Password123!",
+            confirmPassword = "Password123!"
+        });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Core_Protected_Endpoints_Return_Success_With_Bearer()
     {
         var me = await _client.GetAsync("/api/v1/auth/me");

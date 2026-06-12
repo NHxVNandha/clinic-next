@@ -67,6 +67,63 @@ public class AuthController : ControllerBase
         }, "Login berhasil.", HttpContext.TraceIdentifier));
     }
 
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+    {
+        var name = request.Name.Trim();
+        var email = request.Email.Trim().ToLowerInvariant();
+        var password = request.Password;
+
+        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        {
+            return BadRequest(ApiResponse<object>.Fail("Nama, email, dan password wajib diisi.", HttpContext.TraceIdentifier));
+        }
+
+        if (!email.Contains('@') || !email.Contains('.'))
+        {
+            return BadRequest(ApiResponse<object>.Fail("Format email tidak valid.", HttpContext.TraceIdentifier));
+        }
+
+        if (password.Length < 8)
+        {
+            return BadRequest(ApiResponse<object>.Fail("Password minimal 8 karakter.", HttpContext.TraceIdentifier));
+        }
+
+        if (password != request.ConfirmPassword)
+        {
+            return BadRequest(ApiResponse<object>.Fail("Konfirmasi password tidak sama.", HttpContext.TraceIdentifier));
+        }
+
+        var exists = await _dbContext.Users.AnyAsync(x => x.Email.ToLower() == email);
+        if (exists)
+        {
+            return Conflict(ApiResponse<object>.Fail("Email sudah terdaftar.", HttpContext.TraceIdentifier));
+        }
+
+        var now = DateTime.UtcNow;
+        var user = new UserEntity
+        {
+            Name = name,
+            Email = email,
+            Password = BCrypt.Net.BCrypt.HashPassword(password),
+            RoleId = 2,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        _dbContext.Users.Add(user);
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(ApiResponse<object>.Ok(new
+        {
+            user.Id,
+            user.Name,
+            user.Email,
+            user.RoleId,
+            Role = ResolveRoleName(user)
+        }, "Akun berhasil dibuat. Silakan login.", HttpContext.TraceIdentifier));
+    }
+
     [Authorize]
     [HttpGet("me")]
     public async Task<IActionResult> Me()
@@ -320,6 +377,17 @@ public class LoginRequest
     public string Email { get; set; } = string.Empty;
 
     public string Password { get; set; } = string.Empty;
+}
+
+public class RegisterRequest
+{
+    public string Name { get; set; } = string.Empty;
+
+    public string Email { get; set; } = string.Empty;
+
+    public string Password { get; set; } = string.Empty;
+
+    public string ConfirmPassword { get; set; } = string.Empty;
 }
 
 public class LoginResponse

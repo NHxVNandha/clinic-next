@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { login, logout, me, type LoginRequest } from '../api/auth'
+import { login, logout, me, register, type LoginRequest, type RegisterRequest } from '../api/auth'
 import { clearAccessToken, clearAuthUser, getRefreshToken, setAccessToken, setAuthUser, setRefreshToken } from '../lib/storage'
 
 export function useLogin() {
@@ -10,6 +10,12 @@ export function useLogin() {
       setRefreshToken(response.data.refreshToken)
       setAuthUser(response.data.user)
     },
+  })
+}
+
+export function useRegister() {
+  return useMutation({
+    mutationFn: (payload: RegisterRequest) => register(payload),
   })
 }
 

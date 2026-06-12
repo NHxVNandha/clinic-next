@@ -6,6 +6,7 @@ export function ForgotPasswordPage() {
     <div className="auth-layout">
       <main className="auth-shell auth-shell-support">
         <section className="auth-brand-panel auth-brand-panel-support" aria-label="Reset password MediFlow Admin">
+          <img className="auth-brand-image" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgLoK8Rn8KHTmwPvBnJmPp3lrRG94FKTyIyak0UpFvgpS9AtdbM-d_kLwtNaNaWQghOSszuqTgzcBSVNPD6Km1PXynYj0562fGwIO13my7vPqfK-rTpPcIoDglJHxFQZeiOyahpCVDVzCe_UQP0e6exuxQJT60UchDrcaBw-2wrZeyeKPE-vG_gsjUfz01wLHYXSdPDQwp_pyU3ViZG4DFHINLFo609PDHFyaMRtm64fXc8syrMh7ZNpnPdjYQtjupZ-TXAWRC64yF" alt="Lingkungan klinik modern" />
           <div className="auth-brand-pattern" aria-hidden="true" />
           <div className="auth-brand-content">
             <div className="auth-brand-mark"><ShieldQuestion size={36} /></div>

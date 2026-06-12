@@ -39,6 +39,7 @@ export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
     <div className="auth-layout">
       <main className="auth-shell">
         <section className="auth-brand-panel" aria-label={t('login.brandAria')}>
+          <img className="auth-brand-image" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgLoK8Rn8KHTmwPvBnJmPp3lrRG94FKTyIyak0UpFvgpS9AtdbM-d_kLwtNaNaWQghOSszuqTgzcBSVNPD6Km1PXynYj0562fGwIO13my7vPqfK-rTpPcIoDglJHxFQZeiOyahpCVDVzCe_UQP0e6exuxQJT60UchDrcaBw-2wrZeyeKPE-vG_gsjUfz01wLHYXSdPDQwp_pyU3ViZG4DFHINLFo609PDHFyaMRtm64fXc8syrMh7ZNpnPdjYQtjupZ-TXAWRC64yF" alt="Lingkungan klinik modern" />
           <div className="auth-brand-pattern" aria-hidden="true" />
           <div className="auth-brand-content">
             <div className="auth-brand-mark"><ShieldCheck size={36} /></div>
@@ -123,7 +124,7 @@ export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
             </form>
 
             <div className="auth-register-prompt">
-              <p>{t('login.registerPrompt')} <Link className="auth-text-button" to="/register-clinic">{t('login.registerLink')}</Link></p>
+              <p>{t('login.registerPrompt')} <Link className="auth-text-button" to="/register">{t('login.registerLink')}</Link></p>
             </div>
             <p className="auth-legal">{t('login.legal')}</p>
           </div>

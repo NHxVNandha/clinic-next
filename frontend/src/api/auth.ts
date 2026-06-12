@@ -6,6 +6,13 @@ export type LoginRequest = {
   password: string
 }
 
+export type RegisterRequest = {
+  name: string
+  email: string
+  password: string
+  confirmPassword: string
+}
+
 export type LoginUser = {
   id: number
   name: string
@@ -43,6 +50,11 @@ export type SessionItem = {
 
 export async function login(payload: LoginRequest): Promise<ApiResponse<LoginResponseData>> {
   const { data } = await apiClient.post<ApiResponse<LoginResponseData>>('/auth/login', payload)
+  return data
+}
+
+export async function register(payload: RegisterRequest): Promise<ApiResponse<LoginUser>> {
+  const { data } = await apiClient.post<ApiResponse<LoginUser>>('/auth/register', payload)
   return data
 }
 
