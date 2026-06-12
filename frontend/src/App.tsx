@@ -2,6 +2,8 @@ import { Suspense, lazy, useMemo, useState, type ReactElement } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/app-shell'
 import { LoginPage } from './pages/login-page'
+import { ForgotPasswordPage } from './pages/forgot-password-page'
+import { RegisterClinicPage } from './pages/register-clinic-page'
 import { getAccessToken } from './lib/storage'
 import { useMe } from './hooks/use-auth'
 import { isBypassLogin } from './lib/runtime-flags'
@@ -74,12 +76,24 @@ function App() {
   }, [token, auth.isError])
 
   if (!isAuthenticated) {
-    return <LoginPage onSuccess={() => setTokenVersion((prev) => prev + 1)} />
+    return (
+      <Suspense fallback={<div className="route-loading">{t('loading.route')}</div>}>
+        <Routes>
+          <Route path="/login" element={<LoginPage onSuccess={() => setTokenVersion((prev) => prev + 1)} />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/register-clinic" element={<RegisterClinicPage />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </Suspense>
+    )
   }
 
   return (
     <Suspense fallback={<div className="route-loading">{t('loading.route')}</div>}>
       <Routes>
+        <Route path="/login" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/forgot-password" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/register-clinic" element={<Navigate to="/dashboard" replace />} />
         <Route element={<AppShell onLogout={() => setTokenVersion((prev) => prev + 1)} />}>
           <Route path="/dashboard" element={<DashboardPage canFetch={isBypassLogin || Boolean(token)} />} />
           <Route path="/pendaftaran" element={guard('/pendaftaran', <PendaftaranPage canFetch={isBypassLogin || Boolean(token)} />)} />

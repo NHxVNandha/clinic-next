@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Eye, EyeOff, Lock, Mail, ShieldCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { Link } from 'react-router-dom'
 import { useLogin } from '../hooks/use-auth'
 import { parseApiError } from '../lib/api-error'
 import { useT } from '../i18n'
@@ -89,7 +90,7 @@ export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
                 {errors.Email ? <small id="login-email-error" className="field-error">{errors.Email[0]}</small> : null}
               </label>
               <label>
-                <span className="auth-label-row"><span>{t('login.password')}</span><button className="auth-text-button" type="button">{t('login.forgot')}</button></span>
+                <span className="auth-label-row"><span>{t('login.password')}</span><Link className="auth-text-button" to="/forgot-password">{t('login.forgot')}</Link></span>
                 <div className="auth-input-wrap">
                   <Lock size={18} aria-hidden="true" />
                   <input
@@ -122,7 +123,7 @@ export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
             </form>
 
             <div className="auth-register-prompt">
-              <p>{t('login.registerPrompt')} <button type="button" className="auth-text-button">{t('login.registerLink')}</button></p>
+              <p>{t('login.registerPrompt')} <Link className="auth-text-button" to="/register-clinic">{t('login.registerLink')}</Link></p>
             </div>
             <p className="auth-legal">{t('login.legal')}</p>
           </div>
