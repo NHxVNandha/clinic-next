@@ -1,5 +1,6 @@
 import { Suspense, lazy, useMemo, useState, type ReactElement } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { AuthLayout } from './components/auth-layout'
 import { AppShell } from './components/app-shell'
 import { LoginPage } from './pages/login-page'
 import { ForgotPasswordPage } from './pages/forgot-password-page'
@@ -79,9 +80,11 @@ function App() {
     return (
       <Suspense fallback={<div className="route-loading">{t('loading.route')}</div>}>
         <Routes>
-          <Route path="/login" element={<LoginPage onSuccess={() => setTokenVersion((prev) => prev + 1)} />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/register" element={<RegisterAccountPage />} />
+          <Route element={<AuthLayout />}>
+            <Route path="/login" element={<LoginPage onSuccess={() => setTokenVersion((prev) => prev + 1)} />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/register" element={<RegisterAccountPage />} />
+          </Route>
           <Route path="/register-clinic" element={<Navigate to="/register" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>

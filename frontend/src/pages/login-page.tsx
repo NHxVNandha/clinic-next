@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import { Eye, EyeOff, Lock, Mail, ShieldCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useLogin } from '../hooks/use-auth'
 import { parseApiError } from '../lib/api-error'
 import { useT } from '../i18n'
 
 export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
   const { t } = useT()
-  const navigate = useNavigate()
   const [email, setEmail] = useState('admin@clinicnext.local')
   const [password, setPassword] = useState('Password123!')
   const [showPassword, setShowPassword] = useState(false)
@@ -36,40 +35,7 @@ export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
     }
   }
 
-  function goToRegister(event: React.MouseEvent<HTMLAnchorElement>) {
-    event.preventDefault()
-    const transitionDocument = document as Document & { startViewTransition?: (callback: () => void) => void }
-    if (transitionDocument.startViewTransition) {
-      transitionDocument.startViewTransition(() => navigate('/register'))
-      return
-    }
-    navigate('/register')
-  }
-
   return (
-    <div className="auth-layout">
-      <main className="auth-shell auth-shell-login">
-        <section className="auth-brand-panel" aria-label={t('login.brandAria')}>
-          <img className="auth-brand-image" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgLoK8Rn8KHTmwPvBnJmPp3lrRG94FKTyIyak0UpFvgpS9AtdbM-d_kLwtNaNaWQghOSszuqTgzcBSVNPD6Km1PXynYj0562fGwIO13my7vPqfK-rTpPcIoDglJHxFQZeiOyahpCVDVzCe_UQP0e6exuxQJT60UchDrcaBw-2wrZeyeKPE-vG_gsjUfz01wLHYXSdPDQwp_pyU3ViZG4DFHINLFo609PDHFyaMRtm64fXc8syrMh7ZNpnPdjYQtjupZ-TXAWRC64yF" alt="Lingkungan klinik modern" />
-          <div className="auth-brand-pattern" aria-hidden="true" />
-          <div className="auth-brand-content">
-            <div className="auth-brand-mark"><ShieldCheck size={36} /></div>
-            <h1>{t('login.title')}</h1>
-            <p>{t('login.hero')}</p>
-            <div className="auth-brand-metrics">
-              <article>
-                <small>{t('login.statusLabel')}</small>
-                <strong>{t('login.statusValue')}</strong>
-              </article>
-              <article>
-                <small>{t('login.securityLabel')}</small>
-                <strong>{t('login.securityValue')}</strong>
-              </article>
-            </div>
-          </div>
-        </section>
-
-        <section className="auth-form-panel">
           <div className="auth-card">
             <div className="auth-mobile-brand">
               <span><ShieldCheck size={26} /></span>
@@ -135,12 +101,9 @@ export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
             </form>
 
             <div className="auth-register-prompt">
-              <p>{t('login.registerPrompt')} <Link className="auth-text-button" to="/register" onClick={goToRegister}>{t('login.registerLink')}</Link></p>
+              <p>{t('login.registerPrompt')} <Link className="auth-text-button" to="/register">{t('login.registerLink')}</Link></p>
             </div>
             <p className="auth-legal">{t('login.legal')}</p>
           </div>
-        </section>
-      </main>
-    </div>
   )
 }

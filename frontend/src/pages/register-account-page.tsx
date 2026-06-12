@@ -36,22 +36,6 @@ export function RegisterAccountPage() {
   }
 
   return (
-    <div className="auth-layout">
-      <main className="auth-shell auth-shell-register">
-        <section className="auth-brand-panel" aria-label="Registrasi akun MediFlow Admin">
-          <img className="auth-brand-image" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgLoK8Rn8KHTmwPvBnJmPp3lrRG94FKTyIyak0UpFvgpS9AtdbM-d_kLwtNaNaWQghOSszuqTgzcBSVNPD6Km1PXynYj0562fGwIO13my7vPqfK-rTpPcIoDglJHxFQZeiOyahpCVDVzCe_UQP0e6exuxQJT60UchDrcaBw-2wrZeyeKPE-vG_gsjUfz01wLHYXSdPDQwp_pyU3ViZG4DFHINLFo609PDHFyaMRtm64fXc8syrMh7ZNpnPdjYQtjupZ-TXAWRC64yF" alt="Lingkungan klinik modern" />
-          <div className="auth-brand-pattern" aria-hidden="true" />
-          <div className="auth-brand-content">
-            <div className="auth-brand-mark"><UserRound size={36} /></div>
-            <h1>Buat Akun Pengguna</h1>
-            <p>Daftarkan akun operator agar dapat mengakses alur kerja klinik sesuai role dan kebijakan keamanan aplikasi.</p>
-            <div className="auth-brand-metrics">
-              <article><small>Role Awal</small><strong>User Secure</strong></article>
-              <article><small>Akses</small><strong>Role Based</strong></article>
-            </div>
-          </div>
-        </section>
-        <section className="auth-form-panel auth-form-panel-scroll">
           <form className="auth-card auth-register-card" onSubmit={submit}>
             <Link className="auth-back-link" to="/login"><ArrowLeft size={16} /> Kembali ke login</Link>
             <div className="auth-form-header">
@@ -83,8 +67,5 @@ export function RegisterAccountPage() {
               {registerMutation.isPending ? 'Membuat akun...' : 'Buat Akun'}
             </button>
           </form>
-        </section>
-      </main>
-    </div>
   )
 }
