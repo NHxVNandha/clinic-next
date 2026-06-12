@@ -3,10 +3,11 @@ import { Command } from 'cmdk'
 import { Bell, CircleHelp, Languages, LogOut, Moon, Search, Sun } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { appRoutes } from '../routes'
-import { clearAccessToken, clearAuthUser, getAuthUser } from '../lib/storage'
+import { getAuthUser } from '../lib/storage'
 import { isBypassLogin, isDummyMode } from '../lib/runtime-flags'
 import { canAccessRoute } from '../lib/access'
 import { useT, type TranslationKey } from '../i18n'
+import { useLogout } from '../hooks/use-auth'
 
 type ThemeMode = 'light' | 'dark' | 'system'
 
@@ -29,6 +30,7 @@ export function AppShell({ onLogout }: { onLogout: () => void }) {
     return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system'
   })
   const [isCommandOpen, setIsCommandOpen] = useState(false)
+  const logoutMutation = useLogout()
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -122,11 +124,11 @@ export function AppShell({ onLogout }: { onLogout: () => void }) {
             <button
               type="button"
               className="icon-btn icon-only"
-              onClick={() => {
-                clearAccessToken()
-                clearAuthUser()
+              onClick={async () => {
+                await logoutMutation.mutateAsync().catch(() => undefined)
                 onLogout()
               }}
+              disabled={logoutMutation.isPending}
               title={t('topbar.logout')}
               aria-label={t('topbar.logout')}
             >

@@ -1,6 +1,6 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { login, me, type LoginRequest } from '../api/auth'
-import { clearAccessToken, clearAuthUser, setAccessToken, setAuthUser, setRefreshToken } from '../lib/storage'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { login, logout, me, type LoginRequest } from '../api/auth'
+import { clearAccessToken, clearAuthUser, getRefreshToken, setAccessToken, setAuthUser, setRefreshToken } from '../lib/storage'
 
 export function useLogin() {
   return useMutation({
@@ -19,6 +19,23 @@ export function useMe(enabled: boolean) {
     queryFn: me,
     enabled,
     retry: false,
+  })
+}
+
+export function useLogout() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const refreshToken = getRefreshToken()
+      if (refreshToken) {
+        await logout({ refreshToken })
+      }
+    },
+    onSettled: () => {
+      clearAccessToken()
+      clearAuthUser()
+      queryClient.removeQueries({ queryKey: ['auth'] })
+    },
   })
 }
 
