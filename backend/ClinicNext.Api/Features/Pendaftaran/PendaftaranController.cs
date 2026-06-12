@@ -148,7 +148,7 @@ public class PendaftaranController : ControllerBase
         }
 
         var pasien = await _dbContext.Pasien
-            .FirstOrDefaultAsync(x => x.Id == request.IdPasien && x.DeletedAt == null);
+            .FirstOrDefaultAsync(x => x.IdPasien == request.IdPasien && x.DeletedAt == null);
 
         if (pasien == null)
         {
@@ -168,7 +168,7 @@ public class PendaftaranController : ControllerBase
         var entity = new PendaftaranEntity
         {
             IdRegistrasi = idRegistrasi,
-            IdPasien = request.IdPasien,
+            IdPasien = pasien.Id,
             KdDokter = request.KdDokter,
             Tanggal = request.Tanggal,
             InputBy = userId.Value,
@@ -353,7 +353,8 @@ public class PendaftaranController : ControllerBase
 public class CreatePendaftaranRequest
 {
     [Required]
-    public long IdPasien { get; set; }
+    [MaxLength(50)]
+    public string IdPasien { get; set; } = string.Empty;
 
     [Required]
     [MaxLength(50)]

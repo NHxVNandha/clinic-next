@@ -23,7 +23,7 @@ public class MasterController : ControllerBase
     }
 
     [HttpGet("pasien")]
-    public async Task<IActionResult> GetPasien([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    public async Task<IActionResult> GetPasien([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? search = null)
     {
         if (page <= 0 || pageSize <= 0)
         {
@@ -32,11 +32,22 @@ public class MasterController : ControllerBase
 
         var query = _dbContext.Pasien
             .Where(x => x.DeletedAt == null)
-            .OrderByDescending(x => x.Id);
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(x =>
+                (x.IdPasien ?? string.Empty).Contains(search) ||
+                (x.Nik ?? string.Empty).Contains(search) ||
+                (x.Nama ?? string.Empty).Contains(search) ||
+                (x.NoHp ?? string.Empty).Contains(search) ||
+                (x.Email ?? string.Empty).Contains(search));
+        }
 
         var total = await query.CountAsync();
 
         var data = await query
+            .OrderByDescending(x => x.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(x => new

@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: clinic-next-api
+    runtime: dotnet
+    plan: free
+    buildCommand: dotnet publish backend/ClinicNext.Api/ClinicNext.Api.csproj -c Release -o backend/ClinicNext.Api/out
+    startCommand: dotnet backend/ClinicNext.Api/out/ClinicNext.Api.dll
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Database__MigrateOnStartup
+        value: true
+      - key: Jwt__Issuer
+        value: ClinicNext
+      - key: Jwt__Audience
+        value: ClinicNext.Client
+      - key: AllowedOrigins
+        value: https://clinicnext-tqti.vercel.app
