@@ -387,53 +387,62 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
         description="Pilih pasien dan dokter dari referensi. Konfirmasi akan muncul sebelum penyimpanan."
         icon={Users}
         size="sm"
+        className="registration-modal"
         onClose={() => setCreateExistingModalOpen(false)}
       >
-        <div className="modal-info-card">
-          <div className="modal-info-avatar">PX</div>
-          <div>
-            <strong>Registrasi Pasien Lama</strong>
-            <p className="modal-helper-text">Cari pasien dari master, lalu tentukan dokter dan keluhan awal untuk kunjungan baru.</p>
+        <div className="registration-onboarding compact">
+          <div className="registration-intro-panel">
+            <div className="registration-intro-icon"><Users size={22} /></div>
+            <div>
+              <small>Existing Patient</small>
+              <strong>Registrasi Pasien Lama</strong>
+              <p>Cari pasien dari master, lalu tentukan dokter dan keluhan awal untuk kunjungan baru.</p>
+            </div>
           </div>
-        </div>
-        <div className="form-grid">
-          <FieldLabel text="ID Pasien (Master)" htmlFor="pendaftaran-existing-idpasien">
-            <StrictMasterComboboxField
-              inputId="pendaftaran-existing-idpasien"
-              value={form.idPasien}
-              onChange={(next) => {
-                setForm((p) => ({ ...p, idPasien: next }))
-                setFormError(null)
-              }}
-              placeholder="Cari atau pilih ID pasien"
-              options={(pasienRef.data?.data.items ?? []).map((item) => ({ value: item.idPasien, label: item.nama }))}
-              loading={pasienRef.isLoading || pasienRef.isFetching}
-              recentKey="pendaftaran-idpasien"
-              errorMessage="ID pasien harus dipilih dari daftar referensi."
-              onStrictError={setFormError}
-              disabled={!canCreate}
-            />
-          </FieldLabel>
-          <FieldLabel text="Kode Dokter (Master)" htmlFor="pendaftaran-existing-kddokter">
-            <StrictMasterComboboxField
-              inputId="pendaftaran-existing-kddokter"
-              value={form.kdDokter}
-              onChange={(next) => {
-                setForm((p) => ({ ...p, kdDokter: next }))
-                setFormError(null)
-              }}
-              placeholder="Cari atau pilih kode dokter"
-              options={(dokterRef.data?.data ?? []).map((item) => ({ value: item.kdDokter, label: item.namaDokter || item.kdDokter }))}
-              loading={dokterRef.isLoading || dokterRef.isFetching}
-              recentKey="pendaftaran-kddokter"
-              errorMessage="Kode dokter harus dipilih dari daftar referensi."
-              onStrictError={setFormError}
-              disabled={!canCreate}
-            />
-          </FieldLabel>
-          <FieldLabel text="Keluhan" htmlFor="pendaftaran-existing-keluhan">
-            <input id="pendaftaran-existing-keluhan" className="search-input" placeholder="Contoh: demam 3 hari" value={form.keluhan} onChange={(e) => setForm((p) => ({ ...p, keluhan: e.target.value }))} disabled={!canCreate} />
-          </FieldLabel>
+          <div className="registration-stepper" aria-label="Alur pendaftaran pasien existing">
+            <span className="registration-step active"><b>1</b> Pasien</span>
+            <span className="registration-step active"><b>2</b> Dokter</span>
+            <span className="registration-step"><b>3</b> Konfirmasi</span>
+          </div>
+          <div className="registration-form-panel form-grid">
+            <FieldLabel text="ID Pasien (Master)" htmlFor="pendaftaran-existing-idpasien">
+              <StrictMasterComboboxField
+                inputId="pendaftaran-existing-idpasien"
+                value={form.idPasien}
+                onChange={(next) => {
+                  setForm((p) => ({ ...p, idPasien: next }))
+                  setFormError(null)
+                }}
+                placeholder="Cari atau pilih ID pasien"
+                options={(pasienRef.data?.data.items ?? []).map((item) => ({ value: item.idPasien, label: item.nama }))}
+                loading={pasienRef.isLoading || pasienRef.isFetching}
+                recentKey="pendaftaran-idpasien"
+                errorMessage="ID pasien harus dipilih dari daftar referensi."
+                onStrictError={setFormError}
+                disabled={!canCreate}
+              />
+            </FieldLabel>
+            <FieldLabel text="Kode Dokter (Master)" htmlFor="pendaftaran-existing-kddokter">
+              <StrictMasterComboboxField
+                inputId="pendaftaran-existing-kddokter"
+                value={form.kdDokter}
+                onChange={(next) => {
+                  setForm((p) => ({ ...p, kdDokter: next }))
+                  setFormError(null)
+                }}
+                placeholder="Cari atau pilih kode dokter"
+                options={(dokterRef.data?.data ?? []).map((item) => ({ value: item.kdDokter, label: item.namaDokter || item.kdDokter }))}
+                loading={dokterRef.isLoading || dokterRef.isFetching}
+                recentKey="pendaftaran-kddokter"
+                errorMessage="Kode dokter harus dipilih dari daftar referensi."
+                onStrictError={setFormError}
+                disabled={!canCreate}
+              />
+            </FieldLabel>
+            <FieldLabel text="Keluhan" htmlFor="pendaftaran-existing-keluhan">
+              <input id="pendaftaran-existing-keluhan" className="search-input" placeholder="Contoh: demam 3 hari" value={form.keluhan} onChange={(e) => setForm((p) => ({ ...p, keluhan: e.target.value }))} disabled={!canCreate} />
+            </FieldLabel>
+          </div>
         </div>
         <FormFeedback errors={[formError]} />
         <div className="confirm-actions">
@@ -449,41 +458,60 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
         title="Tambah Pendaftaran + Pasien Baru"
         description="Lengkapi identitas pasien baru. Konfirmasi akan muncul sebelum penyimpanan."
         icon={UserPlus}
-        size="md"
+        size="lg"
+        className="registration-modal"
         footerNote="Data pasien baru akan disimpan permanen dan langsung dibuatkan pendaftaran kunjungan."
         onClose={() => setCreateNewPatientModalOpen(false)}
       >
-        <div className="modal-summary-grid">
-          <article className="modal-summary-card"><small>Jenis Form</small><strong>Pasien Baru</strong></article>
-          <article className="modal-summary-card"><small>Validasi</small><strong>NIK + Dokter</strong></article>
-        </div>
-        <div className="form-grid">
-          <FieldLabel text="Nama Pasien" htmlFor="pendaftaran-baru-nama">
-            <input id="pendaftaran-baru-nama" className="search-input" placeholder="Nama lengkap pasien" value={pasienBaruForm.nama} onChange={(e) => setPasienBaruForm((p) => ({ ...p, nama: e.target.value }))} disabled={!canCreate} />
-          </FieldLabel>
-          <FieldLabel text="NIK" htmlFor="pendaftaran-baru-nik">
-            <input id="pendaftaran-baru-nik" className="search-input" placeholder="16 digit NIK" value={pasienBaruForm.nik} onChange={(e) => setPasienBaruForm((p) => ({ ...p, nik: formatNik(e.target.value) }))} disabled={!canCreate} />
-          </FieldLabel>
-          <FieldLabel text="Kode Dokter (Master)" htmlFor="pendaftaran-baru-kddokter">
-            <StrictMasterComboboxField
-              inputId="pendaftaran-baru-kddokter"
-              value={pasienBaruForm.kdDokter}
-              onChange={(next) => {
-                setPasienBaruForm((p) => ({ ...p, kdDokter: next }))
-                setPasienBaruError(null)
-              }}
-              placeholder="Cari atau pilih kode dokter"
-              options={(dokterRef.data?.data ?? []).map((item) => ({ value: item.kdDokter, label: item.namaDokter || item.kdDokter }))}
-              loading={dokterRef.isLoading || dokterRef.isFetching}
-              recentKey="pendaftaran-baru-kddokter"
-              errorMessage="Kode dokter harus dipilih dari daftar referensi."
-              onStrictError={setPasienBaruError}
-              disabled={!canCreate}
-            />
-          </FieldLabel>
-          <FieldLabel text="No. HP" htmlFor="pendaftaran-baru-nohp">
-            <input id="pendaftaran-baru-nohp" className="search-input" placeholder="08xxxxxxxxxx" value={pasienBaruForm.noHp} onChange={(e) => setPasienBaruForm((p) => ({ ...p, noHp: formatPhone(e.target.value) }))} disabled={!canCreate} />
-          </FieldLabel>
+        <div className="registration-onboarding">
+          <aside className="registration-intro-panel">
+            <div className="registration-intro-icon"><UserPlus size={22} /></div>
+            <div>
+              <small>New Patient</small>
+              <strong>Onboarding Pasien Baru</strong>
+              <p>Lengkapi data identitas, pilih dokter referensi, lalu sistem akan membuat pasien dan pendaftaran kunjungan sekaligus.</p>
+            </div>
+            <div className="registration-checklist">
+              <span>Validasi NIK</span>
+              <span>Dokter master wajib</span>
+              <span>Konfirmasi sebelum simpan</span>
+            </div>
+          </aside>
+          <div className="registration-form-panel">
+            <div className="registration-stepper" aria-label="Alur pendaftaran pasien baru">
+              <span className="registration-step active"><b>1</b> Identitas Pasien</span>
+              <span className="registration-step active"><b>2</b> Dokter</span>
+              <span className="registration-step"><b>3</b> Konfirmasi</span>
+            </div>
+            <div className="form-grid">
+              <FieldLabel text="Nama Pasien" htmlFor="pendaftaran-baru-nama">
+                <input id="pendaftaran-baru-nama" className="search-input" placeholder="Nama lengkap pasien" value={pasienBaruForm.nama} onChange={(e) => setPasienBaruForm((p) => ({ ...p, nama: e.target.value }))} disabled={!canCreate} />
+              </FieldLabel>
+              <FieldLabel text="NIK" htmlFor="pendaftaran-baru-nik">
+                <input id="pendaftaran-baru-nik" className="search-input" placeholder="16 digit NIK" value={pasienBaruForm.nik} onChange={(e) => setPasienBaruForm((p) => ({ ...p, nik: formatNik(e.target.value) }))} disabled={!canCreate} />
+              </FieldLabel>
+              <FieldLabel text="Kode Dokter (Master)" htmlFor="pendaftaran-baru-kddokter">
+                <StrictMasterComboboxField
+                  inputId="pendaftaran-baru-kddokter"
+                  value={pasienBaruForm.kdDokter}
+                  onChange={(next) => {
+                    setPasienBaruForm((p) => ({ ...p, kdDokter: next }))
+                    setPasienBaruError(null)
+                  }}
+                  placeholder="Cari atau pilih kode dokter"
+                  options={(dokterRef.data?.data ?? []).map((item) => ({ value: item.kdDokter, label: item.namaDokter || item.kdDokter }))}
+                  loading={dokterRef.isLoading || dokterRef.isFetching}
+                  recentKey="pendaftaran-baru-kddokter"
+                  errorMessage="Kode dokter harus dipilih dari daftar referensi."
+                  onStrictError={setPasienBaruError}
+                  disabled={!canCreate}
+                />
+              </FieldLabel>
+              <FieldLabel text="No. HP" htmlFor="pendaftaran-baru-nohp">
+                <input id="pendaftaran-baru-nohp" className="search-input" placeholder="08xxxxxxxxxx" value={pasienBaruForm.noHp} onChange={(e) => setPasienBaruForm((p) => ({ ...p, noHp: formatPhone(e.target.value) }))} disabled={!canCreate} />
+              </FieldLabel>
+            </div>
+          </div>
         </div>
         <FormFeedback errors={[pasienBaruError]} />
         <div className="confirm-actions">
