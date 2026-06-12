@@ -1,4 +1,5 @@
 const ACCESS_TOKEN_KEY = 'clinic-next-access-token'
+const REFRESH_TOKEN_KEY = 'clinic-next-refresh-token'
 const AUTH_USER_KEY = 'clinic-next-auth-user'
 
 export type StoredAuthUser = {
@@ -17,8 +18,17 @@ export function setAccessToken(token: string): void {
   localStorage.setItem(ACCESS_TOKEN_KEY, token)
 }
 
+export function getRefreshToken(): string | null {
+  return localStorage.getItem(REFRESH_TOKEN_KEY)
+}
+
+export function setRefreshToken(token: string): void {
+  localStorage.setItem(REFRESH_TOKEN_KEY, token)
+}
+
 export function clearAccessToken(): void {
   localStorage.removeItem(ACCESS_TOKEN_KEY)
+  localStorage.removeItem(REFRESH_TOKEN_KEY)
 }
 
 export function setAuthUser(user: StoredAuthUser): void {

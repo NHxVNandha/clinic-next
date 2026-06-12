@@ -224,7 +224,7 @@ export function PelayananPage({ canFetch }: { canFetch: boolean }) {
       }
       const confirmed = await confirmThemedAction({ title: 'Konfirmasi tambah tindakan', text: `Tambah tindakan untuk ${selected.idRegistrasi}?`, confirmText: 'Ya, Simpan' })
       if (!confirmed) return
-      const result = await runActionWithFeedback(() => createTindakanMutation.mutateAsync({ idRegistrasi: selected.idRegistrasi, payload: { nama: tindakanForm.nama.trim(), qty: Number(tindakanForm.qty || 1), harga: Number(tindakanForm.harga || 0) } }), 'Tindakan berhasil ditambahkan.')
+      const result = await runActionWithFeedback(() => createTindakanMutation.mutateAsync({ idRegistrasi: selected.idRegistrasi, payload: { idJasa: selectedMasterTindakan?.id, nama: tindakanForm.nama.trim(), qty: Number(tindakanForm.qty || 1), harga: Number(tindakanForm.harga || 0) } }), 'Tindakan berhasil ditambahkan.')
       if (result) {
         setTindakanForm({ nama: '', qty: '1', harga: '0' })
         setDetailCreateModalOpen(false)
