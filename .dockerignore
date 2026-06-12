@@ -1,0 +1,14 @@
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/.vercel/
+**/.temp/
+**/.branches/
+.git/
+.gitignore
+frontend/
+docs/
+tests/
+supabase/.temp/
+README.md
