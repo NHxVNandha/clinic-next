@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { X } from 'lucide-react'
+import { useT } from '../i18n'
 
 export function FormModal({
   open,
@@ -23,6 +24,7 @@ export function FormModal({
   onClose: () => void
   children: ReactNode
 }) {
+  const { t } = useT()
   if (!open) return null
   const modalTitleId = `modal-title-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
   const modalDescriptionId = description ? `${modalTitleId}-desc` : undefined
@@ -37,7 +39,7 @@ export function FormModal({
               {description ? <p id={modalDescriptionId}>{description}</p> : null}
             </div>
           </div>
-          <button type="button" className="icon-btn icon-only modal-close-btn" onClick={onClose} title="Tutup modal" aria-label="Tutup modal"><X size={14} /></button>
+          <button type="button" className="icon-btn icon-only modal-close-btn" onClick={onClose} title={t('common.closeModal')} aria-label={t('common.closeModal')}><X size={14} /></button>
         </div>
         <div className="modal-body">
           {children}

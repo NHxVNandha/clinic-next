@@ -23,7 +23,7 @@ import { formatNik, formatPhone } from '../lib/input-normalizers'
 import { canCreatePendaftaran, getActionAccess } from '../lib/access'
 import { confirmThemedAction } from '../lib/sweet-alert'
 import { getAuthUser } from '../lib/storage'
-import { useT } from '../i18n'
+import { useT, type TranslationKey } from '../i18n'
 
 function getPatientDisplayName(data?: Record<string, unknown> | null) {
   const value = data?.namaPasien ?? data?.nama_pasien ?? data?.nama ?? data?.pasienNama ?? data?.namaPatient
@@ -48,6 +48,7 @@ function formatHumanDate(value: string) {
 
 export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
   const { t } = useT()
+  const msg = (key: TranslationKey, values: Record<string, string | number> = {}) => Object.entries(values).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), t(key))
   const canCreate = canCreatePendaftaran()
   const createAccess = getActionAccess('pendaftaranCreate')
   const navigate = useNavigate()
@@ -93,7 +94,7 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
       },
       {
         field: 'idRegistrasi',
-        headerName: 'Registrasi',
+        headerName: t('registration.detail.registrationNo'),
         minWidth: 190,
         pinned: 'left',
         wrapText: true,
@@ -107,7 +108,7 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
       },
       {
         field: 'idPasien',
-        headerName: 'Pasien',
+        headerName: t('registration.step.patient'),
         minWidth: 250,
         wrapText: true,
         autoHeight: true,
@@ -115,10 +116,10 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
           <GridEntityCell primary={getPatientDisplayName(params.data as unknown as Record<string, unknown>)} secondary={String(params.value ?? '-').trim() || '-'} kind="patient" />
         ),
       },
-      { field: 'dokterNama', headerName: 'Dokter', minWidth: 180 },
+      { field: 'dokterNama', headerName: t('registration.detail.doctor'), minWidth: 180 },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('common.status'),
         minWidth: 130,
         cellRenderer: (params: { value?: string }) => {
           const statusMeta = getStatusMeta(params.value)
@@ -127,7 +128,7 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
       },
       {
         colId: 'aksi',
-        headerName: 'Aksi',
+        headerName: t('common.actions'),
         minWidth: 170,
         pinned: 'right',
         sortable: false,
@@ -137,13 +138,13 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
           if (!row) return null
           return (
             <div className="top-actions row-actions">
-              <button className="icon-btn row-action-single" title="Buka di Pelayanan" aria-label="Buka di Pelayanan" onClick={() => navigate(`/pelayanan?search=${encodeURIComponent(row.idRegistrasi ?? '')}`)}><ExternalLink size={14} /><span className="action-label-desktop">Ke Pelayanan</span></button>
+              <button className="icon-btn row-action-single" title={t('registration.openService')} aria-label={t('registration.openService')} onClick={() => navigate(`/pelayanan?search=${encodeURIComponent(row.idRegistrasi ?? '')}`)}><ExternalLink size={14} /><span className="action-label-desktop">{t('registration.toService')}</span></button>
             </div>
           )
         },
       },
     ],
-    [navigate],
+    [navigate, t],
   )
 
   const data = query.data?.data
@@ -162,18 +163,18 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
   const showSystemInfo = role === 'admin' || role === 'dev' || role === 'developer'
   const visitDate = pickValue(detailSource, ['tanggal', 'tglKunjungan', 'createdAt'])
   const detailOverview = [
-    { label: 'Nama Pasien', value: getPatientDisplayName(detailSource) },
-    { label: 'Dokter', value: pickValue(detailSource, ['dokterNama', 'namaDokter', 'dokter']) || '-' },
-    { label: 'Tanggal Kunjungan', value: formatHumanDate(visitDate) },
-    { label: 'Penjamin', value: pickValue(detailSource, ['penjamin', 'tipePenjamin']) || '-' },
+    { label: t('registration.detail.patientName'), value: getPatientDisplayName(detailSource) },
+    { label: t('registration.detail.doctor'), value: pickValue(detailSource, ['dokterNama', 'namaDokter', 'dokter']) || '-' },
+    { label: t('registration.detail.visitDate'), value: formatHumanDate(visitDate) },
+    { label: t('registration.detail.guarantor'), value: pickValue(detailSource, ['penjamin', 'tipePenjamin']) || '-' },
   ]
   const patientIdentifier = pickValue(detailSource, ['noRm', 'no_rm', 'nomorRm', 'nomor_rm', 'idPasien', 'pasienId']) || '-'
   const complaintText = pickValue(detailSource, ['keluhan', 'anamnesa', 'catatan']) || '-'
   const detailSystemInfo = [
-    { label: 'No. Registrasi', value: pickValue(detailSource, ['idRegistrasi']) || '-' },
-    { label: 'No. RM / ID Pasien', value: patientIdentifier },
-    { label: 'Kode Dokter', value: pickValue(detailSource, ['kdDokter']) || '-' },
-    { label: 'ID Internal', value: pickValue(detailSource, ['id']) || '-' },
+    { label: t('registration.detail.registrationNo'), value: pickValue(detailSource, ['idRegistrasi']) || '-' },
+    { label: t('registration.detail.patientNo'), value: patientIdentifier },
+    { label: t('registration.detail.doctorCode'), value: pickValue(detailSource, ['kdDokter']) || '-' },
+    { label: t('registration.detail.internalId'), value: pickValue(detailSource, ['id']) || '-' },
   ]
   const statusCounts = useMemo(() => ({
     menunggu: filteredItems.filter((item) => String(item.status ?? '') === '1').length,
@@ -213,25 +214,25 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
   async function submitCreateExisting() {
     if (!canCreate || createMutation.isPending) return
     if (!form.idPasien.trim() || !form.kdDokter.trim()) {
-      setFormError('ID pasien dan kode dokter wajib diisi.')
+      setFormError(t('registration.error.patientDoctorRequired'))
       return
     }
     const pasienValid = (pasienRef.data?.data.items ?? []).some((item) => item.idPasien === form.idPasien.trim())
     const dokterValid = (dokterRef.data?.data ?? []).some((item) => item.kdDokter === form.kdDokter.trim())
     if (!pasienValid || !dokterValid) {
-      setFormError('ID pasien atau kode dokter tidak valid. Pilih dari daftar referensi.')
+      setFormError(t('registration.error.patientDoctorInvalid'))
       return
     }
     const confirmed = await confirmThemedAction({
-      title: 'Konfirmasi tambah pendaftaran',
-      text: `Tambah pendaftaran untuk pasien ${form.idPasien.trim()}?`,
-      confirmText: 'Ya, Simpan',
+      title: t('registration.confirm.existingTitle'),
+      text: msg('registration.confirm.existingText', { id: form.idPasien.trim() }),
+      confirmText: t('registration.confirm.save'),
     })
     if (!confirmed) return
     setFormError(null)
     const result = await runActionWithFeedback(
       () => createMutation.mutateAsync({ idPasien: form.idPasien.trim(), kdDokter: form.kdDokter.trim(), keluhan: form.keluhan.trim() || undefined }),
-      'Pendaftaran berhasil ditambahkan.',
+      t('registration.success.existing'),
     )
     if (result) {
       setCreateExistingModalOpen(false)
@@ -243,18 +244,18 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
   async function submitCreateNewPatient() {
     if (!canCreate || createPasienBaruMutation.isPending) return
     if (!pasienBaruForm.nama.trim() || !pasienBaruForm.nik.trim() || !pasienBaruForm.kdDokter.trim()) {
-      setPasienBaruError('Nama, NIK, dan kode dokter wajib diisi.')
+      setPasienBaruError(t('registration.error.newRequired'))
       return
     }
     const dokterValid = (dokterRef.data?.data ?? []).some((item) => item.kdDokter === pasienBaruForm.kdDokter.trim())
     if (!dokterValid) {
-      setPasienBaruError('Kode dokter tidak valid. Pilih dari daftar referensi.')
+      setPasienBaruError(t('registration.error.doctorInvalid'))
       return
     }
     const confirmed = await confirmThemedAction({
-      title: 'Konfirmasi tambah pasien baru',
-      text: `Tambah pendaftaran pasien baru atas nama ${pasienBaruForm.nama.trim()}?`,
-      confirmText: 'Ya, Simpan',
+      title: t('registration.confirm.newTitle'),
+      text: msg('registration.confirm.newText', { name: pasienBaruForm.nama.trim() }),
+      confirmText: t('registration.confirm.save'),
     })
     if (!confirmed) return
     setPasienBaruError(null)
@@ -266,7 +267,7 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
           kdDokter: pasienBaruForm.kdDokter.trim(),
           noHp: pasienBaruForm.noHp.trim() || undefined,
         }),
-      'Pendaftaran pasien baru berhasil ditambahkan.',
+      t('registration.success.new'),
     )
     if (result) {
       setCreateNewPatientModalOpen(false)
@@ -288,7 +289,7 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
           </div>
         )}
       />
-      {!canCreate ? <p><span className="readonly-badge">Mode Read-only</span></p> : null}
+      {!canCreate ? <p><span className="readonly-badge">{t('registration.readonly')}</span></p> : null}
 
       <div className="toolbar-row toolbar-primary">
         <input
@@ -301,23 +302,23 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
             setPage(1)
           }}
         />
-        {query.isFetching ? <span className="kbd-hint">Memuat data...</span> : null}
+        {query.isFetching ? <span className="kbd-hint">{t('registration.loading')}</span> : null}
       </div>
       <div className="stats-grid">
         <article className="stat-card">
-          <small>Total Pendaftaran</small>
+          <small>{t('registration.total')}</small>
           <strong>{statusFilter ? filteredItems.length : data?.total ?? 0}</strong>
         </article>
         <article className="stat-card">
-          <small>Menunggu</small>
+          <small>{t('registration.waiting')}</small>
           <strong>{statusCounts.menunggu}</strong>
         </article>
         <article className="stat-card">
-          <small>Dilayani / Checked-in</small>
+          <small>{t('registration.servedCheckedIn')}</small>
           <strong>{statusCounts.dilayani + statusCounts.selesai}</strong>
         </article>
         <article className="stat-card">
-          <small>Dibatalkan</small>
+          <small>{t('registration.cancelled')}</small>
           <strong>{statusCounts.dibatalkan}</strong>
         </article>
       </div>
@@ -326,11 +327,11 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
         <div className="registration-queue-head">
         <div>
             <h2>{t('pendaftaran.queue')}</h2>
-            <p>Menampilkan {filteredItems.length} data pada halaman ini{selected ? `, terpilih ${selected.idRegistrasi}` : ''}.</p>
+            <p>{msg('registration.queueShowing', { count: filteredItems.length, selected: selected ? msg('registration.queueSelected', { id: selected.idRegistrasi ?? '-' }) : '' })}</p>
           </div>
           <div className="registration-queue-actions">
-            <button className="icon-btn" onClick={() => { const today = new Date().toISOString().slice(0, 10); setSearch(today); setPage(1) }}><CalendarDays size={14} /> Hari Ini</button>
-            <button className="icon-btn" onClick={async () => { await query.refetch(); toast.success('Data pendaftaran diperbarui.') }}><RefreshCw size={14} /> {t('common.refresh')}</button>
+            <button className="icon-btn" onClick={() => { const today = new Date().toISOString().slice(0, 10); setSearch(today); setPage(1) }}><CalendarDays size={14} /> {t('registration.today')}</button>
+            <button className="icon-btn" onClick={async () => { await query.refetch(); toast.success(t('registration.refreshSuccess')) }}><RefreshCw size={14} /> {t('common.refresh')}</button>
           </div>
         </div>
         <div className="registration-filter-strip">
@@ -364,18 +365,18 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
       {!activeLoading && filteredItems.length === 0 ? (
         <div className="empty-state">
           <p className="empty-note">{t('grid.empty')}</p>
-          {activeFilterCount > 0 ? <button className="icon-btn icon-only" title="Reset filter" aria-label="Reset filter" onClick={() => { setSearch(''); setStatusFilter(''); setPage(1) }}><RotateCcw size={14} /></button> : null}
+          {activeFilterCount > 0 ? <button className="icon-btn icon-only" title={t('registration.resetFilter')} aria-label={t('registration.resetFilter')} onClick={() => { setSearch(''); setStatusFilter(''); setPage(1) }}><RotateCcw size={14} /></button> : null}
         </div>
       ) : null}
 
       <div className="pager-row">
-        <button className="icon-btn icon-only" title="Halaman sebelumnya" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage((prev) => prev - 1)}>
+        <button className="icon-btn icon-only" title={t('common.previousPage')} aria-label={t('common.previousPage')} disabled={page <= 1} onClick={() => setPage((prev) => prev - 1)}>
           <ChevronLeft size={14} />
         </button>
         <span>
           {t('common.page')} {page} / {totalPage}
         </span>
-        <button className="icon-btn icon-only" title="Halaman berikutnya" aria-label="Halaman berikutnya" disabled={page >= totalPage} onClick={() => setPage((prev) => prev + 1)}>
+        <button className="icon-btn icon-only" title={t('common.nextPage')} aria-label={t('common.nextPage')} disabled={page >= totalPage} onClick={() => setPage((prev) => prev + 1)}>
           <ChevronRight size={14} />
         </button>
       </div>
@@ -383,8 +384,8 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
 
       <FormModal
         open={createExistingModalOpen}
-        title="Tambah Pendaftaran (Pasien Existing)"
-        description="Pilih pasien dan dokter dari referensi. Konfirmasi akan muncul sebelum penyimpanan."
+        title={t('registration.modal.existingTitle')}
+        description={t('registration.modal.existingDesc')}
         icon={Users}
         size="sm"
         className="registration-modal"
@@ -394,18 +395,18 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
           <div className="registration-intro-panel">
             <div className="registration-intro-icon"><Users size={22} /></div>
             <div>
-              <small>Existing Patient</small>
-              <strong>Registrasi Pasien Lama</strong>
-              <p>Cari pasien dari master, lalu tentukan dokter dan keluhan awal untuk kunjungan baru.</p>
+              <small>{t('registration.modal.existingKicker')}</small>
+              <strong>{t('registration.modal.existingHeading')}</strong>
+              <p>{t('registration.modal.existingIntro')}</p>
             </div>
           </div>
-          <div className="registration-stepper" aria-label="Alur pendaftaran pasien existing">
-            <span className="registration-step active"><b>1</b> Pasien</span>
-            <span className="registration-step active"><b>2</b> Dokter</span>
-            <span className="registration-step"><b>3</b> Konfirmasi</span>
+          <div className="registration-stepper" aria-label={t('registration.modal.existingFlow')}>
+            <span className="registration-step active"><b>1</b> {t('registration.step.patient')}</span>
+            <span className="registration-step active"><b>2</b> {t('registration.step.doctor')}</span>
+            <span className="registration-step"><b>3</b> {t('registration.step.confirm')}</span>
           </div>
           <div className="registration-form-panel form-grid">
-            <FieldLabel text="ID Pasien (Master)" htmlFor="pendaftaran-existing-idpasien">
+            <FieldLabel text={t('registration.field.patientId')} htmlFor="pendaftaran-existing-idpasien">
               <StrictMasterComboboxField
                 inputId="pendaftaran-existing-idpasien"
                 value={form.idPasien}
@@ -413,16 +414,16 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
                   setForm((p) => ({ ...p, idPasien: next }))
                   setFormError(null)
                 }}
-                placeholder="Cari atau pilih ID pasien"
+                placeholder={t('registration.field.patientIdPlaceholder')}
                 options={(pasienRef.data?.data.items ?? []).map((item) => ({ value: item.idPasien, label: item.nama }))}
                 loading={pasienRef.isLoading || pasienRef.isFetching}
                 recentKey="pendaftaran-idpasien"
-                errorMessage="ID pasien harus dipilih dari daftar referensi."
+                errorMessage={t('registration.error.patientStrict')}
                 onStrictError={setFormError}
                 disabled={!canCreate}
               />
             </FieldLabel>
-            <FieldLabel text="Kode Dokter (Master)" htmlFor="pendaftaran-existing-kddokter">
+            <FieldLabel text={t('registration.field.doctorCode')} htmlFor="pendaftaran-existing-kddokter">
               <StrictMasterComboboxField
                 inputId="pendaftaran-existing-kddokter"
                 value={form.kdDokter}
@@ -430,67 +431,67 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
                   setForm((p) => ({ ...p, kdDokter: next }))
                   setFormError(null)
                 }}
-                placeholder="Cari atau pilih kode dokter"
+                placeholder={t('registration.field.doctorCodePlaceholder')}
                 options={(dokterRef.data?.data ?? []).map((item) => ({ value: item.kdDokter, label: item.namaDokter || item.kdDokter }))}
                 loading={dokterRef.isLoading || dokterRef.isFetching}
                 recentKey="pendaftaran-kddokter"
-                errorMessage="Kode dokter harus dipilih dari daftar referensi."
+                errorMessage={t('registration.error.doctorStrict')}
                 onStrictError={setFormError}
                 disabled={!canCreate}
               />
             </FieldLabel>
-            <FieldLabel text="Keluhan" htmlFor="pendaftaran-existing-keluhan">
-              <input id="pendaftaran-existing-keluhan" className="search-input" placeholder="Contoh: demam 3 hari" value={form.keluhan} onChange={(e) => setForm((p) => ({ ...p, keluhan: e.target.value }))} disabled={!canCreate} />
+            <FieldLabel text={t('registration.field.complaint')} htmlFor="pendaftaran-existing-keluhan">
+              <input id="pendaftaran-existing-keluhan" className="search-input" placeholder={t('registration.field.complaintPlaceholder')} value={form.keluhan} onChange={(e) => setForm((p) => ({ ...p, keluhan: e.target.value }))} disabled={!canCreate} />
             </FieldLabel>
           </div>
         </div>
         <FormFeedback errors={[formError]} />
         <div className="confirm-actions">
-          <button className="btn-muted" onClick={() => setForm({ idPasien: '', kdDokter: '', keluhan: '' })}>Reset Form</button>
+          <button className="btn-muted" onClick={() => setForm({ idPasien: '', kdDokter: '', keluhan: '' })}>{t('registration.button.resetForm')}</button>
           <button className="btn-primary" disabled={createMutation.isPending || !canCreate} title={!canCreate ? createAccess.reason : undefined} onClick={submitCreateExisting}>
-            {createMutation.isPending ? 'Menyimpan...' : 'Simpan Pendaftaran'}
+            {createMutation.isPending ? t('registration.button.saving') : t('registration.button.saveRegistration')}
           </button>
         </div>
       </FormModal>
 
       <FormModal
         open={createNewPatientModalOpen}
-        title="Tambah Pendaftaran + Pasien Baru"
-        description="Lengkapi identitas pasien baru. Konfirmasi akan muncul sebelum penyimpanan."
+        title={t('registration.modal.newTitle')}
+        description={t('registration.modal.newDesc')}
         icon={UserPlus}
         size="lg"
         className="registration-modal"
-        footerNote="Data pasien baru akan disimpan permanen dan langsung dibuatkan pendaftaran kunjungan."
+        footerNote={t('registration.modal.newFooter')}
         onClose={() => setCreateNewPatientModalOpen(false)}
       >
         <div className="registration-onboarding">
           <aside className="registration-intro-panel">
             <div className="registration-intro-icon"><UserPlus size={22} /></div>
             <div>
-              <small>New Patient</small>
-              <strong>Onboarding Pasien Baru</strong>
-              <p>Lengkapi data identitas, pilih dokter referensi, lalu sistem akan membuat pasien dan pendaftaran kunjungan sekaligus.</p>
+              <small>{t('registration.modal.newKicker')}</small>
+              <strong>{t('registration.modal.newHeading')}</strong>
+              <p>{t('registration.modal.newIntro')}</p>
             </div>
             <div className="registration-checklist">
-              <span>Validasi NIK</span>
-              <span>Dokter master wajib</span>
-              <span>Konfirmasi sebelum simpan</span>
+              <span>{t('registration.check.nik')}</span>
+              <span>{t('registration.check.doctorRequired')}</span>
+              <span>{t('registration.check.confirmBeforeSave')}</span>
             </div>
           </aside>
           <div className="registration-form-panel">
-            <div className="registration-stepper" aria-label="Alur pendaftaran pasien baru">
-              <span className="registration-step active"><b>1</b> Identitas Pasien</span>
-              <span className="registration-step active"><b>2</b> Dokter</span>
-              <span className="registration-step"><b>3</b> Konfirmasi</span>
+            <div className="registration-stepper" aria-label={t('registration.modal.newFlow')}>
+              <span className="registration-step active"><b>1</b> {t('registration.step.patientIdentity')}</span>
+              <span className="registration-step active"><b>2</b> {t('registration.step.doctor')}</span>
+              <span className="registration-step"><b>3</b> {t('registration.step.confirm')}</span>
             </div>
             <div className="form-grid">
-              <FieldLabel text="Nama Pasien" htmlFor="pendaftaran-baru-nama">
-                <input id="pendaftaran-baru-nama" className="search-input" placeholder="Nama lengkap pasien" value={pasienBaruForm.nama} onChange={(e) => setPasienBaruForm((p) => ({ ...p, nama: e.target.value }))} disabled={!canCreate} />
+              <FieldLabel text={t('registration.field.patientName')} htmlFor="pendaftaran-baru-nama">
+                <input id="pendaftaran-baru-nama" className="search-input" placeholder={t('registration.field.patientNamePlaceholder')} value={pasienBaruForm.nama} onChange={(e) => setPasienBaruForm((p) => ({ ...p, nama: e.target.value }))} disabled={!canCreate} />
               </FieldLabel>
-              <FieldLabel text="NIK" htmlFor="pendaftaran-baru-nik">
-                <input id="pendaftaran-baru-nik" className="search-input" placeholder="16 digit NIK" value={pasienBaruForm.nik} onChange={(e) => setPasienBaruForm((p) => ({ ...p, nik: formatNik(e.target.value) }))} disabled={!canCreate} />
+              <FieldLabel text={t('registration.field.nik')} htmlFor="pendaftaran-baru-nik">
+                <input id="pendaftaran-baru-nik" className="search-input" placeholder={t('registration.field.nikPlaceholder')} value={pasienBaruForm.nik} onChange={(e) => setPasienBaruForm((p) => ({ ...p, nik: formatNik(e.target.value) }))} disabled={!canCreate} />
               </FieldLabel>
-              <FieldLabel text="Kode Dokter (Master)" htmlFor="pendaftaran-baru-kddokter">
+              <FieldLabel text={t('registration.field.doctorCode')} htmlFor="pendaftaran-baru-kddokter">
                 <StrictMasterComboboxField
                   inputId="pendaftaran-baru-kddokter"
                   value={pasienBaruForm.kdDokter}
@@ -498,36 +499,36 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
                     setPasienBaruForm((p) => ({ ...p, kdDokter: next }))
                     setPasienBaruError(null)
                   }}
-                  placeholder="Cari atau pilih kode dokter"
+                  placeholder={t('registration.field.doctorCodePlaceholder')}
                   options={(dokterRef.data?.data ?? []).map((item) => ({ value: item.kdDokter, label: item.namaDokter || item.kdDokter }))}
                   loading={dokterRef.isLoading || dokterRef.isFetching}
                   recentKey="pendaftaran-baru-kddokter"
-                  errorMessage="Kode dokter harus dipilih dari daftar referensi."
+                  errorMessage={t('registration.error.doctorStrict')}
                   onStrictError={setPasienBaruError}
                   disabled={!canCreate}
                 />
               </FieldLabel>
-              <FieldLabel text="No. HP" htmlFor="pendaftaran-baru-nohp">
-                <input id="pendaftaran-baru-nohp" className="search-input" placeholder="08xxxxxxxxxx" value={pasienBaruForm.noHp} onChange={(e) => setPasienBaruForm((p) => ({ ...p, noHp: formatPhone(e.target.value) }))} disabled={!canCreate} />
+              <FieldLabel text={t('registration.field.phone')} htmlFor="pendaftaran-baru-nohp">
+                <input id="pendaftaran-baru-nohp" className="search-input" placeholder={t('registration.field.phonePlaceholder')} value={pasienBaruForm.noHp} onChange={(e) => setPasienBaruForm((p) => ({ ...p, noHp: formatPhone(e.target.value) }))} disabled={!canCreate} />
               </FieldLabel>
             </div>
           </div>
         </div>
         <FormFeedback errors={[pasienBaruError]} />
         <div className="confirm-actions">
-          <button className="btn-muted" onClick={() => setPasienBaruForm({ nama: '', nik: '', kdDokter: '', noHp: '' })}>Reset Form</button>
+          <button className="btn-muted" onClick={() => setPasienBaruForm({ nama: '', nik: '', kdDokter: '', noHp: '' })}>{t('registration.button.resetForm')}</button>
           <button className="btn-primary" disabled={createPasienBaruMutation.isPending || !canCreate} title={!canCreate ? createAccess.reason : undefined} onClick={submitCreateNewPatient}>
-            {createPasienBaruMutation.isPending ? 'Menyimpan...' : 'Simpan Pasien Baru'}
+            {createPasienBaruMutation.isPending ? t('registration.button.saving') : t('registration.button.saveNewPatient')}
           </button>
         </div>
       </FormModal>
 
       <div className="detail-with-logs">
         <section className={`preview-box detail-soft ${selected ? 'glass-focus' : 'glass-strong'}`}>
-          <h2>Detail Pendaftaran</h2>
-          {selected ? <div className="selected-strip"><p>Dipilih: <strong>{selected.idRegistrasi}</strong> - {getPatientDisplayName(detailSource)}</p><div className="selected-strip-meta"><span className="detail-badge">{selected.idRegistrasi}</span><span className={`status-pill selected-status-pill ${detailStatus.className}`}>{detailStatus.label}</span></div></div> : null}
+          <h2>{t('registration.detail.title')}</h2>
+          {selected ? <div className="selected-strip"><p>{t('registration.detail.selected')}: <strong>{selected.idRegistrasi}</strong> - {getPatientDisplayName(detailSource)}</p><div className="selected-strip-meta"><span className="detail-badge">{selected.idRegistrasi}</span><span className={`status-pill selected-status-pill ${detailStatus.className}`}>{detailStatus.label}</span></div></div> : null}
           {!selected ? (
-            <p>Pilih baris pendaftaran untuk melihat detail lengkap.</p>
+            <p>{t('registration.detail.empty')}</p>
           ) : detailQuery.isLoading ? (
             <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
               <div className="skeleton-block" />
@@ -538,8 +539,8 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
             <div className="detail-layout" style={{ marginTop: 10 }}>
               <div className="detail-main">
               <div className="detail-meta-strip">
-                <span><strong>No. Registrasi:</strong> {detailSystemInfo[0].value}</span>
-                <span><strong>No. RM / ID Pasien:</strong> {detailSystemInfo[1].value}</span>
+                <span><strong>{t('registration.detail.registrationNo')}:</strong> {detailSystemInfo[0].value}</span>
+                <span><strong>{t('registration.detail.patientNo')}:</strong> {detailSystemInfo[1].value}</span>
               </div>
                 <div className="detail-facts">
                 {detailOverview.map((item) => (
@@ -550,12 +551,12 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
                 ))}
               </div>
               <article className="detail-item detail-complaint">
-                <small className="detail-label">Keluhan</small>
+                <small className="detail-label">{t('registration.detail.complaint')}</small>
                 <strong className="detail-value">{complaintText}</strong>
               </article>
               </div>
               {showSystemInfo ? <details className="detail-system">
-                <summary>Info Sistem (Admin/Dev)</summary>
+                <summary>{t('registration.detail.systemInfo')}</summary>
                 <div className="detail-grid-two detail-grid-compact" style={{ marginTop: 8 }}>
                   {detailSystemInfo.map((item) => (
                     <article key={item.label} className="detail-item">
@@ -570,11 +571,11 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
           )}
         </section>
         <aside className="preview-box detail-soft glass-soft">
-          <h2>Status Pendaftaran</h2>
-          <p className="empty-note">Gunakan panel detail untuk meninjau data pasien, dokter, dan metadata registrasi yang dipilih.</p>
+          <h2>{t('registration.status.title')}</h2>
+          <p className="empty-note">{t('registration.status.desc')}</p>
           <div className="detail-meta-grid">
-            <article><small>Baris Tampil</small><strong>{filteredItems.length}</strong></article>
-            <article><small>Filter Aktif</small><strong>{activeFilterCount}</strong></article>
+            <article><small>{t('registration.status.visibleRows')}</small><strong>{filteredItems.length}</strong></article>
+            <article><small>{t('registration.status.activeFilters')}</small><strong>{activeFilterCount}</strong></article>
           </div>
         </aside>
       </div>
