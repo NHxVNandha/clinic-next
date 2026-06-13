@@ -24,7 +24,7 @@ import { runActionWithFeedback } from '../lib/action-feedback'
 import { useDebouncedValue } from '../hooks/use-debounced-value'
 import { confirmThemedAction } from '../lib/sweet-alert'
 import { FieldLabel } from '../components/field-label'
-import { useT } from '../i18n'
+import { useT, type TranslationKey } from '../i18n'
 
 type MasterMode = 'dokter' | 'pasien' | 'jasa' | 'diagnosa'
 
@@ -33,12 +33,13 @@ function toNumber(value: string, fallback = 0): number {
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
-function formatMasterStatus(value: unknown) {
-  return String(value ?? '') === '1' ? 'Aktif' : 'Tidak Aktif'
+function formatMasterStatus(value: unknown, t: (key: TranslationKey) => string) {
+  return String(value ?? '') === '1' ? t('master.status.active') : t('master.status.inactive')
 }
 
 export function MasterPage({ canFetch }: { canFetch: boolean }) {
   const { t } = useT()
+  const msg = (key: TranslationKey, values: Record<string, string | number> = {}) => Object.entries(values).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), t(key))
   const [searchParams, setSearchParams] = useSearchParams()
   const initialModeParam = searchParams.get('mode')
   const initialMode: MasterMode = initialModeParam === 'pasien' || initialModeParam === 'jasa' || initialModeParam === 'diagnosa' ? initialModeParam : 'dokter'
@@ -106,32 +107,32 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
   const columns = useMemo<ColDef<Record<string, unknown>>[]>(() => {
     if (mode === 'dokter') {
       return [
-        { field: 'kdDokter', headerName: 'Kode Dokter', minWidth: 140 },
-        { field: 'namaDokter', headerName: 'Nama Dokter', minWidth: 220 },
+        { field: 'kdDokter', headerName: t('master.col.doctorCode'), minWidth: 140 },
+        { field: 'namaDokter', headerName: t('master.col.doctorName'), minWidth: 220 },
       ]
     }
     if (mode === 'pasien') {
       return [
-        { field: 'idPasien', headerName: 'Kode Pasien', minWidth: 130 },
+        { field: 'idPasien', headerName: t('master.col.patientCode'), minWidth: 130 },
         { field: 'nik', headerName: 'NIK', minWidth: 160 },
-        { field: 'nama', headerName: 'Nama', minWidth: 220 },
-        { field: 'noHp', headerName: 'No HP', minWidth: 140 },
+        { field: 'nama', headerName: t('master.col.name'), minWidth: 220 },
+        { field: 'noHp', headerName: t('master.col.phone'), minWidth: 140 },
       ]
     }
     if (mode === 'jasa') {
       return [
         { field: 'icd9', headerName: 'ICD9', minWidth: 120 },
-        { field: 'namaJasa', headerName: 'Nama Jasa', minWidth: 220 },
-        { field: 'harga', headerName: 'Harga', minWidth: 140 },
-        { field: 'status', headerName: 'Status', minWidth: 120, valueFormatter: ({ value }) => formatMasterStatus(value) },
+        { field: 'namaJasa', headerName: t('master.col.serviceName'), minWidth: 220 },
+        { field: 'harga', headerName: t('master.col.price'), minWidth: 140 },
+        { field: 'status', headerName: t('common.status'), minWidth: 120, valueFormatter: ({ value }) => formatMasterStatus(value, t) },
       ]
     }
     return [
-      { field: 'kodeDiagnosa', headerName: 'Kode Diagnosa', minWidth: 160 },
-      { field: 'namaDiagnosa', headerName: 'Nama Diagnosa', minWidth: 260 },
-      { field: 'status', headerName: 'Status', minWidth: 120, valueFormatter: ({ value }) => formatMasterStatus(value) },
+      { field: 'kodeDiagnosa', headerName: t('master.col.diagnosisCode'), minWidth: 160 },
+      { field: 'namaDiagnosa', headerName: t('master.col.diagnosisName'), minWidth: 260 },
+      { field: 'status', headerName: t('common.status'), minWidth: 120, valueFormatter: ({ value }) => formatMasterStatus(value, t) },
     ]
-  }, [mode])
+  }, [mode, t])
 
   const onRowClicked = (event: RowClickedEvent<Record<string, unknown>>) => {
     if (!event.data) return
@@ -219,20 +220,20 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
       setDiagnosaModalOpen(true)
       return
     }
-    toast.error('Pilih data terlebih dahulu untuk diubah.')
+    toast.error(t('master.toast.selectToEdit'))
   }
 
   async function saveDokter() {
     if (mode !== 'dokter') return
     if (!kdDokter.trim() || !namaDokter.trim()) {
-      toast.error('Kode dan nama dokter wajib diisi.')
+      toast.error(t('master.toast.doctorRequired'))
       return
     }
 
     const confirmed = await confirmThemedAction({
-      title: selectedDokter ? 'Konfirmasi update dokter' : 'Konfirmasi tambah dokter',
-      text: selectedDokter ? `Perbarui data dokter ${namaDokter.trim()}?` : `Tambah dokter ${namaDokter.trim()}?`,
-      confirmText: selectedDokter ? 'Ya, Update' : 'Ya, Tambah',
+      title: selectedDokter ? t('master.confirm.updateDoctor') : t('master.confirm.addDoctor'),
+      text: selectedDokter ? msg('master.confirm.updateDoctorText', { name: namaDokter.trim() }) : msg('master.confirm.addDoctorText', { name: namaDokter.trim() }),
+      confirmText: selectedDokter ? t('master.confirm.update') : t('master.confirm.add'),
     })
     if (!confirmed) return
 
@@ -243,7 +244,7 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
           kdDokter: kdDokter.trim(),
           namaDokter: namaDokter.trim(),
         }),
-      'Data dokter berhasil disimpan.',
+      t('master.success.doctorSaved'),
     )
 
     if (result) {
@@ -257,28 +258,28 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
     if (mode !== 'jasa') return
     const nextErrors: { namaJasa?: string; harga?: string; status?: string } = {}
     if (!namaJasa.trim()) {
-      nextErrors.namaJasa = 'Nama jasa wajib diisi.'
+      nextErrors.namaJasa = t('master.error.serviceNameRequired')
     }
 
     const harga = toNumber(hargaJasa, -1)
     const status = toNumber(statusJasa, -1)
     if (harga < 0) {
-      nextErrors.harga = 'Harga jasa tidak boleh negatif.'
+      nextErrors.harga = t('master.error.priceNegative')
     }
     if (status !== 0 && status !== 1) {
-      nextErrors.status = 'Status jasa hanya boleh 0 atau 1.'
+      nextErrors.status = t('master.error.serviceStatus')
     }
 
     setJasaErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) {
-      toast.error('Form jasa masih belum valid.')
+      toast.error(t('master.toast.serviceInvalid'))
       return
     }
 
     const confirmed = await confirmThemedAction({
-      title: selectedJasa ? 'Konfirmasi update jasa' : 'Konfirmasi tambah jasa',
-      text: selectedJasa ? `Perbarui data jasa ${namaJasa.trim()}?` : `Tambah jasa ${namaJasa.trim()}?`,
-      confirmText: selectedJasa ? 'Ya, Update' : 'Ya, Tambah',
+      title: selectedJasa ? t('master.confirm.updateService') : t('master.confirm.addService'),
+      text: selectedJasa ? msg('master.confirm.updateServiceText', { name: namaJasa.trim() }) : msg('master.confirm.addServiceText', { name: namaJasa.trim() }),
+      confirmText: selectedJasa ? t('master.confirm.update') : t('master.confirm.add'),
     })
     if (!confirmed) return
 
@@ -292,7 +293,7 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
           harga,
           status,
         }),
-      'Data jasa berhasil disimpan.',
+      t('master.success.serviceSaved'),
     )
 
     if (result) {
@@ -306,27 +307,27 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
     if (mode !== 'diagnosa') return
     const nextErrors: { kodeDiagnosa?: string; namaDiagnosa?: string; status?: string } = {}
     if (!kodeDiagnosa.trim()) {
-      nextErrors.kodeDiagnosa = 'Kode diagnosa wajib diisi.'
+      nextErrors.kodeDiagnosa = t('master.error.diagnosisCodeRequired')
     }
     if (!namaDiagnosa.trim()) {
-      nextErrors.namaDiagnosa = 'Nama diagnosa wajib diisi.'
+      nextErrors.namaDiagnosa = t('master.error.diagnosisNameRequired')
     }
 
     const status = toNumber(statusDiagnosa, -1)
     if (status !== 0 && status !== 1) {
-      nextErrors.status = 'Status diagnosa hanya boleh 0 atau 1.'
+      nextErrors.status = t('master.error.diagnosisStatus')
     }
 
     setDiagnosaErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) {
-      toast.error('Form diagnosa masih belum valid.')
+      toast.error(t('master.toast.diagnosisInvalid'))
       return
     }
 
     const confirmed = await confirmThemedAction({
-      title: selectedDiagnosa ? 'Konfirmasi update diagnosa' : 'Konfirmasi tambah diagnosa',
-      text: selectedDiagnosa ? `Perbarui data diagnosa ${namaDiagnosa.trim()}?` : `Tambah diagnosa ${namaDiagnosa.trim()}?`,
-      confirmText: selectedDiagnosa ? 'Ya, Update' : 'Ya, Tambah',
+      title: selectedDiagnosa ? t('master.confirm.updateDiagnosis') : t('master.confirm.addDiagnosis'),
+      text: selectedDiagnosa ? msg('master.confirm.updateDiagnosisText', { name: namaDiagnosa.trim() }) : msg('master.confirm.addDiagnosisText', { name: namaDiagnosa.trim() }),
+      confirmText: selectedDiagnosa ? t('master.confirm.update') : t('master.confirm.add'),
     })
     if (!confirmed) return
 
@@ -339,7 +340,7 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
           namaDiagnosa: namaDiagnosa.trim(),
           status,
         }),
-      'Data diagnosa berhasil disimpan.',
+      t('master.success.diagnosisSaved'),
     )
 
     if (result) {
@@ -352,17 +353,17 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
   async function deleteSelectedData() {
     if (mode === 'dokter') {
       if (!selectedDokter) {
-        toast.error('Pilih dokter yang ingin dihapus.')
+        toast.error(t('master.toast.selectDoctorDelete'))
         return
       }
       const confirmed = await confirmThemedAction({
-        title: 'Konfirmasi hapus dokter',
-        text: `Anda yakin ingin menghapus dokter ${selectedDokter.namaDokter}?`,
-        confirmText: 'Ya, Hapus',
+        title: t('master.confirm.deleteDoctor'),
+        text: msg('master.confirm.deleteDoctorText', { name: selectedDokter.namaDokter ?? '-' }),
+        confirmText: t('master.confirm.delete'),
         danger: true,
       })
       if (!confirmed) return
-      const result = await runActionWithFeedback(() => deleteDokterMutation.mutateAsync(selectedDokter.id), 'Data dokter berhasil dihapus.')
+      const result = await runActionWithFeedback(() => deleteDokterMutation.mutateAsync(selectedDokter.id), t('master.success.doctorDeleted'))
       if (result) {
         setDokterModalOpen(false)
         resetDokterForm()
@@ -373,17 +374,17 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
 
     if (mode === 'jasa') {
       if (!selectedJasa) {
-        toast.error('Pilih jasa yang ingin dihapus.')
+        toast.error(t('master.toast.selectServiceDelete'))
         return
       }
       const confirmed = await confirmThemedAction({
-        title: 'Konfirmasi hapus jasa',
-        text: `Anda yakin ingin menghapus jasa ${selectedJasa.namaJasa}?`,
-        confirmText: 'Ya, Hapus',
+        title: t('master.confirm.deleteService'),
+        text: msg('master.confirm.deleteServiceText', { name: selectedJasa.namaJasa ?? '-' }),
+        confirmText: t('master.confirm.delete'),
         danger: true,
       })
       if (!confirmed) return
-      const result = await runActionWithFeedback(() => deleteJasaMutation.mutateAsync(selectedJasa.id), 'Data jasa berhasil dihapus.')
+      const result = await runActionWithFeedback(() => deleteJasaMutation.mutateAsync(selectedJasa.id), t('master.success.serviceDeleted'))
       if (result) {
         setJasaModalOpen(false)
         resetJasaForm()
@@ -393,17 +394,17 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
     }
 
     if (!selectedDiagnosa) {
-      toast.error('Pilih diagnosa yang ingin dihapus.')
+      toast.error(t('master.toast.selectDiagnosisDelete'))
       return
     }
     const confirmed = await confirmThemedAction({
-      title: 'Konfirmasi hapus diagnosa',
-      text: `Anda yakin ingin menghapus diagnosa ${selectedDiagnosa.namaDiagnosa}?`,
-      confirmText: 'Ya, Hapus',
+      title: t('master.confirm.deleteDiagnosis'),
+      text: msg('master.confirm.deleteDiagnosisText', { name: selectedDiagnosa.namaDiagnosa ?? '-' }),
+      confirmText: t('master.confirm.delete'),
       danger: true,
     })
     if (!confirmed) return
-    const result = await runActionWithFeedback(() => deleteDiagnosaMutation.mutateAsync(selectedDiagnosa.id), 'Data diagnosa berhasil dihapus.')
+    const result = await runActionWithFeedback(() => deleteDiagnosaMutation.mutateAsync(selectedDiagnosa.id), t('master.success.diagnosisDeleted'))
     if (result) {
       setDiagnosaModalOpen(false)
       resetDiagnosaForm()
@@ -445,35 +446,35 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
       <PageHeader
         title={t('master.title')}
         description={t('nav.master.desc')}
-        eyebrow="Central Registry"
-        actions={mode !== 'pasien' ? <button className="icon-btn btn-primary" onClick={openCreateModal}><Plus size={16} /> Add New Entry</button> : null}
+        eyebrow={t('master.eyebrow')}
+        actions={mode !== 'pasien' ? <button className="icon-btn btn-primary" onClick={openCreateModal}><Plus size={16} /> {t('master.addNew')}</button> : null}
       />
 
       <div className="stats-grid">
         <article className="stat-card">
-          <small>Total Data</small>
+          <small>{t('master.totalData')}</small>
           <strong>{totalItem}</strong>
         </article>
         <article className="stat-card">
-          <small>Halaman Aktif</small>
+          <small>{t('master.activePage')}</small>
           <strong>{mode === 'dokter' ? '1 / 1' : `${page} / ${totalPage}`}</strong>
         </article>
         <article className="stat-card">
-          <small>Filter Aktif</small>
+          <small>{t('master.activeFilter')}</small>
           <strong>{activeFilterCount}</strong>
         </article>
         <article className="stat-card">
-          <small>Tab Aktif</small>
+          <small>{t('master.activeTab')}</small>
           <strong>{mode}</strong>
         </article>
       </div>
 
       <section className="master-management-card">
         <div className="master-tabs">
-          <button className={mode === 'dokter' ? 'active' : ''} onClick={() => setMode('dokter')}>Doctors List</button>
-          <button className={mode === 'pasien' ? 'active' : ''} onClick={() => setMode('pasien')}>Patient Registry</button>
-          <button className={mode === 'jasa' ? 'active' : ''} onClick={() => setMode('jasa')}>Treatment & Prices</button>
-          <button className={mode === 'diagnosa' ? 'active' : ''} onClick={() => setMode('diagnosa')}>Diagnosis</button>
+          <button className={mode === 'dokter' ? 'active' : ''} onClick={() => setMode('dokter')}>{t('master.tab.doctors')}</button>
+          <button className={mode === 'pasien' ? 'active' : ''} onClick={() => setMode('pasien')}>{t('master.tab.patients')}</button>
+          <button className={mode === 'jasa' ? 'active' : ''} onClick={() => setMode('jasa')}>{t('master.tab.services')}</button>
+          <button className={mode === 'diagnosa' ? 'active' : ''} onClick={() => setMode('diagnosa')}>{t('master.tab.diagnosis')}</button>
         </div>
 
         <div className="master-filter-row">
@@ -487,7 +488,7 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
               setPage(1)
             }}
           />
-          <span>Showing {((activeData ?? []) as Record<string, unknown>[]).length} of {totalItem} records</span>
+          <span>{msg('master.showingRecords', { shown: ((activeData ?? []) as Record<string, unknown>[]).length, total: totalItem })}</span>
         </div>
 
         <DataGrid
@@ -501,83 +502,83 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
 
         {mode !== 'pasien' ? (
           <div className="master-action-row">
-            <button className="icon-btn btn-primary-soft" title="Tambah data" onClick={openCreateModal}><Plus size={14} /> Tambah</button>
-            <button className="icon-btn" title="Edit data terpilih" onClick={openEditModal} disabled={mode === 'dokter' ? !selectedDokter : mode === 'jasa' ? !selectedJasa : !selectedDiagnosa}><Pencil size={14} /> Edit</button>
-            <button className="icon-btn btn-critical" title="Hapus data terpilih" onClick={deleteSelectedData} disabled={mode === 'dokter' ? !selectedDokter || deleteDokterMutation.isPending : mode === 'jasa' ? !selectedJasa || deleteJasaMutation.isPending : !selectedDiagnosa || deleteDiagnosaMutation.isPending}><Trash2 size={14} /> Hapus</button>
+            <button className="icon-btn btn-primary-soft" title={t('master.action.addTitle')} onClick={openCreateModal}><Plus size={14} /> {t('master.action.add')}</button>
+            <button className="icon-btn" title={t('master.action.editTitle')} onClick={openEditModal} disabled={mode === 'dokter' ? !selectedDokter : mode === 'jasa' ? !selectedJasa : !selectedDiagnosa}><Pencil size={14} /> {t('master.action.edit')}</button>
+            <button className="icon-btn btn-critical" title={t('master.action.deleteTitle')} onClick={deleteSelectedData} disabled={mode === 'dokter' ? !selectedDokter || deleteDokterMutation.isPending : mode === 'jasa' ? !selectedJasa || deleteJasaMutation.isPending : !selectedDiagnosa || deleteDiagnosaMutation.isPending}><Trash2 size={14} /> {t('master.action.delete')}</button>
           </div>
         ) : null}
 
         {mode !== 'dokter' ? (
           <div className="pager-row">
-            <button className="icon-btn icon-only" title="Halaman sebelumnya" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage((prev) => prev - 1)}><ChevronLeft size={14} /></button>
+            <button className="icon-btn icon-only" title={t('common.previousPage')} aria-label={t('common.previousPage')} disabled={page <= 1} onClick={() => setPage((prev) => prev - 1)}><ChevronLeft size={14} /></button>
             <span>{t('common.page')} {page} / {totalPage}</span>
-            <button className="icon-btn icon-only" title="Halaman berikutnya" aria-label="Halaman berikutnya" disabled={page >= totalPage} onClick={() => setPage((prev) => prev + 1)}><ChevronRight size={14} /></button>
+            <button className="icon-btn icon-only" title={t('common.nextPage')} aria-label={t('common.nextPage')} disabled={page >= totalPage} onClick={() => setPage((prev) => prev + 1)}><ChevronRight size={14} /></button>
           </div>
         ) : null}
       </section>
 
       <FormModal
         open={dokterModalOpen}
-        title={selectedDokter ? 'Edit Dokter' : 'Tambah Dokter'}
-        description="Lengkapi data dokter lalu simpan perubahan."
+        title={selectedDokter ? t('master.modal.editDoctor') : t('master.modal.addDoctor')}
+        description={t('master.modal.doctorDesc')}
         icon={Stethoscope}
         size="sm"
-        footerNote="Data dokter dipakai sebagai referensi pendaftaran, pelayanan, dan laporan klinik."
+        footerNote={t('master.modal.doctorFooter')}
         onClose={() => setDokterModalOpen(false)}
       >
         <div className="form-grid">
-          <FieldLabel text="Kode Dokter" htmlFor="master-dokter-kode">
-            <input id="master-dokter-kode" className="search-input" placeholder="Contoh: DKT-001" value={kdDokter} onChange={(event) => setKdDokter(event.target.value)} />
+          <FieldLabel text={t('master.col.doctorCode')} htmlFor="master-dokter-kode">
+            <input id="master-dokter-kode" className="search-input" placeholder={t('master.field.doctorCodePlaceholder')} value={kdDokter} onChange={(event) => setKdDokter(event.target.value)} />
           </FieldLabel>
-          <FieldLabel text="Nama Dokter" htmlFor="master-dokter-nama">
-            <input id="master-dokter-nama" className="search-input" placeholder="Nama lengkap dokter" value={namaDokter} onChange={(event) => setNamaDokter(event.target.value)} />
+          <FieldLabel text={t('master.col.doctorName')} htmlFor="master-dokter-nama">
+            <input id="master-dokter-nama" className="search-input" placeholder={t('master.field.doctorNamePlaceholder')} value={namaDokter} onChange={(event) => setNamaDokter(event.target.value)} />
           </FieldLabel>
         </div>
         <div className="confirm-actions">
-          <button className="btn-muted" disabled={upsertDokterMutation.isPending} onClick={resetDokterForm}>Reset</button>
+          <button className="btn-muted" disabled={upsertDokterMutation.isPending} onClick={resetDokterForm}>{t('common.reset')}</button>
           <button className="btn-primary" disabled={upsertDokterMutation.isPending} onClick={saveDokter}>
-            {upsertDokterMutation.isPending ? 'Menyimpan...' : selectedDokter ? 'Update Dokter' : 'Simpan Dokter'}
+            {upsertDokterMutation.isPending ? t('master.button.saving') : selectedDokter ? t('master.button.updateDoctor') : t('master.button.saveDoctor')}
           </button>
         </div>
       </FormModal>
 
       <FormModal
         open={jasaModalOpen}
-        title={selectedJasa ? 'Edit Jasa' : 'Tambah Jasa'}
-        description="Pastikan harga dan status jasa valid sebelum menyimpan."
+        title={selectedJasa ? t('master.modal.editService') : t('master.modal.addService')}
+        description={t('master.modal.serviceDesc')}
         icon={Wrench}
         size="md"
         onClose={() => setJasaModalOpen(false)}
       >
         <div className="form-grid">
           <FieldLabel text="ICD9" htmlFor="master-jasa-icd9">
-            <input id="master-jasa-icd9" className="search-input" placeholder="Kode ICD9 (opsional)" value={icd9} onChange={(event) => setIcd9(event.target.value)} />
+            <input id="master-jasa-icd9" className="search-input" placeholder={t('master.field.icd9Optional')} value={icd9} onChange={(event) => setIcd9(event.target.value)} />
           </FieldLabel>
-          <FieldLabel text="Nama Jasa" htmlFor="master-jasa-nama">
+          <FieldLabel text={t('master.col.serviceName')} htmlFor="master-jasa-nama">
             <input
               id="master-jasa-nama"
               className="search-input"
-              placeholder="Nama jasa"
+              placeholder={t('master.field.serviceNamePlaceholder')}
               value={namaJasa}
               onChange={(event) => setNamaJasa(event.target.value)}
               aria-invalid={Boolean(jasaErrors.namaJasa)}
               aria-describedby={jasaErrors.namaJasa ? 'master-jasa-nama-error' : undefined}
             />
           </FieldLabel>
-          <FieldLabel text="Harga" htmlFor="master-jasa-harga">
+          <FieldLabel text={t('master.col.price')} htmlFor="master-jasa-harga">
             <input
               id="master-jasa-harga"
               className="search-input"
               type="number"
               min={0}
-              placeholder="Nominal harga"
+              placeholder={t('master.field.pricePlaceholder')}
               value={hargaJasa}
               onChange={(event) => setHargaJasa(event.target.value)}
               aria-invalid={Boolean(jasaErrors.harga)}
               aria-describedby={jasaErrors.harga ? 'master-jasa-harga-error' : undefined}
             />
           </FieldLabel>
-          <FieldLabel text="Status" htmlFor="master-jasa-status">
+          <FieldLabel text={t('common.status')} htmlFor="master-jasa-status">
             <select
               id="master-jasa-status"
               className="search-input"
@@ -586,51 +587,51 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
               aria-invalid={Boolean(jasaErrors.status)}
               aria-describedby={jasaErrors.status ? 'master-jasa-status-error' : undefined}
             >
-              <option value="1">Aktif</option>
-              <option value="0">Tidak Aktif</option>
+              <option value="1">{t('master.status.active')}</option>
+              <option value="0">{t('master.status.inactive')}</option>
             </select>
           </FieldLabel>
-          <FieldLabel text="Keterangan" htmlFor="master-jasa-keterangan">
-            <input id="master-jasa-keterangan" className="search-input" placeholder="Keterangan singkat (opsional)" value={keteranganJasa} onChange={(event) => setKeteranganJasa(event.target.value)} />
+          <FieldLabel text={t('settings.field.notes')} htmlFor="master-jasa-keterangan">
+            <input id="master-jasa-keterangan" className="search-input" placeholder={t('master.field.notesPlaceholder')} value={keteranganJasa} onChange={(event) => setKeteranganJasa(event.target.value)} />
           </FieldLabel>
         </div>
         {jasaErrors.namaJasa ? <p id="master-jasa-nama-error" className="field-error">{jasaErrors.namaJasa}</p> : null}
         {jasaErrors.harga ? <p id="master-jasa-harga-error" className="field-error">{jasaErrors.harga}</p> : null}
         {jasaErrors.status ? <p id="master-jasa-status-error" className="field-error">{jasaErrors.status}</p> : null}
-        <FormFeedback errors={[]} helperText="Harga wajib angka 0 atau lebih. Status dipakai untuk aktif/nonaktif jasa." />
+        <FormFeedback errors={[]} helperText={t('master.helper.service')} />
         <div className="confirm-actions">
-          <button className="btn-muted" disabled={upsertJasaMutation.isPending} onClick={resetJasaForm}>Reset</button>
+          <button className="btn-muted" disabled={upsertJasaMutation.isPending} onClick={resetJasaForm}>{t('common.reset')}</button>
           <button className="btn-primary" disabled={upsertJasaMutation.isPending} onClick={saveJasa}>
-            {upsertJasaMutation.isPending ? 'Menyimpan...' : selectedJasa ? 'Update Jasa' : 'Simpan Jasa'}
+            {upsertJasaMutation.isPending ? t('master.button.saving') : selectedJasa ? t('master.button.updateService') : t('master.button.saveService')}
           </button>
         </div>
       </FormModal>
 
       <FormModal
         open={diagnosaModalOpen}
-        title={selectedDiagnosa ? 'Edit Diagnosa' : 'Tambah Diagnosa'}
-        description="Kode dan nama diagnosa wajib diisi."
+        title={selectedDiagnosa ? t('master.modal.editDiagnosis') : t('master.modal.addDiagnosis')}
+        description={t('master.modal.diagnosisDesc')}
         icon={ClipboardList}
         size="md"
         onClose={() => setDiagnosaModalOpen(false)}
       >
         <div className="form-grid">
-          <FieldLabel text="Kode Diagnosa" htmlFor="master-diagnosa-kode">
+          <FieldLabel text={t('master.col.diagnosisCode')} htmlFor="master-diagnosa-kode">
             <input
               id="master-diagnosa-kode"
               className="search-input"
-              placeholder="Kode diagnosa"
+              placeholder={t('master.field.diagnosisCodePlaceholder')}
               value={kodeDiagnosa}
               onChange={(event) => setKodeDiagnosa(event.target.value)}
               aria-invalid={Boolean(diagnosaErrors.kodeDiagnosa)}
               aria-describedby={diagnosaErrors.kodeDiagnosa ? 'master-diagnosa-kode-error' : undefined}
             />
           </FieldLabel>
-          <FieldLabel text="Nama Diagnosa" htmlFor="master-diagnosa-nama">
+          <FieldLabel text={t('master.col.diagnosisName')} htmlFor="master-diagnosa-nama">
             <input
               id="master-diagnosa-nama"
               className="search-input"
-              placeholder="Nama diagnosa"
+              placeholder={t('master.field.diagnosisNamePlaceholder')}
               value={namaDiagnosa}
               onChange={(event) => setNamaDiagnosa(event.target.value)}
               aria-invalid={Boolean(diagnosaErrors.namaDiagnosa)}
@@ -638,9 +639,9 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
             />
           </FieldLabel>
           <FieldLabel text="Kode SNOMED" htmlFor="master-diagnosa-snomed">
-            <input id="master-diagnosa-snomed" className="search-input" placeholder="Kode SNOMED (opsional)" value={kodeSnomed} onChange={(event) => setKodeSnomed(event.target.value)} />
+            <input id="master-diagnosa-snomed" className="search-input" placeholder={t('master.field.snomedOptional')} value={kodeSnomed} onChange={(event) => setKodeSnomed(event.target.value)} />
           </FieldLabel>
-          <FieldLabel text="Status" htmlFor="master-diagnosa-status">
+          <FieldLabel text={t('common.status')} htmlFor="master-diagnosa-status">
             <select
               id="master-diagnosa-status"
               className="search-input"
@@ -649,19 +650,19 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
               aria-invalid={Boolean(diagnosaErrors.status)}
               aria-describedby={diagnosaErrors.status ? 'master-diagnosa-status-error' : undefined}
             >
-              <option value="1">Aktif</option>
-              <option value="0">Tidak Aktif</option>
+              <option value="1">{t('master.status.active')}</option>
+              <option value="0">{t('master.status.inactive')}</option>
             </select>
           </FieldLabel>
         </div>
         {diagnosaErrors.kodeDiagnosa ? <p id="master-diagnosa-kode-error" className="field-error">{diagnosaErrors.kodeDiagnosa}</p> : null}
         {diagnosaErrors.namaDiagnosa ? <p id="master-diagnosa-nama-error" className="field-error">{diagnosaErrors.namaDiagnosa}</p> : null}
         {diagnosaErrors.status ? <p id="master-diagnosa-status-error" className="field-error">{diagnosaErrors.status}</p> : null}
-        <FormFeedback errors={[]} helperText="Status dipakai untuk aktif/nonaktif diagnosa." />
+        <FormFeedback errors={[]} helperText={t('master.helper.diagnosis')} />
         <div className="confirm-actions">
-          <button className="btn-muted" disabled={upsertDiagnosaMutation.isPending} onClick={resetDiagnosaForm}>Reset</button>
+          <button className="btn-muted" disabled={upsertDiagnosaMutation.isPending} onClick={resetDiagnosaForm}>{t('common.reset')}</button>
           <button className="btn-primary" disabled={upsertDiagnosaMutation.isPending} onClick={saveDiagnosa}>
-            {upsertDiagnosaMutation.isPending ? 'Menyimpan...' : selectedDiagnosa ? 'Update Diagnosa' : 'Simpan Diagnosa'}
+            {upsertDiagnosaMutation.isPending ? t('master.button.saving') : selectedDiagnosa ? t('master.button.updateDiagnosis') : t('master.button.saveDiagnosis')}
           </button>
         </div>
       </FormModal>
