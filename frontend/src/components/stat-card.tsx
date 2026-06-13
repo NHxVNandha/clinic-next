@@ -18,10 +18,12 @@ export function StatCard({
   return (
     <article className={`stat-card stitch-stat stat-tone-${tone}`}>
       <div className="stitch-stat-head">
-        {Icon ? <span className="stitch-stat-icon"><Icon size={22} /></span> : <span />}
+        <div className="stitch-stat-label">
+          {Icon ? <span className="stitch-stat-icon"><Icon size={18} /></span> : null}
+          <small>{label}</small>
+        </div>
         {trend ? <span className="stitch-stat-trend">{trend}</span> : null}
       </div>
-      <small>{label}</small>
       <strong>{value}</strong>
       {footer ? <p className="stitch-stat-footer">{footer}</p> : null}
     </article>

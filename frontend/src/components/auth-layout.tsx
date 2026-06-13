@@ -226,8 +226,10 @@ export function AuthLayout() {
             initial="hidden"
             animate="show"
           >
-            <motion.div className="auth-brand-mark" variants={brandItemVariants} custom={motionSettings}><Icon size={36} /></motion.div>
-            <motion.h1 variants={brandItemVariants} custom={motionSettings}>{title}</motion.h1>
+            <motion.div className="auth-brand-title" variants={brandItemVariants} custom={motionSettings}>
+              <span className="auth-brand-mark"><Icon size={36} /></span>
+              <h1>{title}</h1>
+            </motion.div>
             <motion.p variants={brandItemVariants} custom={motionSettings}>{description}</motion.p>
             <motion.div className="auth-brand-metrics" variants={brandItemVariants} custom={motionSettings}>
               <article><small>{metricA.label}</small><strong>{metricA.value}</strong></article>

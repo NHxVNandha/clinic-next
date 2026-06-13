@@ -37,7 +37,7 @@ export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
   }
 
   return (
-          <AuthMotionCard className="auth-card">
+          <AuthMotionCard className="auth-card auth-login-card">
             <AuthMotionItem>
               <div className="auth-mobile-brand">
               <span><ShieldCheck size={26} /></span>
