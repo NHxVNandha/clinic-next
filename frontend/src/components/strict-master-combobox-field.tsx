@@ -11,7 +11,6 @@ type StrictMasterComboboxFieldProps = {
   disabled?: boolean
   errorMessage: string
   onStrictError: (message: string) => void
-  helperText?: string
 }
 
 export function StrictMasterComboboxField({
@@ -25,12 +24,11 @@ export function StrictMasterComboboxField({
   disabled = false,
   errorMessage,
   onStrictError,
-  helperText = 'Wajib pilih dari data master.',
 }: StrictMasterComboboxFieldProps) {
   const trimmedValue = value.trim()
   const isMatched = trimmedValue ? options.some((item) => item.value === trimmedValue) : false
-  const helperTone = !trimmedValue ? 'var(--text-muted)' : isMatched ? 'var(--success-text)' : 'var(--danger-text)'
-  const helperMessage = !trimmedValue ? helperText : isMatched ? 'Master: terhubung.' : 'Master: pilih dari daftar.'
+  const helperTone = isMatched ? 'var(--success-text)' : 'var(--danger-text)'
+  const helperMessage = isMatched ? 'Master: terhubung.' : 'Master: pilih dari daftar.'
 
   return (
     <div>
@@ -46,7 +44,7 @@ export function StrictMasterComboboxField({
         recentKey={recentKey}
         disabled={disabled}
       />
-      <small className="field-helper" style={{ marginTop: 6, display: 'block', color: helperTone }}>{helperMessage}</small>
+      {trimmedValue ? <small className="field-helper" style={{ marginTop: 6, display: 'block', color: helperTone }}>{helperMessage}</small> : null}
     </div>
   )
 }
