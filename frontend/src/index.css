@@ -1102,18 +1102,11 @@ button.filter-chip:focus-visible {
     var(--primary);
   color: var(--primary-contrast);
   padding: clamp(40px, 7vw, 84px);
-  transform: translateX(0);
-  transition:
-    transform 1400ms cubic-bezier(0.2, 0.9, 0.22, 1),
-    filter 1400ms cubic-bezier(0.2, 0.9, 0.22, 1),
-    box-shadow 1400ms cubic-bezier(0.2, 0.9, 0.22, 1);
   will-change: transform, filter;
   box-shadow: 24px 0 64px color-mix(in srgb, var(--primary) 18%, transparent);
 }
 
 .auth-shell-register .auth-brand-panel {
-  transform: translateX(122.222%);
-  filter: saturate(1.08);
   box-shadow: -24px 0 64px color-mix(in srgb, var(--primary) 18%, transparent);
 }
 
@@ -1123,7 +1116,6 @@ button.filter-chip:focus-visible {
   width: 55%;
   z-index: 1;
   overflow: hidden;
-  transition: left 1400ms cubic-bezier(0.2, 0.9, 0.22, 1), width 1400ms cubic-bezier(0.2, 0.9, 0.22, 1);
   will-change: left, width;
 }
 
@@ -1136,42 +1128,7 @@ button.filter-chip:focus-visible {
   max-height: 100%;
   display: grid;
   place-items: center;
-  animation: auth-form-enter-from-left 950ms cubic-bezier(0.2, 0.9, 0.22, 1) 280ms both;
   will-change: opacity, transform, filter;
-}
-
-.auth-shell-to-register .auth-form-stage {
-  animation-name: auth-form-enter-from-right;
-}
-
-.auth-shell-to-login .auth-form-stage {
-  animation-name: auth-form-enter-from-left;
-}
-
-@keyframes auth-form-enter-from-right {
-  from {
-    opacity: 0;
-    transform: translateX(42px) scale(0.985);
-    filter: blur(7px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-    filter: blur(0);
-  }
-}
-
-@keyframes auth-form-enter-from-left {
-  from {
-    opacity: 0;
-    transform: translateX(-42px) scale(0.985);
-    filter: blur(7px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0) scale(1);
-    filter: blur(0);
-  }
 }
 
 .auth-brand-image {
@@ -1196,26 +1153,6 @@ button.filter-chip:focus-visible {
   opacity: 0.86;
 }
 
-.auth-brand-panel::after {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 26px;
-  background: linear-gradient(90deg, color-mix(in srgb, #ffffff 22%, transparent), transparent);
-  opacity: 0;
-  transition: opacity 520ms ease;
-}
-
-.auth-shell-register .auth-brand-panel::after {
-  inset: 0 0 0 auto;
-  background: linear-gradient(270deg, color-mix(in srgb, #ffffff 22%, transparent), transparent);
-}
-
-.auth-shell-to-register .auth-brand-panel::after,
-.auth-shell-to-login .auth-brand-panel::after {
-  opacity: 0.72;
-}
-
 .auth-brand-pattern {
   position: absolute;
   inset: 0;
@@ -1228,65 +1165,6 @@ button.filter-chip:focus-visible {
   position: relative;
   z-index: 1;
   max-width: 560px;
-}
-
-.auth-brand-content > *,
-.auth-card > *,
-.auth-form > *,
-.auth-register-form > * {
-  animation: auth-layer-rise 720ms cubic-bezier(0.2, 0.9, 0.22, 1) both;
-}
-
-.auth-brand-content > :nth-child(1),
-.auth-card > :nth-child(1),
-.auth-form > :nth-child(1),
-.auth-register-form > :nth-child(1) {
-  animation-delay: 220ms;
-}
-
-.auth-brand-content > :nth-child(2),
-.auth-card > :nth-child(2),
-.auth-form > :nth-child(2),
-.auth-register-form > :nth-child(2) {
-  animation-delay: 300ms;
-}
-
-.auth-brand-content > :nth-child(3),
-.auth-card > :nth-child(3),
-.auth-form > :nth-child(3),
-.auth-register-form > :nth-child(3) {
-  animation-delay: 380ms;
-}
-
-.auth-brand-content > :nth-child(4),
-.auth-card > :nth-child(4),
-.auth-form > :nth-child(4),
-.auth-register-form > :nth-child(4) {
-  animation-delay: 460ms;
-}
-
-.auth-card > :nth-child(5),
-.auth-form > :nth-child(5),
-.auth-register-form > :nth-child(5) {
-  animation-delay: 540ms;
-}
-
-.auth-form > :nth-child(6),
-.auth-register-form > :nth-child(6) {
-  animation-delay: 620ms;
-}
-
-@keyframes auth-layer-rise {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-    filter: blur(5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
-  }
 }
 
 .auth-brand-mark,

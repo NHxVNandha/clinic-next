@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Eye, EyeOff, Lock, Mail, ShieldCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Link } from 'react-router-dom'
+import { AuthMotionCard, AuthMotionForm, AuthMotionItem } from '../components/auth-motion'
 import { useLogin } from '../hooks/use-auth'
 import { parseApiError } from '../lib/api-error'
 import { useT } from '../i18n'
@@ -36,22 +37,26 @@ export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
   }
 
   return (
-          <div className="auth-card">
-            <div className="auth-mobile-brand">
+          <AuthMotionCard className="auth-card">
+            <AuthMotionItem>
+              <div className="auth-mobile-brand">
               <span><ShieldCheck size={26} /></span>
               <div>
                 <strong>{t('login.title')}</strong>
                 <small>{t('app.subtitle')}</small>
               </div>
-            </div>
-            <div className="auth-form-header">
+              </div>
+            </AuthMotionItem>
+            <AuthMotionItem>
+              <div className="auth-form-header">
               <h2>{t('login.welcome')}</h2>
               <p>{t('login.desc')}</p>
-            </div>
+              </div>
+            </AuthMotionItem>
 
-            <form className="auth-form" onSubmit={submit}>
-              {summary ? <div className="error-summary">{summary}</div> : null}
-              <label>
+            <AuthMotionForm className="auth-form" onSubmit={submit}>
+              {summary ? <AuthMotionItem><div className="error-summary">{summary}</div></AuthMotionItem> : null}
+              <AuthMotionItem><label>
                 <span>{t('login.email')}</span>
                 <div className="auth-input-wrap">
                   <Mail size={18} aria-hidden="true" />
@@ -66,8 +71,8 @@ export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
                   />
                 </div>
                 {errors.Email ? <small id="login-email-error" className="field-error">{errors.Email[0]}</small> : null}
-              </label>
-              <label>
+              </label></AuthMotionItem>
+              <AuthMotionItem><label>
                 <span className="auth-label-row"><span>{t('login.password')}</span><Link className="auth-text-button" to="/forgot-password">{t('login.forgot')}</Link></span>
                 <div className="auth-input-wrap">
                   <Lock size={18} aria-hidden="true" />
@@ -90,20 +95,20 @@ export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
                   </button>
                 </div>
                 {errors.Password ? <small id="login-password-error" className="field-error">{errors.Password[0]}</small> : null}
-              </label>
-              <label className="auth-check-row">
+              </label></AuthMotionItem>
+              <AuthMotionItem><label className="auth-check-row">
                 <input type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} />
                 <span>{t('login.remember')}</span>
-              </label>
-              <button className="btn-primary auth-submit" disabled={loginMutation.isPending} type="submit">
+              </label></AuthMotionItem>
+              <AuthMotionItem><button className="btn-primary auth-submit" disabled={loginMutation.isPending} type="submit">
                 {loginMutation.isPending ? t('login.processing') : t('login.submit')}
-              </button>
-            </form>
+              </button></AuthMotionItem>
+            </AuthMotionForm>
 
-            <div className="auth-register-prompt">
+            <AuthMotionItem><div className="auth-register-prompt">
               <p>{t('login.registerPrompt')} <Link className="auth-text-button" to="/register">{t('login.registerLink')}</Link></p>
-            </div>
-            <p className="auth-legal">{t('login.legal')}</p>
-          </div>
+            </div></AuthMotionItem>
+            <AuthMotionItem><p className="auth-legal">{t('login.legal')}</p></AuthMotionItem>
+          </AuthMotionCard>
   )
 }

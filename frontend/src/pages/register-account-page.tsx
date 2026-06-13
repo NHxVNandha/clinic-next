@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ArrowLeft, Eye, EyeOff, Lock, Mail, ShieldCheck, UserRound } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Link, useNavigate } from 'react-router-dom'
+import { AuthMotionForm, AuthMotionGroup, AuthMotionItem } from '../components/auth-motion'
 import { useRegister } from '../hooks/use-auth'
 import { parseApiError } from '../lib/api-error'
 
@@ -36,36 +37,36 @@ export function RegisterAccountPage() {
   }
 
   return (
-          <form className="auth-card auth-register-card" onSubmit={submit}>
-            <Link className="auth-back-link" to="/login"><ArrowLeft size={16} /> Kembali ke login</Link>
-            <div className="auth-form-header">
+          <AuthMotionForm className="auth-card auth-register-card" onSubmit={submit}>
+            <AuthMotionItem><Link className="auth-back-link" to="/login"><ArrowLeft size={16} /> Kembali ke login</Link></AuthMotionItem>
+            <AuthMotionItem><div className="auth-form-header">
               <span className="auth-support-icon"><ShieldCheck size={28} /></span>
               <h2>Registrasi Akun</h2>
               <p>Buat akun pengguna untuk masuk ke aplikasi. Akun baru menggunakan akses standar dan dapat disesuaikan oleh admin.</p>
-            </div>
-            {summary ? <div className="error-summary">{summary}</div> : null}
-            <div className="auth-form auth-register-form">
-              <label>
+            </div></AuthMotionItem>
+            {summary ? <AuthMotionItem><div className="error-summary">{summary}</div></AuthMotionItem> : null}
+            <AuthMotionGroup className="auth-form auth-register-form">
+              <AuthMotionItem><label>
                 <span>Nama Lengkap</span>
                 <div className="auth-input-wrap"><UserRound size={18} aria-hidden="true" /><input value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Nama pengguna" required /></div>
-              </label>
-              <label>
+              </label></AuthMotionItem>
+              <AuthMotionItem><label>
                 <span>Email</span>
                 <div className="auth-input-wrap"><Mail size={18} aria-hidden="true" /><input value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} type="email" placeholder="nama@klinik.com" required /></div>
-              </label>
-              <label>
+              </label></AuthMotionItem>
+              <AuthMotionItem><label>
                 <span>Password</span>
                 <div className="auth-input-wrap"><Lock size={18} aria-hidden="true" /><input value={form.password} onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))} type={showPassword ? 'text' : 'password'} placeholder="Minimal 8 karakter" required minLength={8} /><button className="auth-password-toggle" type="button" onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div>
-              </label>
-              <label>
+              </label></AuthMotionItem>
+              <AuthMotionItem><label>
                 <span>Konfirmasi Password</span>
                 <div className="auth-input-wrap"><Lock size={18} aria-hidden="true" /><input value={form.confirmPassword} onChange={(event) => setForm((prev) => ({ ...prev, confirmPassword: event.target.value }))} type={showConfirmPassword ? 'text' : 'password'} placeholder="Ulangi password" required minLength={8} /><button className="auth-password-toggle" type="button" onClick={() => setShowConfirmPassword((current) => !current)} aria-label={showConfirmPassword ? 'Sembunyikan konfirmasi password' : 'Tampilkan konfirmasi password'}>{showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button></div>
-              </label>
-            </div>
-            <p className="auth-helper-text">Akun baru tidak mendapat akses admin otomatis. Admin dapat menyesuaikan role melalui menu pengaturan.</p>
-            <button className="btn-primary auth-submit" disabled={registerMutation.isPending} type="submit">
+              </label></AuthMotionItem>
+            </AuthMotionGroup>
+            <AuthMotionItem><p className="auth-helper-text">Akun baru tidak mendapat akses admin otomatis. Admin dapat menyesuaikan role melalui menu pengaturan.</p></AuthMotionItem>
+            <AuthMotionItem><button className="btn-primary auth-submit" disabled={registerMutation.isPending} type="submit">
               {registerMutation.isPending ? 'Membuat akun...' : 'Buat Akun'}
-            </button>
-          </form>
+            </button></AuthMotionItem>
+          </AuthMotionForm>
   )
 }
