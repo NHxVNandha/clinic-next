@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { ShieldCheck, ShieldQuestion, UserRound } from 'lucide-react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useT } from '../i18n'
@@ -8,6 +9,8 @@ export function AuthLayout() {
   const { t } = useT()
   const location = useLocation()
   const mode = location.pathname === '/register' ? 'register' : 'login'
+  const previousMode = useRef(mode)
+  const [direction, setDirection] = useState(mode === 'register' ? 'to-register' : 'to-login')
   const isRegister = mode === 'register'
   const isForgot = location.pathname === '/forgot-password'
   const Icon = isRegister ? UserRound : isForgot ? ShieldQuestion : ShieldCheck
@@ -20,9 +23,16 @@ export function AuthLayout() {
   const metricA = isRegister ? { label: 'Role Awal', value: 'User Secure' } : isForgot ? { label: 'Verifikasi', value: 'Admin Clinic' } : { label: t('login.statusLabel'), value: t('login.statusValue') }
   const metricB = isRegister ? { label: 'Akses', value: 'Role Based' } : isForgot ? { label: 'Status', value: 'Manual Secure' } : { label: t('login.securityLabel'), value: t('login.securityValue') }
 
+  useEffect(() => {
+    if (previousMode.current !== mode) {
+      setDirection(mode === 'register' ? 'to-register' : 'to-login')
+      previousMode.current = mode
+    }
+  }, [mode])
+
   return (
     <div className="auth-layout">
-      <main className={`auth-shell auth-shell-${mode}`}>
+      <main className={`auth-shell auth-shell-${mode} auth-shell-${direction}`}>
         <section className="auth-brand-panel" aria-label="Panel brand MediFlow Admin">
           <img className="auth-brand-image" src={clinicalImageUrl} alt="Lingkungan klinik modern" />
           <div className="auth-brand-pattern" aria-hidden="true" />
@@ -36,7 +46,6 @@ export function AuthLayout() {
             </div>
           </div>
         </section>
-        <span className="auth-comparison-line" aria-hidden="true" />
         <section className={`auth-form-panel ${isRegister ? 'auth-form-panel-scroll' : ''}`.trim()}>
           <div className="auth-form-stage" key={location.pathname}>
             <Outlet />
