@@ -33,7 +33,7 @@ export function FormModal({
       <section className={`confirm-card form-modal-card form-modal-${size} ${className}`.trim()}>
         <div className="modal-header form-modal-header">
           <div className="form-modal-title-row">
-            {Icon ? <span className="form-modal-icon"><Icon size={22} /></span> : null}
+            {Icon ? <span className="form-modal-icon"><Icon size={24} /></span> : null}
             <div>
               <h3 id={modalTitleId}>{title}</h3>
               {description ? <p id={modalDescriptionId}>{description}</p> : null}
