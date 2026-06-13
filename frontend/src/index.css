@@ -1101,12 +1101,17 @@ button.filter-chip:focus-visible {
     var(--primary);
   color: var(--primary-contrast);
   padding: clamp(40px, 7vw, 84px);
-  transition: left 720ms cubic-bezier(0.22, 1, 0.36, 1), width 720ms cubic-bezier(0.22, 1, 0.36, 1), border-radius 720ms cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: left, width;
+  clip-path: inset(0 0 0 0 round 0);
+  transition:
+    left 780ms cubic-bezier(0.22, 1, 0.36, 1),
+    clip-path 780ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 780ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: left, clip-path, filter;
 }
 
 .auth-shell-register .auth-brand-panel {
   left: 55%;
+  filter: saturate(1.08);
 }
 
 .auth-form-panel {
@@ -1122,22 +1127,69 @@ button.filter-chip:focus-visible {
   left: 0;
 }
 
+.auth-comparison-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 45%;
+  z-index: 8;
+  width: 2px;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, #ffffff 76%, var(--accent-cool)) 12%, #ffffff 50%, color-mix(in srgb, #ffffff 76%, var(--accent-cool)) 88%, transparent 100%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--primary) 16%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent-cool) 60%, transparent),
+    0 0 54px color-mix(in srgb, #ffffff 28%, transparent);
+  transform: translateX(-1px);
+  transition: left 780ms cubic-bezier(0.22, 1, 0.36, 1), opacity 260ms ease;
+}
+
+.auth-comparison-line::before,
+.auth-comparison-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.auth-comparison-line::before {
+  left: -30px;
+  width: 60px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, #ffffff 30%, transparent), transparent);
+  filter: blur(10px);
+  opacity: 0.88;
+}
+
+.auth-comparison-line::after {
+  left: -6px;
+  width: 14px;
+  background: repeating-linear-gradient(180deg, color-mix(in srgb, #ffffff 54%, transparent) 0 12px, transparent 12px 24px);
+  opacity: 0.28;
+}
+
+.auth-shell-register .auth-comparison-line {
+  left: 55%;
+}
+
 .auth-form-stage {
   width: min(720px, 100%);
   max-height: 100%;
   display: grid;
   place-items: center;
-  animation: auth-form-stage-in 360ms ease both;
+  animation: auth-form-stage-in 430ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes auth-form-stage-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px) scale(0.992);
+    filter: blur(3px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
 
@@ -1552,6 +1604,10 @@ button.filter-chip:focus-visible {
   }
 
   .auth-brand-panel {
+    display: none;
+  }
+
+  .auth-comparison-line {
     display: none;
   }
 
@@ -2925,6 +2981,10 @@ button.filter-chip:hover {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .auth-comparison-line {
+    transition: none !important;
   }
 }
 

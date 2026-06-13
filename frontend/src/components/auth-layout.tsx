@@ -36,6 +36,7 @@ export function AuthLayout() {
             </div>
           </div>
         </section>
+        <span className="auth-comparison-line" aria-hidden="true" />
         <section className={`auth-form-panel ${isRegister ? 'auth-form-panel-scroll' : ''}`.trim()}>
           <div className="auth-form-stage" key={location.pathname}>
             <Outlet />
