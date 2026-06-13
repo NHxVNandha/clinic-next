@@ -7,9 +7,9 @@ import { FieldLabel } from '../components/field-label'
 import { PageHeader } from '../components/page-header'
 import { useT } from '../i18n'
 
-function renderRecordTable(records: Record<string, unknown>[]) {
+function renderRecordTable(records: Record<string, unknown>[], emptyText: string) {
   if (!records.length) {
-    return <p>Tidak ada data.</p>
+    return <p>{emptyText}</p>
   }
 
   const keys = Array.from(
@@ -68,28 +68,28 @@ export function RekamMedisPage({ canFetch }: { canFetch: boolean }) {
 
   return (
     <section className="page-card">
-      <PageHeader title={t('rekam.title')} description={t('nav.rekamMedis.desc')} eyebrow="Medical Records" />
+      <PageHeader title={t('rekam.title')} description={t('nav.rekamMedis.desc')} eyebrow={t('medical.eyebrow')} />
 
       <div className="toolbar-row">
-        <FieldLabel text="Filter ID Pasien" htmlFor="rekam-medis-filter-pasien" className="toolbar-field">
-          <input id="rekam-medis-filter-pasien" ref={searchInputRef} className="search-input" placeholder="Masukkan ID pasien" value={idPasien} onChange={(e) => setIdPasien(e.target.value)} />
+        <FieldLabel text={t('medical.filterPatient')} htmlFor="rekam-medis-filter-pasien" className="toolbar-field">
+          <input id="rekam-medis-filter-pasien" ref={searchInputRef} className="search-input" placeholder={t('medical.patientPlaceholder')} value={idPasien} onChange={(e) => setIdPasien(e.target.value)} />
         </FieldLabel>
-        <FieldLabel text="Filter ID Registrasi" htmlFor="rekam-medis-filter-registrasi" className="toolbar-field">
-          <input id="rekam-medis-filter-registrasi" className="search-input" placeholder="Masukkan ID registrasi" value={idRegistrasi} onChange={(e) => setIdRegistrasi(e.target.value)} />
+        <FieldLabel text={t('medical.filterRegistration')} htmlFor="rekam-medis-filter-registrasi" className="toolbar-field">
+          <input id="rekam-medis-filter-registrasi" className="search-input" placeholder={t('medical.registrationPlaceholder')} value={idRegistrasi} onChange={(e) => setIdRegistrasi(e.target.value)} />
         </FieldLabel>
       </div>
 
       <div className="stats-grid medical-record-stats">
-        <article className="stat-card"><small>Total Histori</small><strong>{historyRows.length}</strong></article>
-        <article className="stat-card"><small>Kunjungan Hari Ini</small><strong>{historyRows.filter((item) => String(item.tanggal ?? '').startsWith(new Date().toISOString().slice(0, 10))).length}</strong></article>
-        <article className="stat-card"><small>Form Tersedia</small><strong>{forms.data?.data?.length ?? 0}</strong></article>
-        <article className="stat-card"><small>Review Data</small><strong>{selectedForm ? formRows.length : 0}</strong></article>
+        <article className="stat-card"><small>{t('medical.totalHistory')}</small><strong>{historyRows.length}</strong></article>
+        <article className="stat-card"><small>{t('medical.todayVisits')}</small><strong>{historyRows.filter((item) => String(item.tanggal ?? '').startsWith(new Date().toISOString().slice(0, 10))).length}</strong></article>
+        <article className="stat-card"><small>{t('medical.availableForms')}</small><strong>{forms.data?.data?.length ?? 0}</strong></article>
+        <article className="stat-card"><small>{t('medical.reviewData')}</small><strong>{selectedForm ? formRows.length : 0}</strong></article>
       </div>
 
       <div className="medical-record-layout">
         <aside className="medical-side-panel">
           <section>
-           <h2>Form Tersedia</h2>
+            <h2>{t('medical.availableForms')}</h2>
            {forms.isLoading ? (
             <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
               <div className="skeleton-block" />
@@ -104,23 +104,23 @@ export function RekamMedisPage({ canFetch }: { canFetch: boolean }) {
               ))}
             </div>
            )}
-           {!forms.isLoading && (forms.data?.data?.length ?? 0) === 0 ? <p className="empty-note">Belum ada form rekam medis tersedia.</p> : null}
+            {!forms.isLoading && (forms.data?.data?.length ?? 0) === 0 ? <p className="empty-note">{t('medical.noForms')}</p> : null}
           </section>
 
           <section>
-            <h2>Security Status</h2>
-            <div className="medical-security-item"><strong>Role Based Access</strong><span>Aktif</span></div>
-            <div className="medical-security-item"><strong>Akses Data</strong><span>Terkontrol</span></div>
+            <h2>{t('medical.securityStatus')}</h2>
+            <div className="medical-security-item"><strong>{t('medical.roleAccess')}</strong><span>{t('medical.active')}</span></div>
+            <div className="medical-security-item"><strong>{t('medical.dataAccess')}</strong><span>{t('medical.controlled')}</span></div>
           </section>
         </aside>
 
         <section className="medical-history-card">
           <div className="medical-card-head">
             <div>
-              <h2>Daftar Riwayat Pasien</h2>
-              <p>Filter aktif: {idPasien || 'Semua pasien'} {idRegistrasi ? `• ${idRegistrasi}` : ''}</p>
+              <h2>{t('medical.historyList')}</h2>
+              <p>{t('medical.activeFilter').replace('{patient}', idPasien || t('medical.allPatients')).replace('{registration}', idRegistrasi ? `• ${idRegistrasi}` : '')}</p>
             </div>
-            <span>Filter: 7 Hari Terakhir</span>
+            <span>{t('medical.lastSevenDays')}</span>
           </div>
           {history.isLoading ? (
             <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
@@ -135,21 +135,21 @@ export function RekamMedisPage({ canFetch }: { canFetch: boolean }) {
                   <div className="medical-avatar">{String(item.idPasien || 'RM').slice(-2).toUpperCase()}</div>
                   <div>
                     <strong>{item.judulRm || item.kodeRm || `RM #${item.id}`}</strong>
-                    <p>Pasien: {item.idPasien || '-'} • Registrasi: {item.idRegistrasi || '-'}</p>
+                    <p>{t('medical.patient')}: {item.idPasien || '-'} • {t('medical.registration')}: {item.idRegistrasi || '-'}</p>
                   </div>
                   <span>{item.tanggal || '-'} {item.jam || ''}</span>
                 </article>
               ))}
             </div>
           ) : (
-            <p>Histori tidak ditemukan.</p>
+            <p>{t('medical.historyEmpty')}</p>
           )}
         </section>
 
         <section className="medical-form-card">
-          <div className="medical-card-head"><div><h2>Data Form {selectedForm ? `(${selectedForm})` : ''}</h2><p>Pilih form untuk menampilkan data klinis terstruktur.</p></div></div>
+          <div className="medical-card-head"><div><h2>{t('medical.formData')} {selectedForm ? `(${selectedForm})` : ''}</h2><p>{t('medical.formDesc')}</p></div></div>
           {!selectedForm ? (
-            <p>Pilih form untuk menampilkan data.</p>
+            <p>{t('medical.selectForm')}</p>
           ) : formData.isLoading ? (
             <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
               <div className="skeleton-block" />
@@ -157,7 +157,7 @@ export function RekamMedisPage({ canFetch }: { canFetch: boolean }) {
               <div className="skeleton-block" />
             </div>
           ) : (
-            renderRecordTable(formData.data?.data ?? [])
+            renderRecordTable(formData.data?.data ?? [], t('medical.noData'))
           )}
         </section>
       </div>
