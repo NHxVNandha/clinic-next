@@ -31,7 +31,6 @@ export function StrictMasterComboboxField({
   const isMatched = trimmedValue ? options.some((item) => item.value === trimmedValue) : false
   const helperTone = !trimmedValue ? 'var(--text-muted)' : isMatched ? 'var(--success-text)' : 'var(--danger-text)'
   const helperMessage = !trimmedValue ? helperText : isMatched ? 'Master: terhubung.' : 'Master: pilih dari daftar.'
-  const helperPrefix = !trimmedValue ? '[i]' : isMatched ? '[OK]' : '[!]'
 
   return (
     <div>
@@ -47,7 +46,7 @@ export function StrictMasterComboboxField({
         recentKey={recentKey}
         disabled={disabled}
       />
-      <small className="field-helper" style={{ marginTop: 6, display: 'block', color: helperTone }}>{helperPrefix} {helperMessage}</small>
+      <small className="field-helper" style={{ marginTop: 6, display: 'block', color: helperTone }}>{helperMessage}</small>
     </div>
   )
 }
