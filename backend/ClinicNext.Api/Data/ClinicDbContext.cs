@@ -186,6 +186,7 @@ public class ClinicDbContext : DbContext
             entity.Property(x => x.Id).HasColumnName("id");
             entity.Property(x => x.Jenis).HasColumnName("jenis");
             entity.Property(x => x.Nama).HasColumnName("nama");
+            entity.Property(x => x.TaxId).HasColumnName("tax_id");
             entity.Property(x => x.Alamat).HasColumnName("alamat");
             entity.Property(x => x.Email).HasColumnName("email");
             entity.Property(x => x.NoHp).HasColumnName("no_hp");

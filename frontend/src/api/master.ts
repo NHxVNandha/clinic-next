@@ -9,7 +9,20 @@ export type UpsertDokterRequest = { id?: number; kdDokter: string; namaDokter: s
 export type UpsertJasaRequest = { id?: number; icd9?: string; namaJasa: string; keterangan?: string; harga?: number; status?: number }
 export type UpsertDiagnosaRequest = { id?: number; kodeDiagnosa: string; kodeSnomed?: string; namaDiagnosa: string; status?: number }
 
-export type MasterSetting = { id?: number; key?: string; value?: string; description?: string }
+export type MasterSetting = {
+  id?: number
+  jenis?: string
+  nama?: string
+  taxId?: string
+  alamat?: string
+  email?: string
+  noHp?: string
+  phone?: string
+  logo?: string
+  logoSidebar?: string
+  titleSidebar?: string
+  keterangan?: string
+}
 
 export async function getMasterDokter(search?: string): Promise<ApiResponse<MasterDokter[]>> {
   const { data } = await apiClient.get<ApiResponse<MasterDokter[]>>('/master/dokter', { params: { search } })

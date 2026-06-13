@@ -445,6 +445,7 @@ public class MasterController : ControllerBase
             query = query.Where(x =>
                 (x.Jenis ?? string.Empty).Contains(search) ||
                 (x.Nama ?? string.Empty).Contains(search) ||
+                (x.TaxId ?? string.Empty).Contains(search) ||
                 (x.Email ?? string.Empty).Contains(search));
         }
 
@@ -490,12 +491,17 @@ public class MasterController : ControllerBase
         }
         else
         {
-            entity = new SettingEntity();
-            _dbContext.Setting.Add(entity);
+            entity = await _dbContext.Setting.FirstOrDefaultAsync(x => x.Jenis == request.Jenis && x.DeletedAt == null)
+                ?? new SettingEntity();
+            if (entity.Id == 0)
+            {
+                _dbContext.Setting.Add(entity);
+            }
         }
 
         entity.Jenis = request.Jenis;
         entity.Nama = request.Nama;
+        entity.TaxId = request.TaxId;
         entity.Alamat = request.Alamat;
         entity.Email = request.Email;
         entity.NoHp = request.NoHp;
@@ -729,6 +735,9 @@ public class UpsertSettingRequest
     [Required]
     [MaxLength(255)]
     public string? Nama { get; set; }
+
+    [MaxLength(100)]
+    public string? TaxId { get; set; }
 
     [MaxLength(1000)]
     public string? Alamat { get; set; }

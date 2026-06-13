@@ -8,6 +8,8 @@ public class SettingEntity
 
     public string? Nama { get; set; }
 
+    public string? TaxId { get; set; }
+
     public string? Alamat { get; set; }
 
     public string? Email { get; set; }

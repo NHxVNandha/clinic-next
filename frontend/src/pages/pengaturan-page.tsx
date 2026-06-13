@@ -10,15 +10,37 @@ import { MetricGrid } from '../components/metric-grid'
 import { PageHeader } from '../components/page-header'
 import { SectionCard } from '../components/section-card'
 import { StatCard } from '../components/stat-card'
-import { upsertMasterSetting, type MasterSetting } from '../api/master'
+import { upsertMasterSetting } from '../api/master'
 import { useMasterSetting, useMasterUser } from '../hooks/use-master'
 import { runActionWithFeedback } from '../lib/action-feedback'
 import { useT } from '../i18n'
 
 type SettingTab = 'clinic' | 'users' | 'roles' | 'backup' | 'system'
 
-function settingValue(rows: MasterSetting[], key: string, fallback = '') {
-  return rows.find((item) => item.key === key)?.value ?? fallback
+type ClinicIdentityForm = {
+  clinicName: string
+  taxId: string
+  phone: string
+  noHp: string
+  email: string
+  address: string
+  logo: string
+  logoSidebar: string
+  titleSidebar: string
+  keterangan: string
+}
+
+const defaultClinicIdentity: ClinicIdentityForm = {
+  clinicName: 'MediFlow Healthcare Center',
+  taxId: '',
+  phone: '',
+  noHp: '',
+  email: '',
+  address: '',
+  logo: '',
+  logoSidebar: '',
+  titleSidebar: '',
+  keterangan: '',
 }
 
 export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
@@ -29,14 +51,31 @@ export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
   const userSummary = useMasterUser(1, 1, '', canFetch)
   const users = useMasterUser(1, 20, search, canFetch && activeTab === 'users')
   const rows = settings.data?.data.items ?? []
-  const [form, setForm] = useState({ clinicName: '', taxId: '', phone: '', address: '' })
+  const clinicIdentity = rows.find((item) => item.jenis === 'clinic.identity')
+  const [form, setForm] = useState<Partial<ClinicIdentityForm>>({})
+  const [touched, setTouched] = useState<Partial<Record<keyof ClinicIdentityForm, boolean>>>({})
   const saveMutation = useMutation({ mutationFn: upsertMasterSetting })
 
+  function fieldValue(field: keyof ClinicIdentityForm, savedValue: string | undefined, fallback = '') {
+    return touched[field] ? form[field] ?? '' : savedValue ?? fallback
+  }
+
+  function updateField(field: keyof ClinicIdentityForm, value: string) {
+    setTouched((prev) => ({ ...prev, [field]: true }))
+    setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
   const formValues = {
-    clinicName: form.clinicName || settingValue(rows, 'clinic.name', 'MediFlow Healthcare Center'),
-    taxId: form.taxId || settingValue(rows, 'clinic.taxId', ''),
-    phone: form.phone || settingValue(rows, 'clinic.phone', ''),
-    address: form.address || settingValue(rows, 'clinic.address', ''),
+    clinicName: fieldValue('clinicName', clinicIdentity?.nama, defaultClinicIdentity.clinicName),
+    taxId: fieldValue('taxId', clinicIdentity?.taxId),
+    phone: fieldValue('phone', clinicIdentity?.phone),
+    noHp: fieldValue('noHp', clinicIdentity?.noHp),
+    email: fieldValue('email', clinicIdentity?.email),
+    address: fieldValue('address', clinicIdentity?.alamat),
+    logo: fieldValue('logo', clinicIdentity?.logo),
+    logoSidebar: fieldValue('logoSidebar', clinicIdentity?.logoSidebar),
+    titleSidebar: fieldValue('titleSidebar', clinicIdentity?.titleSidebar),
+    keterangan: fieldValue('keterangan', clinicIdentity?.keterangan),
   }
 
   const userColumns = useMemo<ColDef<Record<string, unknown>>[]>(() => [
@@ -48,16 +87,24 @@ export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
 
   async function saveClinicIdentity() {
     const payload = {
-      settings: [
-        { key: 'clinic.name', value: formValues.clinicName, description: 'Nama klinik' },
-        { key: 'clinic.taxId', value: formValues.taxId, description: 'NPWP klinik' },
-        { key: 'clinic.phone', value: formValues.phone, description: 'Telepon utama klinik' },
-        { key: 'clinic.address', value: formValues.address, description: 'Alamat kantor klinik' },
-      ],
+      id: clinicIdentity?.id,
+      jenis: 'clinic.identity',
+      nama: formValues.clinicName,
+      taxId: formValues.taxId,
+      phone: formValues.phone,
+      noHp: formValues.noHp,
+      email: formValues.email,
+      alamat: formValues.address,
+      logo: formValues.logo,
+      logoSidebar: formValues.logoSidebar,
+      titleSidebar: formValues.titleSidebar,
+      keterangan: formValues.keterangan,
     }
     const result = await runActionWithFeedback(() => saveMutation.mutateAsync(payload), 'Pengaturan klinik berhasil disimpan.')
     if (result) {
       await settings.refetch()
+      setForm({})
+      setTouched({})
       toast.success('Identitas klinik diperbarui.')
     }
   }
@@ -102,10 +149,16 @@ export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
             <SectionCard title="Clinic Identity" description="Update your clinical organization details for reports and letterheads." actions={<button className="icon-btn btn-primary" disabled={saveMutation.isPending} onClick={saveClinicIdentity}><Save size={16} /> Save Changes</button>} className="settings-clinic-card">
               <div className="settings-clinic-grid">
                 <div className="settings-form-grid">
-                  <FieldLabel text="Clinic Name" htmlFor="setting-clinic-name"><input id="setting-clinic-name" value={formValues.clinicName} onChange={(event) => setForm((prev) => ({ ...prev, clinicName: event.target.value }))} /></FieldLabel>
-                  <FieldLabel text="Tax ID / NPWP" htmlFor="setting-tax-id"><input id="setting-tax-id" value={formValues.taxId} onChange={(event) => setForm((prev) => ({ ...prev, taxId: event.target.value }))} /></FieldLabel>
-                  <FieldLabel text="Primary Phone" htmlFor="setting-phone"><input id="setting-phone" value={formValues.phone} onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))} /></FieldLabel>
-                  <FieldLabel text="Office Address" htmlFor="setting-address"><textarea id="setting-address" rows={4} value={formValues.address} onChange={(event) => setForm((prev) => ({ ...prev, address: event.target.value }))} /></FieldLabel>
+                  <FieldLabel text="Clinic Name" htmlFor="setting-clinic-name"><input id="setting-clinic-name" value={formValues.clinicName} onChange={(event) => updateField('clinicName', event.target.value)} /></FieldLabel>
+                  <FieldLabel text="Tax ID / NPWP" htmlFor="setting-tax-id"><input id="setting-tax-id" value={formValues.taxId} onChange={(event) => updateField('taxId', event.target.value)} /></FieldLabel>
+                  <FieldLabel text="Primary Phone" htmlFor="setting-phone"><input id="setting-phone" value={formValues.phone} onChange={(event) => updateField('phone', event.target.value)} /></FieldLabel>
+                  <FieldLabel text="Mobile / WhatsApp" htmlFor="setting-no-hp"><input id="setting-no-hp" value={formValues.noHp} onChange={(event) => updateField('noHp', event.target.value)} /></FieldLabel>
+                  <FieldLabel text="Email" htmlFor="setting-email"><input id="setting-email" type="email" value={formValues.email} onChange={(event) => updateField('email', event.target.value)} /></FieldLabel>
+                  <FieldLabel text="Title Sidebar" htmlFor="setting-title-sidebar"><input id="setting-title-sidebar" value={formValues.titleSidebar} onChange={(event) => updateField('titleSidebar', event.target.value)} /></FieldLabel>
+                  <FieldLabel text="Logo URL" htmlFor="setting-logo"><input id="setting-logo" value={formValues.logo} onChange={(event) => updateField('logo', event.target.value)} /></FieldLabel>
+                  <FieldLabel text="Logo Sidebar URL" htmlFor="setting-logo-sidebar"><input id="setting-logo-sidebar" value={formValues.logoSidebar} onChange={(event) => updateField('logoSidebar', event.target.value)} /></FieldLabel>
+                  <FieldLabel text="Office Address" htmlFor="setting-address"><textarea id="setting-address" rows={4} value={formValues.address} onChange={(event) => updateField('address', event.target.value)} /></FieldLabel>
+                  <FieldLabel text="Keterangan" htmlFor="setting-keterangan"><textarea id="setting-keterangan" rows={4} value={formValues.keterangan} onChange={(event) => updateField('keterangan', event.target.value)} /></FieldLabel>
                 </div>
                 <div className="settings-logo-dropzone">
                   <div className="settings-logo-mark">MF</div>
