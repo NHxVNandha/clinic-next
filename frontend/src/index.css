@@ -1712,11 +1712,6 @@ button.filter-chip:focus-visible {
   animation: modal-overlay-in 220ms ease both;
 }
 
-.form-modal-overlay {
-  align-items: center;
-  justify-items: center;
-}
-
 :root[data-theme='dark'] .confirm-overlay {
   background:
     radial-gradient(70% 52% at 82% 8%, color-mix(in srgb, var(--primary) 22%, transparent) 0%, transparent 74%),
@@ -1737,10 +1732,6 @@ button.filter-chip:focus-visible {
   position: relative;
   overflow: hidden;
   animation: modal-card-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.form-modal-card {
-  width: min(720px, calc(100vw - 24px));
 }
 
 .modal-header {
@@ -3176,10 +3167,6 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: Inter, "Segoe UI", sans-serif;
-}
-
-body.modal-open {
-  overflow: hidden;
 }
 
 .app-shell {
@@ -5784,156 +5771,6 @@ button.filter-chip:hover {
   background: color-mix(in srgb, var(--danger-bg) 46%, var(--surface));
 }
 
-.form-modal-overlay {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 28px 24px;
-  overflow: hidden;
-  background: color-mix(in srgb, var(--inverse-surface, #2d3133) 42%, transparent);
-  backdrop-filter: blur(8px);
-}
-
-.form-modal-card {
-  width: min(780px, calc(100vw - 32px));
-  max-height: calc(100dvh - 56px);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: var(--surface);
-  box-shadow: 0 22px 70px color-mix(in srgb, #0f172a 24%, transparent);
-  padding: 0;
-}
-
-.form-modal-sm {
-  width: min(780px, calc(100vw - 32px));
-}
-
-.form-modal-lg {
-  width: min(780px, calc(100vw - 32px));
-}
-
-.form-modal-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface-muted) 44%, var(--surface));
-  padding: 18px 24px 16px;
-}
-
-.form-modal-header::after {
-  display: none;
-}
-
-.form-modal-title-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  min-width: 0;
-}
-
-.form-modal-title-row h3 {
-  margin: 0;
-  color: var(--text);
-  font-family: Inter, "Segoe UI", sans-serif;
-  font-size: clamp(1.16rem, 1.7vw, 1.32rem);
-  font-weight: 700;
-  line-height: 1.25;
-  letter-spacing: -0.015em;
-}
-
-.form-modal-title-row p {
-  margin: 4px 0 0;
-  color: var(--text-soft);
-  font-size: 0.875rem;
-  font-weight: 400;
-  line-height: 1.5;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-.form-modal-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 42px;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: var(--primary-fixed);
-  color: var(--primary);
-}
-
-.form-modal-card .modal-body {
-  flex: 1;
-  overflow-y: auto;
-  margin: 0;
-  padding: 20px 24px;
-  gap: 16px;
-}
-
-.form-modal-card .form-grid {
-  margin-top: 0 !important;
-  gap: 14px 18px;
-}
-
-.form-modal-card .field-label {
-  color: color-mix(in srgb, var(--text) 76%, var(--text-muted));
-  font-size: 0.75rem;
-  font-weight: 650;
-  letter-spacing: 0.025em;
-  text-transform: uppercase;
-}
-
-.form-modal-card .field-helper {
-  font-size: 0.76rem;
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: 0;
-}
-
-.form-modal-card input,
-.form-modal-card select,
-.form-modal-card textarea,
-.form-modal-card .search-input {
-  border-color: var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-  min-height: 44px;
-  color: var(--text);
-  font-size: 0.88rem;
-  font-weight: 400;
-  letter-spacing: 0;
-}
-
-.form-modal-card input:focus,
-.form-modal-card select:focus,
-.form-modal-card textarea:focus,
-.form-modal-card .search-input:focus {
-  outline: 3px solid var(--focus-ring);
-  border-color: var(--primary);
-}
-
-.form-modal-card .confirm-actions {
-  margin: 0 -24px -20px;
-  border-top: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface-muted) 52%, var(--surface));
-  padding: 14px 24px;
-}
-
-.form-modal-footer-note {
-  border-top: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface-muted) 46%, var(--surface));
-  color: var(--text-soft);
-  padding: 10px 24px;
-  font-size: 0.76rem;
-  line-height: 1.5;
-}
-
 .modal-summary-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -6189,34 +6026,6 @@ button.filter-chip:hover {
     align-items: stretch;
     flex-direction: column;
     grid-template-columns: 1fr;
-  }
-
-  .form-modal-overlay {
-    align-items: flex-start;
-    justify-content: center;
-    padding: 12px;
-  }
-
-  .form-modal-card,
-  .form-modal-sm,
-  .form-modal-lg {
-    width: min(780px, calc(100vw - 24px));
-    max-height: calc(100dvh - 24px);
-    border-radius: 12px;
-  }
-
-  .form-modal-header,
-  .form-modal-card .modal-body,
-  .form-modal-footer-note {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-
-  .form-modal-card .confirm-actions {
-    margin-left: -16px;
-    margin-right: -16px;
-    padding-left: 16px;
-    padding-right: 16px;
   }
 
   .modal-summary-grid,
