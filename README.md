@@ -1,3 +1,9 @@
+---
+title: ClinicNext API
+sdk: docker
+app_port: 7860
+---
+
 # clinic-next
 
 Modernisasi aplikasi klinik dengan pendekatan API-first.
