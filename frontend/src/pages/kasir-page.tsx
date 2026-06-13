@@ -30,7 +30,7 @@ import { normalizeIdRegistrasi } from '../lib/input-normalizers'
 import { canManageDestructiveActions, canManageKasirPayments, canManageKasirPengeluaran, getActionAccess } from '../lib/access'
 import { confirmThemedAction } from '../lib/sweet-alert'
 import { getAuthUser } from '../lib/storage'
-import { useT } from '../i18n'
+import { useT, type TranslationKey } from '../i18n'
 
 function getPatientDisplayName(data?: Record<string, unknown> | null) {
   const value = data?.namaPasien ?? data?.nama_pasien ?? data?.nama ?? data?.pasienNama ?? data?.namaPatient
@@ -86,6 +86,7 @@ function flattenInvoiceRows(value: unknown, parent = ''): Array<{ field: string;
 
 export function KasirPage({ canFetch }: { canFetch: boolean }) {
   const { t } = useT()
+  const msg = (key: TranslationKey, values: Record<string, string | number> = {}) => Object.entries(values).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), t(key))
   const canManage = canManageDestructiveActions()
   const canManagePayments = canManageKasirPayments()
   const canManagePengeluaran = canManageKasirPengeluaran()
@@ -179,7 +180,7 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
       { field: 'noInvoice', headerName: 'Invoice', minWidth: 170, pinned: 'left' },
       {
         field: 'idRegistrasi',
-        headerName: 'Registrasi',
+        headerName: t('dashboard.col.registration'),
         minWidth: 190,
         pinned: 'left',
         wrapText: true,
@@ -193,7 +194,7 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
       },
       {
         field: 'idPasien',
-        headerName: 'Pasien',
+        headerName: t('dashboard.col.patient'),
         minWidth: 250,
         wrapText: true,
         autoHeight: true,
@@ -201,13 +202,13 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
           <GridEntityCell primary={getPatientDisplayName(params.data as unknown as Record<string, unknown>)} secondary={String(params.value ?? '-').trim() || '-'} kind="patient" />
         ),
       },
-      { field: 'namaDokter', headerName: 'Dokter', minWidth: 180 },
+      { field: 'namaDokter', headerName: t('dashboard.col.doctor'), minWidth: 180 },
       { field: 'grandtotal', headerName: 'Grand Total', minWidth: 160, valueFormatter: (p) => formatMoney(Number(p.value ?? 0)) },
-      { field: 'jumlahBayar', headerName: 'Jumlah Bayar', minWidth: 160, valueFormatter: (p) => formatMoney(Number(p.value ?? 0)) },
-      { field: 'sisa', headerName: 'Sisa', minWidth: 140, valueFormatter: (p) => formatMoney(Number(p.value ?? 0)) },
+      { field: 'jumlahBayar', headerName: t('cashier.col.paidAmount'), minWidth: 160, valueFormatter: (p) => formatMoney(Number(p.value ?? 0)) },
+      { field: 'sisa', headerName: t('cashier.col.remaining'), minWidth: 140, valueFormatter: (p) => formatMoney(Number(p.value ?? 0)) },
       {
         field: 'status',
-        headerName: 'Status',
+        headerName: t('common.status'),
         minWidth: 130,
         cellRenderer: (params: { value?: string }) => {
           const statusMeta = getStatusMeta(params.value)
@@ -216,7 +217,7 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
       },
       {
         colId: 'aksi',
-        headerName: 'Aksi',
+        headerName: t('common.actions'),
         width: 224,
         minWidth: 224,
         maxWidth: 240,
@@ -233,50 +234,50 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
                 <button
                   className="icon-btn btn-primary-soft"
                   disabled={pulangMutation.isPending}
-                  title="Pulangkan pasien"
-                  aria-label="Pulangkan pasien"
+                  title={t('cashier.dischargeTitle')}
+                  aria-label={t('cashier.dischargeTitle')}
                   onClick={async () => {
                     const confirmed = await confirmThemedAction({
-                      title: 'Konfirmasi pulangkan pasien',
-                      text: `Anda yakin ingin memulangkan registrasi ${row.idRegistrasi ?? '-'}?`,
-                      confirmText: 'Ya, Pulangkan',
+                      title: t('cashier.confirmDischarge'),
+                      text: t('cashier.confirmDischargeText').replace('{id}', String(row.idRegistrasi ?? '-')),
+                      confirmText: t('cashier.confirmDischargeButton'),
                     })
                     if (!confirmed) return
-                    const result = await runActionWithFeedback(() => pulangMutation.mutateAsync(row.idRegistrasi), 'Pasien berhasil dipulangkan.')
+                    const result = await runActionWithFeedback(() => pulangMutation.mutateAsync(row.idRegistrasi), t('cashier.dischargeSuccess'))
                     if (result) {
                       await query.refetch()
                     }
                   }}
-                ><UserCheck size={14} /><span className="action-label-desktop">Pulangkan</span></button>
+                ><UserCheck size={14} /><span className="action-label-desktop">{t('cashier.discharge')}</span></button>
               ) : null}
               {canManage ? (
                 <button
                   className="icon-btn btn-critical"
                   disabled={cancelPendaftaranMutation.isPending}
-                  title="Batalkan registrasi pasien"
-                  aria-label="Batalkan registrasi pasien"
+                  title={t('cashier.cancelRegistration')}
+                  aria-label={t('cashier.cancelRegistration')}
                   onClick={async () => {
                     const confirmed = await confirmThemedAction({
-                      title: 'Konfirmasi batalkan registrasi',
-                      text: `Anda yakin ingin membatalkan registrasi ${row.idRegistrasi ?? '-'}?`,
-                      confirmText: 'Ya, Batalkan',
+                      title: t('cashier.confirmCancel'),
+                      text: t('cashier.confirmCancelText').replace('{id}', String(row.idRegistrasi ?? '-')),
+                      confirmText: t('cashier.confirmCancelButton'),
                       danger: true,
                     })
                     if (!confirmed) return
-                    const result = await runActionWithFeedback(() => cancelPendaftaranMutation.mutateAsync(row.idRegistrasi), 'Registrasi pasien berhasil dibatalkan.')
+                    const result = await runActionWithFeedback(() => cancelPendaftaranMutation.mutateAsync(row.idRegistrasi), t('cashier.cancelSuccess'))
                     if (result) {
                       await query.refetch()
                     }
                   }}
-                ><Ban size={14} /><span className="action-label-desktop">Batalkan</span></button>
+                ><Ban size={14} /><span className="action-label-desktop">{t('cashier.cancel')}</span></button>
               ) : null}
             </div>
           )
         },
       },
-      { field: 'tglBayar', headerName: 'Tanggal Bayar', minWidth: 140, hide: true },
+      { field: 'tglBayar', headerName: t('cashier.col.paymentDate'), minWidth: 140, hide: true },
     ],
-    [canManage, cancelPendaftaranMutation, pulangMutation, query],
+    [canManage, cancelPendaftaranMutation, pulangMutation, query, t],
   )
 
   const invoiceRows = useMemo(() => flattenInvoiceRows(preview.data?.data), [preview.data])
@@ -287,13 +288,13 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
 
   const pengeluaranColumns = useMemo<ColDef<Record<string, unknown>>[]>(() => [
     { field: 'id', headerName: 'ID', minWidth: 100, pinned: 'left' },
-    { field: 'tanggal', headerName: 'Tanggal', minWidth: 140 },
-    { field: 'keterangan', headerName: 'Keterangan', minWidth: 240 },
+    { field: 'tanggal', headerName: t('reports.date'), minWidth: 140 },
+    { field: 'keterangan', headerName: t('settings.field.notes'), minWidth: 240 },
     { field: 'total', headerName: 'Total', minWidth: 150, valueFormatter: (p) => formatMoney(Number(p.value ?? 0)) },
-    { colId: 'aksi', headerName: 'Aksi', minWidth: 90, pinned: 'right', sortable: false, filter: false, cellRenderer: (params: { data?: Record<string, unknown> }) => (
-      <button className="icon-btn icon-only" title="Lihat detail" aria-label="Lihat detail" onClick={() => setSelectedPengeluaranId(Number(params.data?.id ?? 0))}><Eye size={14} /></button>
+    { colId: 'aksi', headerName: t('common.actions'), minWidth: 90, pinned: 'right', sortable: false, filter: false, cellRenderer: (params: { data?: Record<string, unknown> }) => (
+      <button className="icon-btn icon-only" title={t('cashier.viewDetail')} aria-label={t('cashier.viewDetail')} onClick={() => setSelectedPengeluaranId(Number(params.data?.id ?? 0))}><Eye size={14} /></button>
     ) },
-  ], [])
+  ], [t])
 
   const pengeluaranDetailColumns = useMemo<ColDef<Record<string, unknown>>[]>(() => [
     { field: 'nama', headerName: 'Nama', minWidth: 220 },
@@ -509,15 +510,15 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
       <PageHeader
         title={t('kasir.title')}
         description={t('nav.kasir.desc')}
-        eyebrow="Cashier Operations"
+        eyebrow={t('cashier.eyebrow')}
         actions={(
           <div className="billing-header-actions">
-            <button className="icon-btn" onClick={() => window.print()}>Cetak Laporan Harian</button>
-            <button className="icon-btn btn-primary" disabled={!canManagePayments} title={!canManagePayments ? kasirPaymentAccess.reason : 'Tambah pembayaran'} onClick={() => setCreatePaymentModalOpen(true)}><Wallet size={16} /> Invoice Manual</button>
+            <button className="icon-btn" onClick={() => window.print()}>{t('cashier.printDaily')}</button>
+            <button className="icon-btn btn-primary" disabled={!canManagePayments} title={!canManagePayments ? kasirPaymentAccess.reason : t('cashier.addPayment')} onClick={() => setCreatePaymentModalOpen(true)}><Wallet size={16} /> {t('cashier.manualInvoice')}</button>
           </div>
         )}
       />
-      {!(canManagePayments || canManagePengeluaran) ? <p><span className="readonly-badge">Mode Read-only</span></p> : null}
+      {!(canManagePayments || canManagePengeluaran) ? <p><span className="readonly-badge">{t('registration.readonly')}</span></p> : null}
 
       <div className="toolbar-row toolbar-primary">
         <input
@@ -533,19 +534,19 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
       </div>
       <div className="stats-grid">
         <article className="stat-card">
-          <small>Total Transaksi</small>
+          <small>{t('cashier.totalTransactions')}</small>
           <strong>{new Intl.NumberFormat('id-ID', { notation: 'compact', maximumFractionDigits: 1 }).format(billingSummary.totalTransaksi)}</strong>
         </article>
         <article className="stat-card">
-          <small>Lunas Hari Ini</small>
+          <small>{t('cashier.paidToday')}</small>
           <strong>{billingSummary.lunas}</strong>
         </article>
         <article className="stat-card">
-          <small>Menunggu Pembayaran</small>
+          <small>{t('cashier.pendingPayments')}</small>
           <strong>{billingSummary.pending}</strong>
         </article>
         <article className="stat-card">
-          <small>Outstanding</small>
+          <small>{t('cashier.outstanding')}</small>
           <strong>{new Intl.NumberFormat('id-ID', { notation: 'compact', maximumFractionDigits: 1 }).format(billingSummary.pendingAmount)}</strong>
         </article>
       </div>
@@ -561,7 +562,7 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
         <div className="billing-queue-head">
           <div>
             <h2>{t('kasir.queue')}</h2>
-            <p>Invoice terpilih: {selected?.noInvoice ?? 'belum ada'}.</p>
+            <p>{msg('cashier.selectedInvoice', { invoice: selected?.noInvoice ?? t('cashier.noSelected') })}</p>
           </div>
           <span className="billing-live-badge">Live</span>
         </div>
@@ -569,27 +570,27 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
         {!activeLoading && (data?.items?.length ?? 0) === 0 ? (
           <div className="empty-state">
             <p className="empty-note">{t('grid.empty')}</p>
-            {search.trim() ? <button className="icon-btn icon-only" title="Reset filter" aria-label="Reset filter" onClick={() => { setSearch(''); setPage(1) }}><RotateCcw size={14} /></button> : null}
+            {search.trim() ? <button className="icon-btn icon-only" title={t('registration.resetFilter')} aria-label={t('registration.resetFilter')} onClick={() => { setSearch(''); setPage(1) }}><RotateCcw size={14} /></button> : null}
           </div>
         ) : null}
 
         <div className="billing-queue-actions">
           <button className="icon-btn btn-primary-soft" disabled={!canManagePengeluaran} title={!canManagePengeluaran ? kasirPengeluaranAccess.reason : t('kasir.addExpense')} onClick={() => setCreatePengeluaranModalOpen(true)}><Plus size={14} /> {t('kasir.addExpense')}</button>
-          <button className="icon-btn" onClick={async () => { await query.refetch(); toast.success('Data kasir diperbarui.') }}><RefreshCw size={14} /> {t('common.refresh')}</button>
+          <button className="icon-btn" onClick={async () => { await query.refetch(); toast.success(t('cashier.refreshSuccess')) }}><RefreshCw size={14} /> {t('common.refresh')}</button>
         </div>
 
         <div className="pager-row">
-          <button className="icon-btn icon-only" title="Halaman sebelumnya" aria-label="Halaman sebelumnya" disabled={page <= 1} onClick={() => setPage((prev) => prev - 1)}><ChevronLeft size={14} /></button>
+          <button className="icon-btn icon-only" title={t('common.previousPage')} aria-label={t('common.previousPage')} disabled={page <= 1} onClick={() => setPage((prev) => prev - 1)}><ChevronLeft size={14} /></button>
           <span>{t('common.page')} {page} / {totalPage}</span>
-          <button className="icon-btn icon-only" title="Halaman berikutnya" aria-label="Halaman berikutnya" disabled={page >= totalPage} onClick={() => setPage((prev) => prev + 1)}><ChevronRight size={14} /></button>
+          <button className="icon-btn icon-only" title={t('common.nextPage')} aria-label={t('common.nextPage')} disabled={page >= totalPage} onClick={() => setPage((prev) => prev + 1)}><ChevronRight size={14} /></button>
         </div>
       </section>
 
       <section className={`preview-box detail-soft ${selected ? 'glass-focus' : 'glass-strong'}`}>
-        <h2>Preview Invoice</h2>
-        {selected ? <div className="selected-strip"><p>Dipilih: <strong>{selected.idRegistrasi}</strong> - {getPatientDisplayName(selectedSource)}</p><div className="selected-strip-meta"><span className="detail-badge">{selected.idRegistrasi}</span><span className={`status-pill selected-status-pill ${selectedStatus.className}`}>{selectedStatus.label}</span></div></div> : null}
+        <h2>{t('cashier.previewInvoice')}</h2>
+        {selected ? <div className="selected-strip"><p>{t('registration.detail.selected')}: <strong>{selected.idRegistrasi}</strong> - {getPatientDisplayName(selectedSource)}</p><div className="selected-strip-meta"><span className="detail-badge">{selected.idRegistrasi}</span><span className={`status-pill selected-status-pill ${selectedStatus.className}`}>{selectedStatus.label}</span></div></div> : null}
         {!selected ? (
-          <p>Pilih baris pembayaran untuk menampilkan preview invoice.</p>
+          <p>{t('cashier.previewEmpty')}</p>
         ) : (
           <>
             <div className="detail-layout" style={{ marginTop: 10 }}>
@@ -608,7 +609,7 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
               </div>
               </div>
               {showSystemInfo ? <details className="detail-system">
-                <summary>Info Sistem (Admin/Dev)</summary>
+                <summary>{t('registration.detail.systemInfo')}</summary>
                 <div className="detail-grid-two detail-grid-compact" style={{ marginTop: 8 }}>
                   {selectedSystemInfo.map((item) => (
                     <article key={item.label} className="detail-item">
@@ -621,11 +622,11 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
               : null}
             </div>
             {preview.isLoading ? (
-              <p>Memuat preview...</p>
+              <p>{t('cashier.loadingPreview')}</p>
             ) : preview.data ? (
               <DataGrid rows={invoiceRows} columns={invoiceColumns} height={300} hideUtilityActions compact storageKey="kasir-invoice-preview" />
             ) : (
-              <p>Preview tidak tersedia.</p>
+              <p>{t('cashier.previewUnavailable')}</p>
             )}
           </>
         )}
@@ -675,9 +676,9 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
       </section>
 
       <section className="preview-box detail-soft glass-soft">
-        <h2>Pengeluaran</h2>
+        <h2>{t('cashier.expenses')}</h2>
         <div className="toolbar-row" style={{ marginTop: 8 }}>
-          <input className="search-input" placeholder="Cari pengeluaran..." value={pengeluaranSearch} onChange={(e) => { setPengeluaranSearch(e.target.value); setPengeluaranPage(1) }} />
+          <input className="search-input" placeholder={t('cashier.searchExpense')} value={pengeluaranSearch} onChange={(e) => { setPengeluaranSearch(e.target.value); setPengeluaranPage(1) }} />
           <div className="top-actions">
             <button className="icon-btn icon-only" title="Refresh pengeluaran" aria-label="Refresh pengeluaran" onClick={() => pengeluaran.refetch()}><RefreshCw size={14} /></button>
             <button className="icon-btn icon-only" title="Reset filter pengeluaran" aria-label="Reset filter pengeluaran" onClick={() => { setPengeluaranSearch(''); setPengeluaranPage(1) }}><RotateCcw size={14} /></button>
@@ -702,7 +703,7 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
           onRowClicked={(event) => setSelectedPengeluaranId(Number((event.data as Record<string, unknown> | undefined)?.id ?? 0))}
         />
         {!(pengeluaran.isLoading || pengeluaran.isFetching) && (pengeluaranData?.items?.length ?? 0) === 0 ? (
-          <p className="empty-note">Belum ada data pengeluaran. Tambahkan data baru atau ubah filter pencarian.</p>
+          <p className="empty-note">{t('cashier.expenseEmpty')}</p>
         ) : null}
 
         <div className="pager-row">
@@ -710,7 +711,7 @@ export function KasirPage({ canFetch }: { canFetch: boolean }) {
             <ChevronLeft size={14} />
           </button>
           <span>
-            Halaman {pengeluaranPage} / {pengeluaranTotalPage}
+            {t('common.page')} {pengeluaranPage} / {pengeluaranTotalPage}
           </span>
           <button className="icon-btn icon-only" title="Halaman pengeluaran berikutnya" aria-label="Halaman pengeluaran berikutnya" disabled={pengeluaranPage >= pengeluaranTotalPage} onClick={() => setPengeluaranPage((p) => p + 1)}>
             <ChevronRight size={14} />
