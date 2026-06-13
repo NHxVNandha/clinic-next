@@ -4113,6 +4113,16 @@ body.modal-open {
   pointer-events: none;
 }
 
+.registration-intro-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.registration-intro-head > div:last-child {
+  min-width: 0;
+}
+
 .registration-intro-icon {
   display: inline-flex;
   align-items: center;
@@ -4122,6 +4132,7 @@ body.modal-open {
   border-radius: 12px;
   background: var(--primary-fixed);
   color: var(--primary);
+  flex: 0 0 auto;
 }
 
 .registration-intro-panel small,
@@ -4218,6 +4229,11 @@ body.modal-open {
 .registration-form-panel.form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.registration-modal .form-grid input,
+.registration-modal .form-grid .search-input {
+  height: 44px;
 }
 
 @media (max-width: 820px) {

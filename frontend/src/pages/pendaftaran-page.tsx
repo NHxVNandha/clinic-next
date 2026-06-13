@@ -466,12 +466,14 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
       >
         <div className="registration-onboarding">
           <aside className="registration-intro-panel">
-            <div className="registration-intro-icon"><UserPlus size={22} /></div>
-            <div>
-              <small>{t('registration.modal.newKicker')}</small>
-              <strong>{t('registration.modal.newHeading')}</strong>
-              <p>{t('registration.modal.newIntro')}</p>
+            <div className="registration-intro-head">
+              <div className="registration-intro-icon"><UserPlus size={22} /></div>
+              <div>
+                <small>{t('registration.modal.newKicker')}</small>
+                <strong>{t('registration.modal.newHeading')}</strong>
+              </div>
             </div>
+            <p>{t('registration.modal.newIntro')}</p>
             <div className="registration-checklist">
               <span>{t('registration.check.nik')}</span>
               <span>{t('registration.check.doctorRequired')}</span>
