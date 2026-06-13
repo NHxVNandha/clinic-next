@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Command } from 'cmdk'
-import { Bell, CircleHelp, Languages, LogOut, Moon, Search, Sun } from 'lucide-react'
+import { Bell, CircleHelp, Languages, LogOut, Moon, PanelLeftClose, PanelLeftOpen, Search, Sun } from 'lucide-react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { appRoutes } from '../routes'
 import { getAuthUser } from '../lib/storage'
@@ -31,6 +31,7 @@ export function AppShell({ onLogout }: { onLogout: () => void }) {
     return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system'
   })
   const [isCommandOpen, setIsCommandOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('clinic-next-sidebar') === 'collapsed')
   const logoutMutation = useLogout()
 
   useEffect(() => {
@@ -54,6 +55,10 @@ export function AppShell({ onLogout }: { onLogout: () => void }) {
     }
   }, [themeMode])
 
+  useEffect(() => {
+    localStorage.setItem('clinic-next-sidebar', sidebarCollapsed ? 'collapsed' : 'expanded')
+  }, [sidebarCollapsed])
+
   const nextTheme = useMemo<ThemeMode>(() => {
     if (themeMode === 'light') return 'dark'
     if (themeMode === 'dark') return 'system'
@@ -66,11 +71,23 @@ export function AppShell({ onLogout }: { onLogout: () => void }) {
   const userName = useMemo(() => String(authUser?.name || authUser?.email || 'Admin Utama'), [authUser?.email, authUser?.name])
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <aside className="sidebar">
           <div className="brand-block">
-            <div className="brand">MediFlow Admin</div>
-          <p>{t('app.subtitle')}</p>
+            <div>
+              <div className="brand">MediFlow Admin</div>
+              <p>{t('app.subtitle')}</p>
+            </div>
+            <button
+              type="button"
+              className="icon-btn icon-only sidebar-toggle"
+              onClick={() => setSidebarCollapsed((current) => !current)}
+              title={sidebarCollapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+              aria-label={sidebarCollapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+              aria-expanded={!sidebarCollapsed}
+            >
+              {sidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+            </button>
         </div>
         <nav aria-label="Navigasi utama aplikasi">
           {visibleRoutes.map((route) => {
@@ -80,7 +97,7 @@ export function AppShell({ onLogout }: { onLogout: () => void }) {
                 key={route.path}
                 to={route.path}
                 className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                title={t(routeTextKeys[route.path]?.desc ?? 'nav.dashboard.desc')}
+                title={sidebarCollapsed ? t(routeTextKeys[route.path]?.label ?? 'nav.dashboard') : t(routeTextKeys[route.path]?.desc ?? 'nav.dashboard.desc')}
               >
                 <Icon size={16} />
                 <span>{t(routeTextKeys[route.path]?.label ?? 'nav.dashboard')}</span>
