@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Text;
 using ClinicNext.Api.Data;
 using ClinicNext.Api.Domain.Entities;
+using ClinicNext.Api.Features.Access;
 using ClinicNext.Api.Models.Common;
 using ClinicNext.Api.Options;
 using Microsoft.AspNetCore.Authorization;
@@ -48,7 +49,13 @@ public class AuthController : ControllerBase
             return Unauthorized(ApiResponse<object>.Fail("Email atau password tidak valid.", HttpContext.TraceIdentifier));
         }
 
+        if ((user.Status ?? 1) != 1)
+        {
+            return Unauthorized(ApiResponse<object>.Fail("Akun nonaktif. Hubungi administrator.", HttpContext.TraceIdentifier));
+        }
+
         var tokenPair = await IssueTokenPairAsync(user);
+        var loginUser = await BuildLoginUserResponseAsync(user);
 
         return Ok(ApiResponse<LoginResponse>.Ok(new LoginResponse
         {
@@ -56,14 +63,7 @@ public class AuthController : ControllerBase
             RefreshToken = tokenPair.RefreshToken,
             ExpiresAtUtc = tokenPair.ExpiresAtUtc,
             TokenType = "Bearer",
-            User = new LoginUserResponse
-            {
-                Id = user.Id,
-                Name = user.Name,
-                Email = user.Email,
-                Role = ResolveRoleName(user),
-                RoleId = user.RoleId
-            }
+            User = loginUser
         }, "Login berhasil.", HttpContext.TraceIdentifier));
     }
 
@@ -107,6 +107,7 @@ public class AuthController : ControllerBase
             Email = email,
             Password = BCrypt.Net.BCrypt.HashPassword(password),
             RoleId = 2,
+            Status = 1,
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -120,7 +121,8 @@ public class AuthController : ControllerBase
             user.Name,
             user.Email,
             user.RoleId,
-            Role = ResolveRoleName(user)
+            Role = await ResolveRoleNameAsync(user),
+            Permissions = await ResolvePermissionsAsync(user.RoleId)
         }, "Akun berhasil dibuat. Silakan login.", HttpContext.TraceIdentifier));
     }
 
@@ -140,14 +142,12 @@ public class AuthController : ControllerBase
             return NotFound(ApiResponse<object>.Fail("User tidak ditemukan.", HttpContext.TraceIdentifier));
         }
 
-        return Ok(ApiResponse<LoginUserResponse>.Ok(new LoginUserResponse
+        if ((user.Status ?? 1) != 1)
         {
-            Id = user.Id,
-            Name = user.Name,
-            Email = user.Email,
-            RoleId = user.RoleId,
-            Role = ResolveRoleName(user)
-        }, "Profil user berhasil diambil.", HttpContext.TraceIdentifier));
+            return Unauthorized(ApiResponse<object>.Fail("Akun nonaktif. Hubungi administrator.", HttpContext.TraceIdentifier));
+        }
+
+        return Ok(ApiResponse<LoginUserResponse>.Ok(await BuildLoginUserResponseAsync(user), "Profil user berhasil diambil.", HttpContext.TraceIdentifier));
     }
 
     [HttpPost("refresh")]
@@ -175,10 +175,16 @@ public class AuthController : ControllerBase
             return Unauthorized(ApiResponse<object>.Fail("User token tidak ditemukan.", HttpContext.TraceIdentifier));
         }
 
+        if ((user.Status ?? 1) != 1)
+        {
+            return Unauthorized(ApiResponse<object>.Fail("Akun nonaktif. Hubungi administrator.", HttpContext.TraceIdentifier));
+        }
+
         tokenEntity.RevokedAt = now;
         tokenEntity.UpdatedAt = now;
 
         var tokenPair = await IssueTokenPairAsync(user);
+        var loginUser = await BuildLoginUserResponseAsync(user);
 
         return Ok(ApiResponse<LoginResponse>.Ok(new LoginResponse
         {
@@ -186,14 +192,7 @@ public class AuthController : ControllerBase
             RefreshToken = tokenPair.RefreshToken,
             ExpiresAtUtc = tokenPair.ExpiresAtUtc,
             TokenType = "Bearer",
-            User = new LoginUserResponse
-            {
-                Id = user.Id,
-                Name = user.Name,
-                Email = user.Email,
-                RoleId = user.RoleId,
-                Role = ResolveRoleName(user)
-            }
+            User = loginUser
         }, "Token berhasil diperbarui.", HttpContext.TraceIdentifier));
     }
 
@@ -271,7 +270,7 @@ public class AuthController : ControllerBase
 
     private async Task<TokenPair> IssueTokenPairAsync(UserEntity user)
     {
-        var roleName = ResolveRoleName(user);
+        var roleName = await ResolveRoleNameAsync(user);
         var now = DateTime.UtcNow;
 
         var claims = new List<Claim>
@@ -339,9 +338,55 @@ public class AuthController : ControllerBase
         return hash;
     }
 
-    private static string ResolveRoleName(UserEntity user)
+    private async Task<LoginUserResponse> BuildLoginUserResponseAsync(UserEntity user)
     {
+        return new LoginUserResponse
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email,
+            RoleId = user.RoleId,
+            Role = await ResolveRoleNameAsync(user),
+            Permissions = await ResolvePermissionsAsync(user.RoleId),
+            Status = user.Status ?? 1
+        };
+    }
+
+    private async Task<string> ResolveRoleNameAsync(UserEntity user)
+    {
+        if (user.RoleId.HasValue)
+        {
+            var role = await _dbContext.Roles.AsNoTracking().FirstOrDefaultAsync(x => x.Id == user.RoleId.Value);
+            if (!string.IsNullOrWhiteSpace(role?.Code))
+            {
+                return role.Code;
+            }
+        }
+
         return user.RoleId == 1 ? "admin" : "user";
+    }
+
+    private async Task<string[]> ResolvePermissionsAsync(int? roleId)
+    {
+        if (!roleId.HasValue)
+        {
+            return [];
+        }
+
+        var permissions = await _dbContext.RolePermissions.AsNoTracking()
+            .Where(x => x.RoleId == roleId.Value && x.Allowed)
+            .Select(x => x.PermissionKey)
+            .ToArrayAsync();
+
+        if (permissions.Length > 0)
+        {
+            return permissions;
+        }
+
+        var role = AccessCatalog.DefaultRoleIds.FirstOrDefault(x => x.Value == roleId.Value).Key;
+        return string.IsNullOrWhiteSpace(role)
+            ? []
+            : AccessCatalog.DefaultRolePermissions.GetValueOrDefault(role) ?? [];
     }
 
     private int? GetCurrentUserId()
@@ -424,6 +469,10 @@ public class LoginUserResponse
     public int? RoleId { get; set; }
 
     public string Role { get; set; } = string.Empty;
+
+    public int Status { get; set; } = 1;
+
+    public string[] Permissions { get; set; } = [];
 }
 
 public class TokenPair

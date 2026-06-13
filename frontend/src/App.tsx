@@ -1,15 +1,15 @@
-import { Suspense, lazy, useMemo, useState, type ReactElement } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useState, type ReactElement } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthLayout } from './components/auth-layout'
 import { AppShell } from './components/app-shell'
 import { LoginPage } from './pages/login-page'
 import { ForgotPasswordPage } from './pages/forgot-password-page'
 import { RegisterAccountPage } from './pages/register-account-page'
-import { getAccessToken } from './lib/storage'
+import { getAccessToken, setAuthUser } from './lib/storage'
 import { useMe } from './hooks/use-auth'
 import { isBypassLogin } from './lib/runtime-flags'
 import { appRoutes } from './routes'
-import { canAccessRoute } from './lib/access'
+import { canAccessPermission } from './lib/access'
 import { useT } from './i18n'
 
 const DashboardPage = lazy(async () => {
@@ -59,7 +59,7 @@ const PengaturanPage = lazy(async () => {
 
 function guard(path: string, element: ReactElement) {
   const route = appRoutes.find((item) => item.path === path)
-  if (!route || canAccessRoute(route.allowedRoles)) return element
+  if (!route || canAccessPermission(route.permissionKey, route.allowedRoles)) return element
   return <Navigate to={`/unauthorized?from=${encodeURIComponent(path)}`} replace />
 }
 
@@ -68,6 +68,12 @@ function App() {
   const [, setTokenVersion] = useState(0)
   const token = getAccessToken()
   const auth = useMe(!isBypassLogin && Boolean(token))
+
+  useEffect(() => {
+    if (auth.data?.data) {
+      setAuthUser(auth.data.data)
+    }
+  }, [auth.data?.data])
 
   const isAuthenticated = useMemo(() => {
     if (isBypassLogin) return true

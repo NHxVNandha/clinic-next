@@ -1,5 +1,6 @@
 using ClinicNext.Api.Data;
 using ClinicNext.Api.Domain.Entities;
+using ClinicNext.Api.Features.Access;
 using ClinicNext.Api.Models.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -382,19 +383,22 @@ public class MasterController : ControllerBase
         }
 
         var total = await query.CountAsync();
-        var data = await query
+        var roles = await _dbContext.Roles.AsNoTracking().ToDictionaryAsync(x => x.Id, x => x.Code);
+        var users = await query
             .OrderByDescending(x => x.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(x => new
-            {
-                x.Id,
-                x.Name,
-                x.Email,
-                x.RoleId,
-                Role = x.RoleId == 1 ? "admin" : "user"
-            })
             .ToListAsync();
+        var data = users.Select(x => new
+        {
+            x.Id,
+            x.Name,
+            x.Email,
+            x.RoleId,
+            Role = x.RoleId.HasValue && roles.TryGetValue(x.RoleId.Value, out var role) ? role : x.RoleId == 1 ? "admin" : "user",
+            Status = x.Status ?? 1,
+            StatusLabel = (x.Status ?? 1) == 1 ? "Aktif" : "Nonaktif"
+        });
 
         return Ok(ApiResponse<object>.Ok(new
         {
@@ -408,24 +412,185 @@ public class MasterController : ControllerBase
     [HttpGet("user/{id:int}")]
     public async Task<IActionResult> GetUserDetail(int id)
     {
-        var data = await _dbContext.Users
-            .Where(x => x.Id == id)
-            .Select(x => new
-            {
-                x.Id,
-                x.Name,
-                x.Email,
-                x.RoleId,
-                Role = x.RoleId == 1 ? "admin" : "user"
-            })
-            .FirstOrDefaultAsync();
+        var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == id);
 
-        if (data == null)
+        if (user == null)
         {
             return NotFound(ApiResponse<object>.Fail("Data user tidak ditemukan.", HttpContext.TraceIdentifier));
         }
 
+        var role = user.RoleId.HasValue
+            ? await _dbContext.Roles.AsNoTracking().FirstOrDefaultAsync(x => x.Id == user.RoleId.Value)
+            : null;
+        var data = new
+        {
+            user.Id,
+            user.Name,
+            user.Email,
+            user.RoleId,
+            Role = role?.Code ?? (user.RoleId == 1 ? "admin" : "user"),
+            Status = user.Status ?? 1,
+            StatusLabel = (user.Status ?? 1) == 1 ? "Aktif" : "Nonaktif"
+        };
+
         return Ok(ApiResponse<object>.Ok(data, "Detail user berhasil diambil.", HttpContext.TraceIdentifier));
+    }
+
+    [HttpPatch("user/{id:int}/access")]
+    public async Task<IActionResult> UpdateUserAccess(int id, [FromBody] UpdateUserAccessRequest request)
+    {
+        if (!await CurrentUserCanManageAccessAsync())
+        {
+            return Forbid();
+        }
+
+        if (request.Status is not (0 or 1))
+        {
+            return BadRequest(ApiResponse<object>.Fail("Status harus 0 atau 1.", HttpContext.TraceIdentifier));
+        }
+
+        var role = await _dbContext.Roles.FirstOrDefaultAsync(x => x.Id == request.RoleId && x.Status == 1);
+        if (role == null)
+        {
+            return BadRequest(ApiResponse<object>.Fail("Role tidak valid atau nonaktif.", HttpContext.TraceIdentifier));
+        }
+
+        var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == id);
+        if (user == null)
+        {
+            return NotFound(ApiResponse<object>.Fail("Data user tidak ditemukan.", HttpContext.TraceIdentifier));
+        }
+
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == id && (request.Status == 0 || !IsAdminRole(role.Code)))
+        {
+            return BadRequest(ApiResponse<object>.Fail("Tidak dapat menonaktifkan atau menurunkan role akun sendiri.", HttpContext.TraceIdentifier));
+        }
+
+        user.RoleId = request.RoleId;
+        user.Status = request.Status;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(ApiResponse<object>.Ok(new { user.Id, user.RoleId, user.Status }, "Akses user berhasil diperbarui.", HttpContext.TraceIdentifier));
+    }
+
+    [HttpGet("roles")]
+    public async Task<IActionResult> GetRoles()
+    {
+        var roles = await _dbContext.Roles.AsNoTracking().OrderBy(x => x.Name).ToListAsync();
+        var permissions = await _dbContext.RolePermissions.AsNoTracking().Where(x => x.Allowed).ToListAsync();
+        var data = roles.Select(role => new
+        {
+            role.Id,
+            role.Code,
+            role.Name,
+            role.IsSystem,
+            role.Status,
+            Permissions = permissions.Where(x => x.RoleId == role.Id).Select(x => x.PermissionKey).OrderBy(x => x).ToArray()
+        });
+
+        return Ok(ApiResponse<object>.Ok(data, "Data role berhasil diambil.", HttpContext.TraceIdentifier));
+    }
+
+    [HttpPost("roles")]
+    public async Task<IActionResult> CreateRole([FromBody] UpsertRoleRequest request)
+    {
+        if (!await CurrentUserCanManageAccessAsync())
+        {
+            return Forbid();
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Name))
+        {
+            return BadRequest(ApiResponse<object>.Fail("Nama role wajib diisi.", HttpContext.TraceIdentifier));
+        }
+
+        var code = string.IsNullOrWhiteSpace(request.Code) ? AccessCatalog.NormalizeRoleCode(request.Name) : AccessCatalog.NormalizeRoleCode(request.Code);
+        if (await _dbContext.Roles.AnyAsync(x => x.Code == code))
+        {
+            return Conflict(ApiResponse<object>.Fail("Kode role sudah digunakan.", HttpContext.TraceIdentifier));
+        }
+
+        var role = new RoleEntity
+        {
+            Code = code,
+            Name = request.Name.Trim(),
+            IsSystem = false,
+            Status = request.Status is 0 ? 0 : 1,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        _dbContext.Roles.Add(role);
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(ApiResponse<object>.Ok(new { role.Id }, "Role berhasil dibuat.", HttpContext.TraceIdentifier));
+    }
+
+    [HttpPatch("roles/{id:int}")]
+    public async Task<IActionResult> UpdateRole(int id, [FromBody] UpsertRoleRequest request)
+    {
+        if (!await CurrentUserCanManageAccessAsync())
+        {
+            return Forbid();
+        }
+
+        var role = await _dbContext.Roles.FirstOrDefaultAsync(x => x.Id == id);
+        if (role == null)
+        {
+            return NotFound(ApiResponse<object>.Fail("Role tidak ditemukan.", HttpContext.TraceIdentifier));
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Name))
+        {
+            role.Name = request.Name.Trim();
+        }
+        role.Status = request.Status is 0 ? 0 : 1;
+        role.UpdatedAt = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(ApiResponse<object>.Ok(new { role.Id }, "Role berhasil diperbarui.", HttpContext.TraceIdentifier));
+    }
+
+    [HttpPatch("roles/{id:int}/permissions")]
+    public async Task<IActionResult> UpdateRolePermissions(int id, [FromBody] UpdateRolePermissionsRequest request)
+    {
+        if (!await CurrentUserCanManageAccessAsync())
+        {
+            return Forbid();
+        }
+
+        var role = await _dbContext.Roles.FirstOrDefaultAsync(x => x.Id == id);
+        if (role == null)
+        {
+            return NotFound(ApiResponse<object>.Fail("Role tidak ditemukan.", HttpContext.TraceIdentifier));
+        }
+
+        var requested = request.Permissions.Where(AccessCatalog.MenuPermissions.Contains).Distinct().ToHashSet();
+        var existing = await _dbContext.RolePermissions.Where(x => x.RoleId == id).ToListAsync();
+        foreach (var permission in AccessCatalog.MenuPermissions)
+        {
+            var entity = existing.FirstOrDefault(x => x.PermissionKey == permission);
+            if (entity == null)
+            {
+                _dbContext.RolePermissions.Add(new RolePermissionEntity
+                {
+                    RoleId = id,
+                    PermissionKey = permission,
+                    Allowed = requested.Contains(permission),
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                entity.Allowed = requested.Contains(permission);
+                entity.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+
+        await _dbContext.SaveChangesAsync();
+        return Ok(ApiResponse<object>.Ok(new { role.Id }, "Permission role berhasil diperbarui.", HttpContext.TraceIdentifier));
     }
 
     [HttpGet("setting")]
@@ -682,6 +847,55 @@ public class MasterController : ControllerBase
 
         return null;
     }
+
+    private async Task<bool> CurrentUserCanManageAccessAsync()
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null)
+        {
+            return false;
+        }
+
+        var roleCode = await _dbContext.Users.AsNoTracking()
+            .Where(x => x.Id == userId.Value)
+            .Join(_dbContext.Roles.AsNoTracking(), user => user.RoleId, role => role.Id, (user, role) => role.Code)
+            .FirstOrDefaultAsync();
+
+        return IsAdminRole(roleCode);
+    }
+
+    private static bool IsAdminRole(string? roleCode)
+    {
+        return string.Equals(roleCode, "admin", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(roleCode, "superadmin", StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+public class UpdateUserAccessRequest
+{
+    [Required]
+    public int RoleId { get; set; }
+
+    [Range(0, 1)]
+    public int Status { get; set; } = 1;
+}
+
+public class UpsertRoleRequest
+{
+    [MaxLength(100)]
+    public string? Code { get; set; }
+
+    [Required]
+    [MaxLength(120)]
+    public string Name { get; set; } = string.Empty;
+
+    [Range(0, 1)]
+    public int Status { get; set; } = 1;
+}
+
+public class UpdateRolePermissionsRequest
+{
+    public string[] Permissions { get; set; } = [];
 }
 
 public class UpsertJasaRequest

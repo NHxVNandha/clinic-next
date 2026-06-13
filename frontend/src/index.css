@@ -5447,6 +5447,82 @@ button.filter-chip:hover {
   margin-top: 12px;
 }
 
+.settings-table-wrap {
+  width: 100%;
+  margin-top: 12px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.settings-access-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.settings-access-table th,
+.settings-access-table td {
+  border-bottom: 1px solid var(--border);
+  padding: 12px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.settings-access-table th {
+  background: color-mix(in srgb, var(--surface-muted) 72%, var(--surface));
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.settings-access-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.settings-access-table select,
+.settings-access-table input:not([type='checkbox']) {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid color-mix(in srgb, var(--border) 86%, var(--text-muted));
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 8px 10px;
+}
+
+.settings-role-create {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.settings-role-create .search-input {
+  max-width: 320px;
+}
+
+.settings-role-table-wrap {
+  max-width: 100%;
+}
+
+.settings-role-table {
+  min-width: 1180px;
+}
+
+.settings-permission-cell {
+  text-align: center !important;
+}
+
+.settings-permission-cell input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+
 .settings-logo-dropzone {
   display: grid;
   place-items: center;

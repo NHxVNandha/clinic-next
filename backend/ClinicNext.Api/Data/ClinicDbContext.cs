@@ -11,6 +11,10 @@ public class ClinicDbContext : DbContext
 
     public DbSet<UserEntity> Users => Set<UserEntity>();
 
+    public DbSet<RoleEntity> Roles => Set<RoleEntity>();
+
+    public DbSet<RolePermissionEntity> RolePermissions => Set<RolePermissionEntity>();
+
     public DbSet<PasienEntity> Pasien => Set<PasienEntity>();
 
     public DbSet<DokterEntity> Dokter => Set<DokterEntity>();
@@ -90,7 +94,35 @@ public class ClinicDbContext : DbContext
             entity.Property(x => x.Email).HasColumnName("email");
             entity.Property(x => x.Password).HasColumnName("password");
             entity.Property(x => x.RoleId).HasColumnName("role_id");
+            entity.Property(x => x.Status).HasColumnName("status");
             entity.Property(x => x.RememberToken).HasColumnName("remember_token");
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+        });
+
+        modelBuilder.Entity<RoleEntity>(entity =>
+        {
+            entity.ToTable("roles");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.Code).IsUnique();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.Code).HasColumnName("code");
+            entity.Property(x => x.Name).HasColumnName("name");
+            entity.Property(x => x.IsSystem).HasColumnName("is_system");
+            entity.Property(x => x.Status).HasColumnName("status");
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+        });
+
+        modelBuilder.Entity<RolePermissionEntity>(entity =>
+        {
+            entity.ToTable("role_permissions");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.RoleId, x.PermissionKey }).IsUnique();
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.RoleId).HasColumnName("role_id");
+            entity.Property(x => x.PermissionKey).HasColumnName("permission_key");
+            entity.Property(x => x.Allowed).HasColumnName("allowed");
             entity.Property(x => x.CreatedAt).HasColumnName("created_at");
             entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
         });

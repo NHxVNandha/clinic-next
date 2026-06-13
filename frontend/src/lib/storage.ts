@@ -8,6 +8,8 @@ export type StoredAuthUser = {
   email?: string
   role?: string
   roleId?: number
+  status?: number
+  permissions?: string[]
 }
 
 export function getAccessToken(): string | null {

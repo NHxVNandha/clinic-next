@@ -19,6 +19,8 @@ export type LoginUser = {
   email: string
   roleId?: number
   role: string
+  status?: number
+  permissions?: string[]
 }
 
 export type LoginResponseData = {

@@ -5,7 +5,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { appRoutes } from '../routes'
 import { getAuthUser } from '../lib/storage'
 import { isBypassLogin, isDummyMode } from '../lib/runtime-flags'
-import { canAccessRoute } from '../lib/access'
+import { canAccessPermission } from '../lib/access'
 import { useT, type TranslationKey } from '../i18n'
 import { useLogout } from '../hooks/use-auth'
 
@@ -60,7 +60,7 @@ export function AppShell({ onLogout }: { onLogout: () => void }) {
     return 'light'
   }, [themeMode])
 
-  const visibleRoutes = useMemo(() => appRoutes.filter((route) => canAccessRoute(route.allowedRoles)), [])
+  const visibleRoutes = useMemo(() => appRoutes.filter((route) => canAccessPermission(route.permissionKey, route.allowedRoles)), [])
   const authUser = useMemo(() => getAuthUser(), [])
   const userRole = useMemo(() => String(authUser?.role || '').toLowerCase(), [authUser?.role])
   const userName = useMemo(() => String(authUser?.name || authUser?.email || 'Admin Utama'), [authUser?.email, authUser?.name])

@@ -24,6 +24,25 @@ export type MasterSetting = {
   keterangan?: string
 }
 
+export type MasterUser = {
+  id: number
+  name?: string
+  email?: string
+  roleId?: number
+  role?: string
+  status?: number
+  statusLabel?: string
+}
+
+export type MasterRole = {
+  id: number
+  code: string
+  name: string
+  isSystem?: boolean
+  status: number
+  permissions: string[]
+}
+
 export async function getMasterDokter(search?: string): Promise<ApiResponse<MasterDokter[]>> {
   const { data } = await apiClient.get<ApiResponse<MasterDokter[]>>('/master/dokter', { params: { search } })
   return data
@@ -84,13 +103,38 @@ export async function getMasterDiagnosaDetail(id: number): Promise<ApiResponse<M
   return data
 }
 
-export async function getMasterUser(params: { page: number; pageSize: number; search?: string }): Promise<ApiResponse<PaginatedResponse<Record<string, unknown>>>> {
-  const { data } = await apiClient.get<ApiResponse<PaginatedResponse<Record<string, unknown>>>>('/master/user', { params })
+export async function getMasterUser(params: { page: number; pageSize: number; search?: string }): Promise<ApiResponse<PaginatedResponse<MasterUser>>> {
+  const { data } = await apiClient.get<ApiResponse<PaginatedResponse<MasterUser>>>('/master/user', { params })
   return data
 }
 
 export async function getMasterUserDetail(id: number): Promise<ApiResponse<Record<string, unknown>>> {
   const { data } = await apiClient.get<ApiResponse<Record<string, unknown>>>(`/master/user/${id}`)
+  return data
+}
+
+export async function updateMasterUserAccess(id: number, payload: { roleId: number; status: number }): Promise<ApiResponse<Record<string, unknown>>> {
+  const { data } = await apiClient.patch<ApiResponse<Record<string, unknown>>>(`/master/user/${id}/access`, payload)
+  return data
+}
+
+export async function getMasterRoles(): Promise<ApiResponse<MasterRole[]>> {
+  const { data } = await apiClient.get<ApiResponse<MasterRole[]>>('/master/roles')
+  return data
+}
+
+export async function createMasterRole(payload: { code?: string; name: string; status?: number }): Promise<ApiResponse<Record<string, unknown>>> {
+  const { data } = await apiClient.post<ApiResponse<Record<string, unknown>>>('/master/roles', payload)
+  return data
+}
+
+export async function updateMasterRole(id: number, payload: { name: string; status: number }): Promise<ApiResponse<Record<string, unknown>>> {
+  const { data } = await apiClient.patch<ApiResponse<Record<string, unknown>>>(`/master/roles/${id}`, payload)
+  return data
+}
+
+export async function updateMasterRolePermissions(id: number, payload: { permissions: string[] }): Promise<ApiResponse<Record<string, unknown>>> {
+  const { data } = await apiClient.patch<ApiResponse<Record<string, unknown>>>(`/master/roles/${id}/permissions`, payload)
   return data
 }
 

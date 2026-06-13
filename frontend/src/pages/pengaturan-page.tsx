@@ -1,17 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import type { ColDef } from 'ag-grid-community'
 import { Cloud, DatabaseBackup, Hospital, RefreshCw, Save, ShieldCheck, SlidersHorizontal, Users } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { DataGrid } from '../components/data-grid'
-import { GridEntityCell } from '../components/grid-entity-cell'
 import { FieldLabel } from '../components/field-label'
 import { MetricGrid } from '../components/metric-grid'
 import { PageHeader } from '../components/page-header'
 import { SectionCard } from '../components/section-card'
 import { StatCard } from '../components/stat-card'
-import { upsertMasterSetting } from '../api/master'
-import { useMasterSetting, useMasterUser } from '../hooks/use-master'
+import { createMasterRole, updateMasterRole, updateMasterRolePermissions, updateMasterUserAccess, upsertMasterSetting, type MasterRole, type MasterUser } from '../api/master'
+import { useMasterRoles, useMasterSetting, useMasterUser } from '../hooks/use-master'
 import { parseApiError } from '../lib/api-error'
 import { useT } from '../i18n'
 
@@ -43,6 +40,17 @@ const defaultClinicIdentity: ClinicIdentityForm = {
   keterangan: '',
 }
 
+const menuPermissions = [
+  { key: 'menu.dashboard', label: 'Dashboard' },
+  { key: 'menu.pendaftaran', label: 'Pendaftaran' },
+  { key: 'menu.pelayanan', label: 'Pelayanan' },
+  { key: 'menu.kasir', label: 'Kasir' },
+  { key: 'menu.laporan', label: 'Laporan' },
+  { key: 'menu.master', label: 'Master' },
+  { key: 'menu.rekam-medis', label: 'Rekam Medis' },
+  { key: 'menu.pengaturan', label: 'Pengaturan' },
+]
+
 export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
   const { t } = useT()
   const [activeTab, setActiveTab] = useState<SettingTab>('clinic')
@@ -50,13 +58,21 @@ export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
   const settings = useMasterSetting(1, 100, '', canFetch)
   const userSummary = useMasterUser(1, 1, '', canFetch)
   const users = useMasterUser(1, 20, search, canFetch && activeTab === 'users')
+  const roles = useMasterRoles(canFetch && (activeTab === 'users' || activeTab === 'roles'))
   const rows = settings.data?.data.items ?? []
   const clinicIdentity = rows.find((item) => item.jenis === 'clinic.identity')
   const [form, setForm] = useState<Partial<ClinicIdentityForm>>({})
   const [touched, setTouched] = useState<Partial<Record<keyof ClinicIdentityForm, boolean>>>({})
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof ClinicIdentityForm, string>>>({})
   const [summary, setSummary] = useState('')
+  const [userDrafts, setUserDrafts] = useState<Record<number, { roleId: number; status: number }>>({})
+  const [newRoleName, setNewRoleName] = useState('')
+  const [roleDrafts, setRoleDrafts] = useState<Record<number, { name: string; status: number; permissions: string[] }>>({})
   const saveMutation = useMutation({ mutationFn: upsertMasterSetting })
+  const userAccessMutation = useMutation({ mutationFn: ({ id, payload }: { id: number; payload: { roleId: number; status: number } }) => updateMasterUserAccess(id, payload) })
+  const createRoleMutation = useMutation({ mutationFn: createMasterRole })
+  const updateRoleMutation = useMutation({ mutationFn: ({ id, payload }: { id: number; payload: { name: string; status: number } }) => updateMasterRole(id, payload) })
+  const updateRolePermissionsMutation = useMutation({ mutationFn: ({ id, payload }: { id: number; payload: { permissions: string[] } }) => updateMasterRolePermissions(id, payload) })
 
   function fieldValue(field: keyof ClinicIdentityForm, savedValue: string | undefined, fallback = '') {
     return touched[field] ? form[field] ?? '' : savedValue ?? fallback
@@ -99,12 +115,81 @@ export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
     keterangan: fieldValue('keterangan', clinicIdentity?.keterangan),
   }
 
-  const userColumns = useMemo<ColDef<Record<string, unknown>>[]>(() => [
-    { field: 'name', headerName: 'User', minWidth: 220, cellRenderer: (params: { value?: string; data?: Record<string, unknown> }) => <GridEntityCell primary={String(params.value ?? params.data?.nama ?? params.data?.email ?? '-')} secondary={String(params.data?.email ?? '').trim() || undefined} kind="user" /> },
-    { field: 'email', headerName: 'Email', minWidth: 220 },
-    { field: 'role', headerName: 'Role', minWidth: 140 },
-    { field: 'status', headerName: 'Status', minWidth: 120 },
-  ], [])
+  const roleOptions = useMemo(() => (roles.data?.data ?? []).filter((role) => role.status === 1), [roles.data?.data])
+
+  function userDraft(user: MasterUser) {
+    return userDrafts[user.id] ?? { roleId: user.roleId ?? roleOptions[0]?.id ?? 2, status: user.status ?? 1 }
+  }
+
+  async function saveUserAccess(user: MasterUser) {
+    const draft = userDraft(user)
+    try {
+      await userAccessMutation.mutateAsync({ id: user.id, payload: draft })
+      await users.refetch()
+      setUserDrafts((prev) => {
+        const next = { ...prev }
+        delete next[user.id]
+        return next
+      })
+      toast.success('Akses user berhasil diperbarui.')
+    } catch (error: unknown) {
+      const responseData = typeof error === 'object' && error && 'response' in error
+        ? (error.response as { data?: unknown } | undefined)?.data
+        : undefined
+      toast.error(parseApiError(responseData).message)
+    }
+  }
+
+  function roleDraft(role: MasterRole) {
+    return roleDrafts[role.id] ?? { name: role.name, status: role.status, permissions: role.permissions ?? [] }
+  }
+
+  async function createRole() {
+    const name = newRoleName.trim()
+    if (!name) {
+      toast.error('Nama role wajib diisi.')
+      return
+    }
+    try {
+      await createRoleMutation.mutateAsync({ name, status: 1 })
+      setNewRoleName('')
+      await roles.refetch()
+      toast.success('Role berhasil ditambahkan.')
+    } catch (error: unknown) {
+      const responseData = typeof error === 'object' && error && 'response' in error
+        ? (error.response as { data?: unknown } | undefined)?.data
+        : undefined
+      toast.error(parseApiError(responseData).message)
+    }
+  }
+
+  async function saveRole(role: MasterRole) {
+    const draft = roleDraft(role)
+    try {
+      await updateRoleMutation.mutateAsync({ id: role.id, payload: { name: draft.name.trim() || role.name, status: draft.status } })
+      await updateRolePermissionsMutation.mutateAsync({ id: role.id, payload: { permissions: draft.permissions } })
+      await roles.refetch()
+      setRoleDrafts((prev) => {
+        const next = { ...prev }
+        delete next[role.id]
+        return next
+      })
+      toast.success('Role dan permission berhasil diperbarui.')
+    } catch (error: unknown) {
+      const responseData = typeof error === 'object' && error && 'response' in error
+        ? (error.response as { data?: unknown } | undefined)?.data
+        : undefined
+      toast.error(parseApiError(responseData).message)
+    }
+  }
+
+  function toggleRolePermission(role: MasterRole, permission: string, checked: boolean) {
+    const draft = roleDraft(role)
+    const permissions = checked
+      ? Array.from(new Set([...draft.permissions, permission]))
+      : draft.permissions.filter((item) => item !== permission)
+    setRoleDrafts((prev) => ({ ...prev, [role.id]: { ...draft, permissions } }))
+  }
 
   async function saveClinicIdentity() {
     const nextErrors: Partial<Record<keyof ClinicIdentityForm, string>> = {}
@@ -236,17 +321,82 @@ export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
           {activeTab === 'users' ? (
             <SectionCard title="Active Users" description="User list from master user endpoint." actions={<button className="icon-btn" onClick={() => users.refetch()}><RefreshCw size={16} /> {t('common.refresh')}</button>}>
               <input className="search-input search-dominant" placeholder="Cari user..." value={search} onChange={(event) => setSearch(event.target.value)} />
-              <div className="settings-grid-wrap"><DataGrid rows={(users.data?.data.items ?? []) as Record<string, unknown>[]} columns={userColumns} loading={users.isLoading || users.isFetching} compact storageKey="pengaturan-users" /></div>
+              <div className="settings-table-wrap">
+                <table className="settings-access-table">
+                  <thead>
+                    <tr><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Aksi</th></tr>
+                  </thead>
+                  <tbody>
+                    {(users.data?.data.items ?? []).map((user) => {
+                      const draft = userDraft(user)
+                      return (
+                        <tr key={user.id}>
+                          <td><strong>{user.name || '-'}</strong></td>
+                          <td>{user.email || '-'}</td>
+                          <td>
+                            <select value={draft.roleId} onChange={(event) => setUserDrafts((prev) => ({ ...prev, [user.id]: { ...draft, roleId: Number(event.target.value) } }))}>
+                              {roleOptions.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
+                            </select>
+                          </td>
+                          <td>
+                            <select value={draft.status} onChange={(event) => setUserDrafts((prev) => ({ ...prev, [user.id]: { ...draft, status: Number(event.target.value) } }))}>
+                              <option value={1}>Aktif</option>
+                              <option value={0}>Nonaktif</option>
+                            </select>
+                          </td>
+                          <td><button className="icon-btn btn-primary" disabled={userAccessMutation.isPending} onClick={() => saveUserAccess(user)}>Simpan</button></td>
+                        </tr>
+                      )
+                    })}
+                    {users.isLoading || users.isFetching ? <tr><td colSpan={5}>Memuat data user...</td></tr> : null}
+                    {!users.isLoading && (users.data?.data.items ?? []).length === 0 ? <tr><td colSpan={5}>Tidak ada user.</td></tr> : null}
+                  </tbody>
+                </table>
+              </div>
             </SectionCard>
           ) : null}
 
           {activeTab === 'roles' ? (
-            <SectionCard title="Roles & Permissions" description="Akses saat ini dikendalikan oleh role pada route dan action permission.">
-              <div className="settings-note-grid">
-                <span>admin / superadmin</span><span>Akses konfigurasi penuh</span>
-                <span>kasir</span><span>Kelola pembayaran dan pengeluaran</span>
-                <span>dokter / perawat</span><span>Kelola pelayanan dan rekam medis</span>
-                <span>frontoffice</span><span>Membuat pendaftaran pasien</span>
+            <SectionCard title="Roles & Permissions" description="Kelola role dan checkbox akses menu. Jika role memiliki akses menu, semua action di menu tersebut diperbolehkan.">
+              <div className="settings-role-create">
+                <input className="search-input" placeholder="Nama role baru" value={newRoleName} onChange={(event) => setNewRoleName(event.target.value)} />
+                <button className="icon-btn btn-primary" disabled={createRoleMutation.isPending} onClick={createRole}>Tambah Role</button>
+              </div>
+              <div className="settings-table-wrap settings-role-table-wrap">
+                <table className="settings-access-table settings-role-table">
+                  <thead>
+                    <tr>
+                      <th>Role</th>
+                      <th>Status</th>
+                      {menuPermissions.map((permission) => <th key={permission.key}>{permission.label}</th>)}
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(roles.data?.data ?? []).map((role) => {
+                      const draft = roleDraft(role)
+                      return (
+                        <tr key={role.id}>
+                          <td><input value={draft.name} onChange={(event) => setRoleDrafts((prev) => ({ ...prev, [role.id]: { ...draft, name: event.target.value } }))} /></td>
+                          <td>
+                            <select value={draft.status} onChange={(event) => setRoleDrafts((prev) => ({ ...prev, [role.id]: { ...draft, status: Number(event.target.value) } }))}>
+                              <option value={1}>Aktif</option>
+                              <option value={0}>Nonaktif</option>
+                            </select>
+                          </td>
+                          {menuPermissions.map((permission) => (
+                            <td key={permission.key} className="settings-permission-cell">
+                              <input type="checkbox" checked={draft.permissions.includes(permission.key)} onChange={(event) => toggleRolePermission(role, permission.key, event.target.checked)} aria-label={`${role.name} ${permission.label}`} />
+                            </td>
+                          ))}
+                          <td><button className="icon-btn btn-primary" disabled={updateRoleMutation.isPending || updateRolePermissionsMutation.isPending} onClick={() => saveRole(role)}>Simpan</button></td>
+                        </tr>
+                      )
+                    })}
+                    {roles.isLoading || roles.isFetching ? <tr><td colSpan={menuPermissions.length + 3}>Memuat role...</td></tr> : null}
+                    {!roles.isLoading && (roles.data?.data ?? []).length === 0 ? <tr><td colSpan={menuPermissions.length + 3}>Belum ada role.</td></tr> : null}
+                  </tbody>
+                </table>
               </div>
             </SectionCard>
           ) : null}

@@ -12,6 +12,8 @@ public class UserEntity
 
     public int? RoleId { get; set; }
 
+    public int? Status { get; set; }
+
     public string? RememberToken { get; set; }
 
     public DateTime? CreatedAt { get; set; }

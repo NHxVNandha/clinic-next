@@ -1,4 +1,5 @@
 using ClinicNext.Api.Domain.Entities;
+using ClinicNext.Api.Features.Access;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClinicNext.Api.Data;
@@ -16,6 +17,7 @@ public static class DatabaseBootstrapper
             await dbContext.Database.MigrateAsync();
         }
 
+        await SeedRolesAsync(dbContext);
         await SeedAdminAsync(dbContext, configuration, logger);
     }
 
@@ -41,11 +43,58 @@ public static class DatabaseBootstrapper
             Email = normalizedEmail,
             Password = BCrypt.Net.BCrypt.HashPassword(password),
             RoleId = configuration.GetValue<int?>("SeedAdmin:RoleId") ?? 1,
+            Status = 1,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         });
 
         await dbContext.SaveChangesAsync();
         logger.LogInformation("Seeded initial admin user {Email}.", normalizedEmail);
+    }
+
+    private static async Task SeedRolesAsync(ClinicDbContext dbContext)
+    {
+        var now = DateTime.UtcNow;
+        foreach (var role in AccessCatalog.DefaultRoleIds)
+        {
+            var entity = await dbContext.Roles.FirstOrDefaultAsync(x => x.Code == role.Key);
+            if (entity == null)
+            {
+                entity = new RoleEntity
+                {
+                    Id = role.Value,
+                    Code = role.Key,
+                    Name = role.Key switch
+                    {
+                        "frontoffice" => "Front Office",
+                        _ => char.ToUpperInvariant(role.Key[0]) + role.Key[1..]
+                    },
+                    IsSystem = true,
+                    Status = 1,
+                    CreatedAt = now,
+                    UpdatedAt = now
+                };
+                dbContext.Roles.Add(entity);
+            }
+
+            var permissions = AccessCatalog.DefaultRolePermissions.GetValueOrDefault(role.Key) ?? [];
+            foreach (var permission in permissions)
+            {
+                var exists = await dbContext.RolePermissions.AnyAsync(x => x.RoleId == role.Value && x.PermissionKey == permission);
+                if (!exists)
+                {
+                    dbContext.RolePermissions.Add(new RolePermissionEntity
+                    {
+                        RoleId = role.Value,
+                        PermissionKey = permission,
+                        Allowed = true,
+                        CreatedAt = now,
+                        UpdatedAt = now
+                    });
+                }
+            }
+        }
+
+        await dbContext.SaveChangesAsync();
     }
 }
