@@ -12,7 +12,7 @@ import { SectionCard } from '../components/section-card'
 import { StatCard } from '../components/stat-card'
 import { upsertMasterSetting } from '../api/master'
 import { useMasterSetting, useMasterUser } from '../hooks/use-master'
-import { runActionWithFeedback } from '../lib/action-feedback'
+import { parseApiError } from '../lib/api-error'
 import { useT } from '../i18n'
 
 type SettingTab = 'clinic' | 'users' | 'roles' | 'backup' | 'system'
@@ -54,6 +54,8 @@ export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
   const clinicIdentity = rows.find((item) => item.jenis === 'clinic.identity')
   const [form, setForm] = useState<Partial<ClinicIdentityForm>>({})
   const [touched, setTouched] = useState<Partial<Record<keyof ClinicIdentityForm, boolean>>>({})
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof ClinicIdentityForm, string>>>({})
+  const [summary, setSummary] = useState('')
   const saveMutation = useMutation({ mutationFn: upsertMasterSetting })
 
   function fieldValue(field: keyof ClinicIdentityForm, savedValue: string | undefined, fallback = '') {
@@ -61,8 +63,27 @@ export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
   }
 
   function updateField(field: keyof ClinicIdentityForm, value: string) {
+    setFieldErrors((prev) => ({ ...prev, [field]: undefined }))
+    setSummary('')
     setTouched((prev) => ({ ...prev, [field]: true }))
     setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  function cleanOptional(value: string) {
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : null
+  }
+
+  function inputProps(field: keyof ClinicIdentityForm, id: string) {
+    return {
+      id,
+      'aria-invalid': Boolean(fieldErrors[field]),
+      'aria-describedby': fieldErrors[field] ? `${id}-error` : undefined,
+    }
+  }
+
+  function fieldError(field: keyof ClinicIdentityForm, id: string) {
+    return fieldErrors[field] ? <small id={`${id}-error`} className="field-error">{fieldErrors[field]}</small> : null
   }
 
   const formValues = {
@@ -86,26 +107,67 @@ export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
   ], [])
 
   async function saveClinicIdentity() {
+    const nextErrors: Partial<Record<keyof ClinicIdentityForm, string>> = {}
+    const clinicName = formValues.clinicName.trim()
+    const email = formValues.email.trim()
+
+    if (!clinicName) {
+      nextErrors.clinicName = 'Nama klinik wajib diisi.'
+    }
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      nextErrors.email = 'Format email tidak valid.'
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setFieldErrors(nextErrors)
+      setSummary('Periksa kembali data yang wajib atau belum valid.')
+      toast.error('Validasi gagal. Periksa field yang ditandai.')
+      return
+    }
+
     const payload = {
       id: clinicIdentity?.id,
       jenis: 'clinic.identity',
-      nama: formValues.clinicName,
-      taxId: formValues.taxId,
-      phone: formValues.phone,
-      noHp: formValues.noHp,
-      email: formValues.email,
-      alamat: formValues.address,
-      logo: formValues.logo,
-      logoSidebar: formValues.logoSidebar,
-      titleSidebar: formValues.titleSidebar,
-      keterangan: formValues.keterangan,
+      nama: clinicName,
+      taxId: cleanOptional(formValues.taxId),
+      phone: cleanOptional(formValues.phone),
+      noHp: cleanOptional(formValues.noHp),
+      email: cleanOptional(formValues.email),
+      alamat: cleanOptional(formValues.address),
+      logo: cleanOptional(formValues.logo),
+      logoSidebar: cleanOptional(formValues.logoSidebar),
+      titleSidebar: cleanOptional(formValues.titleSidebar),
+      keterangan: cleanOptional(formValues.keterangan),
     }
-    const result = await runActionWithFeedback(() => saveMutation.mutateAsync(payload), 'Pengaturan klinik berhasil disimpan.')
-    if (result) {
+
+    try {
+      await saveMutation.mutateAsync(payload)
       await settings.refetch()
       setForm({})
       setTouched({})
+      setFieldErrors({})
+      setSummary('')
       toast.success('Identitas klinik diperbarui.')
+    } catch (error: unknown) {
+      const responseData = typeof error === 'object' && error && 'response' in error
+        ? (error.response as { data?: unknown } | undefined)?.data
+        : undefined
+      const parsed = parseApiError(responseData)
+      const apiErrors: Partial<Record<keyof ClinicIdentityForm, string>> = {}
+      if (parsed.fieldErrors.Nama?.[0]) apiErrors.clinicName = parsed.fieldErrors.Nama[0]
+      if (parsed.fieldErrors.Email?.[0]) apiErrors.email = parsed.fieldErrors.Email[0]
+      if (parsed.fieldErrors.TaxId?.[0]) apiErrors.taxId = parsed.fieldErrors.TaxId[0]
+      if (parsed.fieldErrors.Phone?.[0]) apiErrors.phone = parsed.fieldErrors.Phone[0]
+      if (parsed.fieldErrors.NoHp?.[0]) apiErrors.noHp = parsed.fieldErrors.NoHp[0]
+      if (parsed.fieldErrors.Alamat?.[0]) apiErrors.address = parsed.fieldErrors.Alamat[0]
+      if (parsed.fieldErrors.Logo?.[0]) apiErrors.logo = parsed.fieldErrors.Logo[0]
+      if (parsed.fieldErrors.LogoSidebar?.[0]) apiErrors.logoSidebar = parsed.fieldErrors.LogoSidebar[0]
+      if (parsed.fieldErrors.TitleSidebar?.[0]) apiErrors.titleSidebar = parsed.fieldErrors.TitleSidebar[0]
+      if (parsed.fieldErrors.Keterangan?.[0]) apiErrors.keterangan = parsed.fieldErrors.Keterangan[0]
+      setFieldErrors(apiErrors)
+      setSummary(parsed.message)
+      toast.error(parsed.message)
     }
   }
 
@@ -147,18 +209,19 @@ export function PengaturanPage({ canFetch }: { canFetch: boolean }) {
         <div className="settings-panel">
           {activeTab === 'clinic' ? (
             <SectionCard title="Clinic Identity" description="Update your clinical organization details for reports and letterheads." actions={<button className="icon-btn btn-primary" disabled={saveMutation.isPending} onClick={saveClinicIdentity}><Save size={16} /> Save Changes</button>} className="settings-clinic-card">
+              {summary ? <div className="error-summary">{summary}</div> : null}
               <div className="settings-clinic-grid">
                 <div className="settings-form-grid">
-                  <FieldLabel text="Clinic Name" htmlFor="setting-clinic-name"><input id="setting-clinic-name" value={formValues.clinicName} onChange={(event) => updateField('clinicName', event.target.value)} /></FieldLabel>
-                  <FieldLabel text="Tax ID / NPWP" htmlFor="setting-tax-id"><input id="setting-tax-id" value={formValues.taxId} onChange={(event) => updateField('taxId', event.target.value)} /></FieldLabel>
-                  <FieldLabel text="Primary Phone" htmlFor="setting-phone"><input id="setting-phone" value={formValues.phone} onChange={(event) => updateField('phone', event.target.value)} /></FieldLabel>
-                  <FieldLabel text="Mobile / WhatsApp" htmlFor="setting-no-hp"><input id="setting-no-hp" value={formValues.noHp} onChange={(event) => updateField('noHp', event.target.value)} /></FieldLabel>
-                  <FieldLabel text="Email" htmlFor="setting-email"><input id="setting-email" type="email" value={formValues.email} onChange={(event) => updateField('email', event.target.value)} /></FieldLabel>
-                  <FieldLabel text="Title Sidebar" htmlFor="setting-title-sidebar"><input id="setting-title-sidebar" value={formValues.titleSidebar} onChange={(event) => updateField('titleSidebar', event.target.value)} /></FieldLabel>
-                  <FieldLabel text="Logo URL" htmlFor="setting-logo"><input id="setting-logo" value={formValues.logo} onChange={(event) => updateField('logo', event.target.value)} /></FieldLabel>
-                  <FieldLabel text="Logo Sidebar URL" htmlFor="setting-logo-sidebar"><input id="setting-logo-sidebar" value={formValues.logoSidebar} onChange={(event) => updateField('logoSidebar', event.target.value)} /></FieldLabel>
-                  <FieldLabel text="Office Address" htmlFor="setting-address"><textarea id="setting-address" rows={4} value={formValues.address} onChange={(event) => updateField('address', event.target.value)} /></FieldLabel>
-                  <FieldLabel text="Keterangan" htmlFor="setting-keterangan"><textarea id="setting-keterangan" rows={4} value={formValues.keterangan} onChange={(event) => updateField('keterangan', event.target.value)} /></FieldLabel>
+                  <FieldLabel text="Clinic Name" htmlFor="setting-clinic-name"><input {...inputProps('clinicName', 'setting-clinic-name')} value={formValues.clinicName} onChange={(event) => updateField('clinicName', event.target.value)} />{fieldError('clinicName', 'setting-clinic-name')}</FieldLabel>
+                  <FieldLabel text="Tax ID / NPWP" htmlFor="setting-tax-id"><input {...inputProps('taxId', 'setting-tax-id')} value={formValues.taxId} onChange={(event) => updateField('taxId', event.target.value)} />{fieldError('taxId', 'setting-tax-id')}</FieldLabel>
+                  <FieldLabel text="Primary Phone" htmlFor="setting-phone"><input {...inputProps('phone', 'setting-phone')} value={formValues.phone} onChange={(event) => updateField('phone', event.target.value)} />{fieldError('phone', 'setting-phone')}</FieldLabel>
+                  <FieldLabel text="Mobile / WhatsApp" htmlFor="setting-no-hp"><input {...inputProps('noHp', 'setting-no-hp')} value={formValues.noHp} onChange={(event) => updateField('noHp', event.target.value)} />{fieldError('noHp', 'setting-no-hp')}</FieldLabel>
+                  <FieldLabel text="Email" htmlFor="setting-email"><input {...inputProps('email', 'setting-email')} type="email" value={formValues.email} onChange={(event) => updateField('email', event.target.value)} />{fieldError('email', 'setting-email')}</FieldLabel>
+                  <FieldLabel text="Title Sidebar" htmlFor="setting-title-sidebar"><input {...inputProps('titleSidebar', 'setting-title-sidebar')} value={formValues.titleSidebar} onChange={(event) => updateField('titleSidebar', event.target.value)} />{fieldError('titleSidebar', 'setting-title-sidebar')}</FieldLabel>
+                  <FieldLabel text="Logo URL" htmlFor="setting-logo"><input {...inputProps('logo', 'setting-logo')} value={formValues.logo} onChange={(event) => updateField('logo', event.target.value)} />{fieldError('logo', 'setting-logo')}</FieldLabel>
+                  <FieldLabel text="Logo Sidebar URL" htmlFor="setting-logo-sidebar"><input {...inputProps('logoSidebar', 'setting-logo-sidebar')} value={formValues.logoSidebar} onChange={(event) => updateField('logoSidebar', event.target.value)} />{fieldError('logoSidebar', 'setting-logo-sidebar')}</FieldLabel>
+                  <FieldLabel className="settings-form-wide" text="Office Address" htmlFor="setting-address"><textarea {...inputProps('address', 'setting-address')} rows={4} value={formValues.address} onChange={(event) => updateField('address', event.target.value)} />{fieldError('address', 'setting-address')}</FieldLabel>
+                  <FieldLabel className="settings-form-wide" text="Keterangan" htmlFor="setting-keterangan"><textarea {...inputProps('keterangan', 'setting-keterangan')} rows={4} value={formValues.keterangan} onChange={(event) => updateField('keterangan', event.target.value)} />{fieldError('keterangan', 'setting-keterangan')}</FieldLabel>
                 </div>
                 <div className="settings-logo-dropzone">
                   <div className="settings-logo-mark">MF</div>

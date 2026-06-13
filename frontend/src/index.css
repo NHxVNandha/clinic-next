@@ -5400,10 +5400,47 @@ button.filter-chip:hover {
   grid-column: 1 / -1;
 }
 
+.settings-form-wide {
+  grid-column: 1 / -1;
+}
+
 .settings-form-grid input,
 .settings-form-grid textarea {
   width: 100%;
+  border: 1px solid color-mix(in srgb, var(--border) 86%, var(--text-muted));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 82%, var(--surface-muted));
+  color: var(--text);
   padding: 10px 12px;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 55%, transparent),
+    0 1px 2px color-mix(in srgb, var(--text) 5%, transparent);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.settings-form-grid textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.settings-form-grid input::placeholder,
+.settings-form-grid textarea::placeholder {
+  color: color-mix(in srgb, var(--text-muted) 70%, transparent);
+}
+
+.settings-form-grid input:focus,
+.settings-form-grid textarea:focus {
+  border-color: var(--primary);
+  background: var(--surface);
+  box-shadow:
+    0 0 0 3px var(--focus-ring),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 58%, transparent);
+}
+
+.settings-form-grid input[aria-invalid='true'],
+.settings-form-grid textarea[aria-invalid='true'] {
+  border-color: var(--danger-strong);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger-strong) 16%, transparent);
 }
 
 .settings-grid-wrap {
