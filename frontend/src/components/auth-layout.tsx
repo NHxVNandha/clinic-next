@@ -40,6 +40,68 @@ const formPanelVariants: Variants = {
   }),
 }
 
+const imageVariants: Variants = {
+  login: ({ reducedMotion }: MotionSettings) => ({
+    x: 0,
+    scale: reducedMotion ? 1 : 1.04,
+    opacity: 0.42,
+    transition: reducedMotion ? { duration: 0 } : { duration: 1.4, ease: cinematicEase },
+  }),
+  register: ({ reducedMotion }: MotionSettings) => ({
+    x: reducedMotion ? 0 : -18,
+    scale: reducedMotion ? 1 : 1.09,
+    opacity: 0.46,
+    transition: reducedMotion ? { duration: 0 } : { duration: 1.4, ease: cinematicEase },
+  }),
+}
+
+const blueWashVariants: Variants = {
+  login: ({ reducedMotion }: MotionSettings) => ({
+    x: 0,
+    scale: 1,
+    opacity: 0.9,
+    backgroundPosition: '8% 48%',
+    transition: reducedMotion ? { duration: 0 } : { duration: 1.4, ease: cinematicEase },
+  }),
+  register: ({ reducedMotion }: MotionSettings) => ({
+    x: reducedMotion ? 0 : -26,
+    scale: reducedMotion ? 1 : 1.1,
+    opacity: 0.98,
+    backgroundPosition: '92% 52%',
+    transition: reducedMotion ? { duration: 0 } : { duration: 1.4, ease: cinematicEase },
+  }),
+}
+
+const lightSweepVariants: Variants = {
+  login: ({ reducedMotion }: MotionSettings) => ({
+    x: reducedMotion ? 0 : '-36%',
+    opacity: reducedMotion ? 0.12 : 0.16,
+    transition: reducedMotion ? { duration: 0 } : { duration: 1.4, ease: cinematicEase },
+  }),
+  register: ({ reducedMotion }: MotionSettings) => ({
+    x: reducedMotion ? 0 : '34%',
+    opacity: reducedMotion ? 0.12 : 0.3,
+    transition: reducedMotion ? { duration: 0 } : { duration: 1.4, ease: cinematicEase },
+  }),
+}
+
+const patternVariants: Variants = {
+  login: ({ reducedMotion }: MotionSettings) => ({
+    x: 0,
+    y: 0,
+    opacity: 0.14,
+    backgroundPosition: '0px 0px',
+    transition: reducedMotion ? { duration: 0 } : { duration: 1.4, ease: cinematicEase },
+  }),
+  register: ({ reducedMotion }: MotionSettings) => ({
+    x: reducedMotion ? 0 : -24,
+    y: reducedMotion ? 0 : 16,
+    opacity: 0.22,
+    backgroundPosition: '32px 24px',
+    transition: reducedMotion ? { duration: 0 } : { duration: 1.4, ease: cinematicEase },
+  }),
+}
+
 const formStageVariants: Variants = {
   hidden: ({ direction, reducedMotion }: MotionSettings) => ({
     opacity: 0,
@@ -123,8 +185,39 @@ export function AuthLayout() {
           initial={mode}
           animate={mode}
         >
-          <img className="auth-brand-image" src={clinicalImageUrl} alt="Lingkungan klinik modern" />
-          <div className="auth-brand-pattern" aria-hidden="true" />
+          <motion.img
+            className="auth-brand-image"
+            src={clinicalImageUrl}
+            alt="Lingkungan klinik modern"
+            variants={imageVariants}
+            custom={motionSettings}
+            initial={mode}
+            animate={mode}
+          />
+          <motion.div
+            className="auth-brand-blue-wash"
+            aria-hidden="true"
+            variants={blueWashVariants}
+            custom={motionSettings}
+            initial={mode}
+            animate={mode}
+          />
+          <motion.div
+            className="auth-brand-light-sweep"
+            aria-hidden="true"
+            variants={lightSweepVariants}
+            custom={motionSettings}
+            initial={mode}
+            animate={mode}
+          />
+          <motion.div
+            className="auth-brand-pattern"
+            aria-hidden="true"
+            variants={patternVariants}
+            custom={motionSettings}
+            initial={mode}
+            animate={mode}
+          />
           <motion.div
             className="auth-brand-content"
             key={location.pathname}
