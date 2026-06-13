@@ -1104,9 +1104,9 @@ button.filter-chip:focus-visible {
   padding: clamp(40px, 7vw, 84px);
   transform: translateX(0);
   transition:
-    transform 820ms cubic-bezier(0.2, 0.9, 0.22, 1),
-    filter 820ms cubic-bezier(0.2, 0.9, 0.22, 1),
-    box-shadow 820ms cubic-bezier(0.2, 0.9, 0.22, 1);
+    transform 1400ms cubic-bezier(0.2, 0.9, 0.22, 1),
+    filter 1400ms cubic-bezier(0.2, 0.9, 0.22, 1),
+    box-shadow 1400ms cubic-bezier(0.2, 0.9, 0.22, 1);
   will-change: transform, filter;
   box-shadow: 24px 0 64px color-mix(in srgb, var(--primary) 18%, transparent);
 }
@@ -1123,7 +1123,7 @@ button.filter-chip:focus-visible {
   width: 55%;
   z-index: 1;
   overflow: hidden;
-  transition: left 820ms cubic-bezier(0.2, 0.9, 0.22, 1), width 820ms cubic-bezier(0.2, 0.9, 0.22, 1);
+  transition: left 1400ms cubic-bezier(0.2, 0.9, 0.22, 1), width 1400ms cubic-bezier(0.2, 0.9, 0.22, 1);
   will-change: left, width;
 }
 
@@ -1136,7 +1136,7 @@ button.filter-chip:focus-visible {
   max-height: 100%;
   display: grid;
   place-items: center;
-  animation: auth-form-enter-from-left 620ms cubic-bezier(0.2, 0.9, 0.22, 1) 130ms both;
+  animation: auth-form-enter-from-left 950ms cubic-bezier(0.2, 0.9, 0.22, 1) 280ms both;
   will-change: opacity, transform, filter;
 }
 
@@ -1203,7 +1203,7 @@ button.filter-chip:focus-visible {
   width: 26px;
   background: linear-gradient(90deg, color-mix(in srgb, #ffffff 22%, transparent), transparent);
   opacity: 0;
-  transition: opacity 320ms ease;
+  transition: opacity 520ms ease;
 }
 
 .auth-shell-register .auth-brand-panel::after {
@@ -1234,46 +1234,46 @@ button.filter-chip:focus-visible {
 .auth-card > *,
 .auth-form > *,
 .auth-register-form > * {
-  animation: auth-layer-rise 520ms cubic-bezier(0.2, 0.9, 0.22, 1) both;
+  animation: auth-layer-rise 720ms cubic-bezier(0.2, 0.9, 0.22, 1) both;
 }
 
 .auth-brand-content > :nth-child(1),
 .auth-card > :nth-child(1),
 .auth-form > :nth-child(1),
 .auth-register-form > :nth-child(1) {
-  animation-delay: 170ms;
+  animation-delay: 220ms;
 }
 
 .auth-brand-content > :nth-child(2),
 .auth-card > :nth-child(2),
 .auth-form > :nth-child(2),
 .auth-register-form > :nth-child(2) {
-  animation-delay: 220ms;
+  animation-delay: 300ms;
 }
 
 .auth-brand-content > :nth-child(3),
 .auth-card > :nth-child(3),
 .auth-form > :nth-child(3),
 .auth-register-form > :nth-child(3) {
-  animation-delay: 270ms;
+  animation-delay: 380ms;
 }
 
 .auth-brand-content > :nth-child(4),
 .auth-card > :nth-child(4),
 .auth-form > :nth-child(4),
 .auth-register-form > :nth-child(4) {
-  animation-delay: 320ms;
+  animation-delay: 460ms;
 }
 
 .auth-card > :nth-child(5),
 .auth-form > :nth-child(5),
 .auth-register-form > :nth-child(5) {
-  animation-delay: 370ms;
+  animation-delay: 540ms;
 }
 
 .auth-form > :nth-child(6),
 .auth-register-form > :nth-child(6) {
-  animation-delay: 420ms;
+  animation-delay: 620ms;
 }
 
 @keyframes auth-layer-rise {
