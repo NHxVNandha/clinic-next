@@ -33,6 +33,10 @@ function toNumber(value: string, fallback = 0): number {
   return Number.isFinite(parsed) ? parsed : fallback
 }
 
+function formatMasterStatus(value: unknown) {
+  return String(value ?? '') === '1' ? 'Aktif' : 'Tidak Aktif'
+}
+
 export function MasterPage({ canFetch }: { canFetch: boolean }) {
   const { t } = useT()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -119,13 +123,13 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
         { field: 'icd9', headerName: 'ICD9', minWidth: 120 },
         { field: 'namaJasa', headerName: 'Nama Jasa', minWidth: 220 },
         { field: 'harga', headerName: 'Harga', minWidth: 140 },
-        { field: 'status', headerName: 'Status', minWidth: 100 },
+        { field: 'status', headerName: 'Status', minWidth: 120, valueFormatter: ({ value }) => formatMasterStatus(value) },
       ]
     }
     return [
       { field: 'kodeDiagnosa', headerName: 'Kode Diagnosa', minWidth: 160 },
       { field: 'namaDiagnosa', headerName: 'Nama Diagnosa', minWidth: 260 },
-      { field: 'status', headerName: 'Status', minWidth: 100 },
+      { field: 'status', headerName: 'Status', minWidth: 120, valueFormatter: ({ value }) => formatMasterStatus(value) },
     ]
   }, [mode])
 
@@ -582,8 +586,8 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
               aria-invalid={Boolean(jasaErrors.status)}
               aria-describedby={jasaErrors.status ? 'master-jasa-status-error' : undefined}
             >
-              <option value="1">Aktif (1)</option>
-              <option value="0">Nonaktif (0)</option>
+              <option value="1">Aktif</option>
+              <option value="0">Tidak Aktif</option>
             </select>
           </FieldLabel>
           <FieldLabel text="Keterangan" htmlFor="master-jasa-keterangan">
@@ -645,8 +649,8 @@ export function MasterPage({ canFetch }: { canFetch: boolean }) {
               aria-invalid={Boolean(diagnosaErrors.status)}
               aria-describedby={diagnosaErrors.status ? 'master-diagnosa-status-error' : undefined}
             >
-              <option value="1">Aktif (1)</option>
-              <option value="0">Nonaktif (0)</option>
+              <option value="1">Aktif</option>
+              <option value="0">Tidak Aktif</option>
             </select>
           </FieldLabel>
         </div>
