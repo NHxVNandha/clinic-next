@@ -8,7 +8,7 @@ import { usePendaftaran } from '../hooks/use-pendaftaran'
 import { usePelayanan } from '../hooks/use-pelayanan'
 import { usePembayaran } from '../hooks/use-kasir'
 import type { PembayaranItem } from '../api/kasir'
-import { useT } from '../i18n'
+import { useT, type TranslationKey } from '../i18n'
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value)
@@ -34,6 +34,7 @@ function statusLabel(value: unknown) {
 
 export function DashboardPage({ canFetch }: { canFetch: boolean }) {
   const { t } = useT()
+  const msg = (key: TranslationKey, values: Record<string, string | number> = {}) => Object.entries(values).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), t(key))
   const pendaftaran = usePendaftaran({ page: 1, pageSize: 8 }, canFetch)
   const pelayanan = usePelayanan({ page: 1, pageSize: 8 }, canFetch)
   const kasir = usePembayaran({ page: 1, pageSize: 8 }, canFetch)
@@ -57,7 +58,7 @@ export function DashboardPage({ canFetch }: { canFetch: boolean }) {
   return (
     <section className="page-card dashboard-page">
       <PageHeader
-        title="Dashboard Overview"
+        title={t('dashboard.title')}
         description={t('nav.dashboard.desc')}
         eyebrow="MediFlow Admin"
         actions={<Link className="icon-btn btn-primary" to="/pendaftaran">{t('dashboard.newRegistration')}</Link>}
@@ -71,10 +72,10 @@ export function DashboardPage({ canFetch }: { canFetch: boolean }) {
       </MetricGrid>
 
       <div className="dashboard-bento-grid">
-        <SectionCard title={t('dashboard.visits')} description="Weekly visual to monitor service load." className="dashboard-chart-card">
+        <SectionCard title={t('dashboard.visits')} description={t('dashboard.chartDesc')} className="dashboard-chart-card">
           <div className="dashboard-chart-summary">
             <div>
-              <span className="dashboard-kicker">Total Kunjungan</span>
+              <span className="dashboard-kicker">{t('dashboard.totalVisits')}</span>
               <strong>{activeRegistrations + pelayananRows.length}</strong>
             </div>
             <span className="dashboard-trend"><TrendingUp size={15} /> +12%</span>
@@ -90,10 +91,10 @@ export function DashboardPage({ canFetch }: { canFetch: boolean }) {
           <div className="dashboard-monthly-chart" aria-label="Grafik kunjungan bulanan">
             <div className="dashboard-monthly-head">
               <div>
-                <span className="dashboard-kicker">Tren Bulanan</span>
-                <strong>6 bulan terakhir</strong>
+                <span className="dashboard-kicker">{t('dashboard.monthlyTrend')}</span>
+                <strong>{t('dashboard.lastSixMonths')}</strong>
               </div>
-              <span>Stabil naik</span>
+              <span>{t('dashboard.stableRising')}</span>
             </div>
             <div className="monthly-bars">
               {monthlyChartValues.map((height, index) => (
@@ -106,7 +107,7 @@ export function DashboardPage({ canFetch }: { canFetch: boolean }) {
           </div>
         </SectionCard>
 
-        <SectionCard title={t('dashboard.traffic')} description="Today's operational load distribution." className="dashboard-traffic-card">
+        <SectionCard title={t('dashboard.traffic')} description={t('dashboard.trafficDesc')} className="dashboard-traffic-card">
           <div className="traffic-list">
             {departmentTraffic.map((item) => (
               <div className="traffic-item" key={item.label}>
@@ -117,18 +118,18 @@ export function DashboardPage({ canFetch }: { canFetch: boolean }) {
           </div>
           <div className="traffic-total">
             <strong>{pelayanan.data?.data.total ?? 0}</strong>
-            <span>Total konsultasi terpantau</span>
+            <span>{t('dashboard.totalConsults')}</span>
           </div>
         </SectionCard>
 
-        <SectionCard title={t('dashboard.activity')} description="Recent activity from registration data." className="dashboard-activity-card">
+        <SectionCard title={t('dashboard.activity')} description={t('dashboard.activityDesc')} className="dashboard-activity-card">
           <div className="activity-list">
             {pendaftaranRows.length > 0 ? pendaftaranRows.slice(0, 5).map((item) => (
               <div className="activity-item" key={item.idRegistrasi ?? item.id}>
                 <span className="activity-dot"><FileText size={13} /></span>
                 <div>
                   <strong>{item.idRegistrasi ?? '-'}</strong>
-                  <p>{String((item as Record<string, unknown>).namaPasien ?? item.idPasien ?? 'Pasien')} terdaftar untuk pelayanan.</p>
+                  <p>{msg('dashboard.registeredForService', { name: String((item as Record<string, unknown>).namaPasien ?? item.idPasien ?? t('dashboard.col.patient')) })}</p>
                 </div>
               </div>
             )) : <p className="empty-note">{t('grid.empty')}</p>}
@@ -136,17 +137,17 @@ export function DashboardPage({ canFetch }: { canFetch: boolean }) {
         </SectionCard>
       </div>
 
-      <SectionCard title={t('dashboard.appointments')} description="Latest services for front office and clinical coordination." actions={<Link className="icon-btn" to="/pelayanan">{t('nav.pelayanan')} <ArrowUpRight size={14} /></Link>}>
+      <SectionCard title={t('dashboard.appointments')} description={t('dashboard.appointmentsDesc')} actions={<Link className="icon-btn" to="/pelayanan">{t('nav.pelayanan')} <ArrowUpRight size={14} /></Link>}>
         <div className="stitch-table-wrap">
           <table className="stitch-table dashboard-appointment-table">
             <thead>
               <tr>
-                <th>Registrasi</th>
-                <th>Pasien</th>
-                <th>Dokter</th>
-                <th>Layanan</th>
-                <th>Status</th>
-                <th>Aksi</th>
+                <th>{t('dashboard.col.registration')}</th>
+                <th>{t('dashboard.col.patient')}</th>
+                <th>{t('dashboard.col.doctor')}</th>
+                <th>{t('dashboard.col.service')}</th>
+                <th>{t('common.status')}</th>
+                <th>{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -163,12 +164,12 @@ export function DashboardPage({ canFetch }: { canFetch: boolean }) {
                     </div>
                   </td>
                   <td>{String((item as Record<string, unknown>).dokterNama ?? (item as Record<string, unknown>).namaDokter ?? '-')}</td>
-                  <td><span className="dashboard-service-chip"><Activity size={13} /> Konsultasi</span></td>
+                  <td><span className="dashboard-service-chip"><Activity size={13} /> {t('dashboard.service.consultation')}</span></td>
                   <td><span className="status-pill status-dilayani">{statusLabel(item.status)}</span></td>
-                  <td><Link className="table-link" to={`/pelayanan?search=${encodeURIComponent(String(item.idRegistrasi ?? ''))}`}>Detail</Link></td>
+                  <td><Link className="table-link" to={`/pelayanan?search=${encodeURIComponent(String(item.idRegistrasi ?? ''))}`}>{t('dashboard.detail')}</Link></td>
                 </tr>
               ))}
-              {pelayananRows.length === 0 ? <tr><td colSpan={6}>Belum ada data pelayanan termuat.</td></tr> : null}
+              {pelayananRows.length === 0 ? <tr><td colSpan={6}>{t('dashboard.emptyServices')}</td></tr> : null}
             </tbody>
           </table>
         </div>
