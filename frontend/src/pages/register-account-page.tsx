@@ -42,8 +42,10 @@ export function RegisterAccountPage() {
           <AuthMotionForm className="auth-card auth-register-card" onSubmit={submit}>
             <AuthMotionItem><Link className="auth-back-link" to="/login"><ArrowLeft size={16} /> {t('register.back')}</Link></AuthMotionItem>
             <AuthMotionItem><div className="auth-form-header">
-              <span className="auth-support-icon"><ShieldCheck size={28} /></span>
-              <h2>{t('register.title')}</h2>
+              <div className="auth-form-title-row">
+                <span className="auth-support-icon"><ShieldCheck size={28} /></span>
+                <h2>{t('register.title')}</h2>
+              </div>
               <p>{t('register.desc')}</p>
             </div></AuthMotionItem>
             {summary ? <AuthMotionItem><div className="error-summary">{summary}</div></AuthMotionItem> : null}

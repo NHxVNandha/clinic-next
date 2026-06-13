@@ -1271,6 +1271,12 @@ button.filter-chip:focus-visible {
   font-size: clamp(1.55rem, 3vw, 2rem);
 }
 
+.auth-form-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .auth-form-header p,
 .auth-register-prompt p,
 .auth-legal {
@@ -1503,9 +1509,10 @@ button.filter-chip:focus-visible {
 
 .auth-register-card .auth-support-icon,
 .auth-support-card .auth-support-icon {
+  flex: 0 0 auto;
   width: 46px;
   height: 46px;
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
 .auth-support-panel {
