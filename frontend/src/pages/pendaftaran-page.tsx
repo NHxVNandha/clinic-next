@@ -18,7 +18,9 @@ import { useMasterDokter, useMasterPasien } from '../hooks/use-master'
 import { useDebouncedValue } from '../hooks/use-debounced-value'
 import { getStatusMeta } from '../lib/status-meta'
 import { StrictMasterComboboxField } from '../components/strict-master-combobox-field'
-import { FieldLabel } from '../components/field-label'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Label } from '../components/ui/label'
 import { formatNik, formatPhone } from '../lib/input-normalizers'
 import { canCreatePendaftaran, getActionAccess } from '../lib/access'
 import { confirmThemedAction } from '../lib/sweet-alert'
@@ -406,7 +408,8 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
             <span className="registration-step"><b>3</b> {t('registration.step.confirm')}</span>
           </div>
           <div className="registration-form-panel form-grid">
-            <FieldLabel text={t('registration.field.patientId')} htmlFor="pendaftaran-existing-idpasien">
+            <div className="grid gap-2">
+              <Label htmlFor="pendaftaran-existing-idpasien">{t('registration.field.patientId')}</Label>
               <StrictMasterComboboxField
                 inputId="pendaftaran-existing-idpasien"
                 value={form.idPasien}
@@ -422,8 +425,9 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
                 onStrictError={setFormError}
                 disabled={!canCreate}
               />
-            </FieldLabel>
-            <FieldLabel text={t('registration.field.doctorCode')} htmlFor="pendaftaran-existing-kddokter">
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="pendaftaran-existing-kddokter">{t('registration.field.doctorCode')}</Label>
               <StrictMasterComboboxField
                 inputId="pendaftaran-existing-kddokter"
                 value={form.kdDokter}
@@ -439,18 +443,19 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
                 onStrictError={setFormError}
                 disabled={!canCreate}
               />
-            </FieldLabel>
-            <FieldLabel text={t('registration.field.complaint')} htmlFor="pendaftaran-existing-keluhan">
-              <input id="pendaftaran-existing-keluhan" className="search-input" placeholder={t('registration.field.complaintPlaceholder')} value={form.keluhan} onChange={(e) => setForm((p) => ({ ...p, keluhan: e.target.value }))} disabled={!canCreate} />
-            </FieldLabel>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="pendaftaran-existing-keluhan">{t('registration.field.complaint')}</Label>
+              <Input id="pendaftaran-existing-keluhan" placeholder={t('registration.field.complaintPlaceholder')} value={form.keluhan} onChange={(e) => setForm((p) => ({ ...p, keluhan: e.target.value }))} disabled={!canCreate} />
+            </div>
           </div>
         </div>
         <FormFeedback errors={[formError]} />
         <div className="confirm-actions">
-          <button className="btn-muted" onClick={() => setForm({ idPasien: '', kdDokter: '', keluhan: '' })}>{t('registration.button.resetForm')}</button>
-          <button className="btn-primary" disabled={createMutation.isPending || !canCreate} title={!canCreate ? createAccess.reason : undefined} onClick={submitCreateExisting}>
+          <Button variant="secondary" onClick={() => setForm({ idPasien: '', kdDokter: '', keluhan: '' })}>{t('registration.button.resetForm')}</Button>
+          <Button disabled={createMutation.isPending || !canCreate} title={!canCreate ? createAccess.reason : undefined} onClick={submitCreateExisting}>
             {createMutation.isPending ? t('registration.button.saving') : t('registration.button.saveRegistration')}
-          </button>
+          </Button>
         </div>
       </FormModal>
 
@@ -487,13 +492,16 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
               <span className="registration-step"><b>3</b> {t('registration.step.confirm')}</span>
             </div>
             <div className="form-grid">
-              <FieldLabel text={t('registration.field.patientName')} htmlFor="pendaftaran-baru-nama">
-                <input id="pendaftaran-baru-nama" className="search-input" placeholder={t('registration.field.patientNamePlaceholder')} value={pasienBaruForm.nama} onChange={(e) => setPasienBaruForm((p) => ({ ...p, nama: e.target.value }))} disabled={!canCreate} />
-              </FieldLabel>
-              <FieldLabel text={t('registration.field.nik')} htmlFor="pendaftaran-baru-nik">
-                <input id="pendaftaran-baru-nik" className="search-input" placeholder={t('registration.field.nikPlaceholder')} value={pasienBaruForm.nik} onChange={(e) => setPasienBaruForm((p) => ({ ...p, nik: formatNik(e.target.value) }))} disabled={!canCreate} />
-              </FieldLabel>
-              <FieldLabel text={t('registration.field.doctorCode')} htmlFor="pendaftaran-baru-kddokter">
+              <div className="grid gap-2">
+                <Label htmlFor="pendaftaran-baru-nama">{t('registration.field.patientName')}</Label>
+                <Input id="pendaftaran-baru-nama" placeholder={t('registration.field.patientNamePlaceholder')} value={pasienBaruForm.nama} onChange={(e) => setPasienBaruForm((p) => ({ ...p, nama: e.target.value }))} disabled={!canCreate} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="pendaftaran-baru-nik">{t('registration.field.nik')}</Label>
+                <Input id="pendaftaran-baru-nik" placeholder={t('registration.field.nikPlaceholder')} value={pasienBaruForm.nik} onChange={(e) => setPasienBaruForm((p) => ({ ...p, nik: formatNik(e.target.value) }))} disabled={!canCreate} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="pendaftaran-baru-kddokter">{t('registration.field.doctorCode')}</Label>
                 <StrictMasterComboboxField
                   inputId="pendaftaran-baru-kddokter"
                   value={pasienBaruForm.kdDokter}
@@ -509,19 +517,20 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
                   onStrictError={setPasienBaruError}
                   disabled={!canCreate}
                 />
-              </FieldLabel>
-              <FieldLabel text={t('registration.field.phone')} htmlFor="pendaftaran-baru-nohp">
-                <input id="pendaftaran-baru-nohp" className="search-input" placeholder={t('registration.field.phonePlaceholder')} value={pasienBaruForm.noHp} onChange={(e) => setPasienBaruForm((p) => ({ ...p, noHp: formatPhone(e.target.value) }))} disabled={!canCreate} />
-              </FieldLabel>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="pendaftaran-baru-nohp">{t('registration.field.phone')}</Label>
+                <Input id="pendaftaran-baru-nohp" placeholder={t('registration.field.phonePlaceholder')} value={pasienBaruForm.noHp} onChange={(e) => setPasienBaruForm((p) => ({ ...p, noHp: formatPhone(e.target.value) }))} disabled={!canCreate} />
+              </div>
             </div>
           </div>
         </div>
         <FormFeedback errors={[pasienBaruError]} />
         <div className="confirm-actions">
-          <button className="btn-muted" onClick={() => setPasienBaruForm({ nama: '', nik: '', kdDokter: '', noHp: '' })}>{t('registration.button.resetForm')}</button>
-          <button className="btn-primary" disabled={createPasienBaruMutation.isPending || !canCreate} title={!canCreate ? createAccess.reason : undefined} onClick={submitCreateNewPatient}>
+          <Button variant="secondary" onClick={() => setPasienBaruForm({ nama: '', nik: '', kdDokter: '', noHp: '' })}>{t('registration.button.resetForm')}</Button>
+          <Button disabled={createPasienBaruMutation.isPending || !canCreate} title={!canCreate ? createAccess.reason : undefined} onClick={submitCreateNewPatient}>
             {createPasienBaruMutation.isPending ? t('registration.button.saving') : t('registration.button.saveNewPatient')}
-          </button>
+          </Button>
         </div>
       </FormModal>
 
