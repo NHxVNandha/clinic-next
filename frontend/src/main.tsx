@@ -27,7 +27,6 @@ import {
   ValidationModule,
   ModuleRegistry,
 } from 'ag-grid-community'
-import 'sweetalert2/dist/sweetalert2.min.css'
 import './index.css'
 import App from './App'
 import { LanguageProvider } from './i18n'

@@ -22,7 +22,7 @@ import {
 } from '../api/master'
 import { runActionWithFeedback } from '../lib/action-feedback'
 import { useDebouncedValue } from '../hooks/use-debounced-value'
-import { confirmThemedAction } from '../lib/sweet-alert'
+import { confirmThemedAction } from '../lib/confirm-action'
 import { FieldLabel } from '../components/field-label'
 import { useT, type TranslationKey } from '../i18n'
 

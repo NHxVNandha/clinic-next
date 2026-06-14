@@ -1930,60 +1930,6 @@ button.filter-chip:focus-visible {
   cursor: not-allowed;
 }
 
-.swal-theme-light,
-.swal-theme-dark {
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface) 90%, transparent);
-  color: var(--text);
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(12px);
-}
-
-.swal-theme-light .swal2-title,
-.swal-theme-dark .swal2-title {
-  color: var(--text);
-}
-
-.swal-theme-light .swal2-html-container,
-.swal-theme-dark .swal2-html-container {
-  color: var(--text-muted);
-}
-
-.swal-btn-primary,
-.swal-btn-danger,
-.swal-btn-cancel {
-  min-height: var(--btn-height-comfortable);
-  border-radius: 10px;
-  border: 1px solid transparent;
-  padding: 8px 14px;
-  font-weight: 600;
-  transition: filter 0.14s ease, border-color 0.14s ease;
-}
-
-.swal-btn-primary:hover,
-.swal-btn-danger:hover,
-.swal-btn-cancel:hover {
-  filter: brightness(0.97);
-}
-
-.swal-btn-primary {
-  background: var(--primary);
-  color: var(--primary-contrast);
-}
-
-.swal-btn-danger {
-  background: var(--danger-strong);
-  color: var(--danger-contrast);
-  border-color: color-mix(in srgb, var(--danger-strong) 72%, var(--border));
-}
-
-.swal-btn-cancel {
-  background: var(--surface);
-  color: var(--text);
-  border-color: var(--border);
-}
-
 .placeholder-grid {
   margin-top: 18px;
   display: grid;

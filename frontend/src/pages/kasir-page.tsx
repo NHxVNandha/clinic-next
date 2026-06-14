@@ -28,7 +28,7 @@ import { StrictMasterComboboxField } from '../components/strict-master-combobox-
 import { FieldLabel } from '../components/field-label'
 import { normalizeIdRegistrasi } from '../lib/input-normalizers'
 import { canManageDestructiveActions, canManageKasirPayments, canManageKasirPengeluaran, getActionAccess } from '../lib/access'
-import { confirmThemedAction } from '../lib/sweet-alert'
+import { confirmThemedAction } from '../lib/confirm-action'
 import { getAuthUser } from '../lib/storage'
 import { useT, type TranslationKey } from '../i18n'
 

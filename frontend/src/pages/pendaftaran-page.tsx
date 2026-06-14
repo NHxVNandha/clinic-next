@@ -23,7 +23,7 @@ import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { formatNik, formatPhone } from '../lib/input-normalizers'
 import { canCreatePendaftaran, getActionAccess } from '../lib/access'
-import { confirmThemedAction } from '../lib/sweet-alert'
+import { confirmThemedAction } from '../lib/confirm-action'
 import { getAuthUser } from '../lib/storage'
 import { useT, type TranslationKey } from '../i18n'
 

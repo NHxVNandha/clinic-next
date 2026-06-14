@@ -30,6 +30,7 @@ export function FormModal({
   return (
     <Dialog open={open} onOpenChange={(next) => { if (!next) onClose() }}>
       <DialogContent
+        data-form-modal-content="true"
         data-size={size}
         className={cn(
           '[&_.field-label]:text-[0.75rem] [&_.field-label]:font-[650] [&_.field-label]:uppercase [&_.field-label]:tracking-[0.025em] [&_.field-label]:text-[color-mix(in_srgb,var(--text)_76%,var(--text-muted))]',
