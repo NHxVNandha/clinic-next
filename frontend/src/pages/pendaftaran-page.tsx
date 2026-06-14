@@ -395,12 +395,14 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
       >
         <div className="registration-onboarding compact">
           <div className="registration-intro-panel">
-            <div className="registration-intro-icon"><Users size={22} /></div>
-            <div>
-              <small>{t('registration.modal.existingKicker')}</small>
-              <strong>{t('registration.modal.existingHeading')}</strong>
-              <p>{t('registration.modal.existingIntro')}</p>
+            <div className="registration-intro-head">
+              <div className="registration-intro-icon"><Users size={22} /></div>
+              <div>
+                <small>{t('registration.modal.existingKicker')}</small>
+                <strong>{t('registration.modal.existingHeading')}</strong>
+              </div>
             </div>
+            <p>{t('registration.modal.existingIntro')}</p>
           </div>
           <div className="registration-stepper" aria-label={t('registration.modal.existingFlow')}>
             <span className="registration-step active"><b>1</b> {t('registration.step.patient')}</span>
