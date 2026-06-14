@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ColDef } from 'ag-grid-community'
 import type { RowClickedEvent } from 'ag-grid-community'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { CalendarDays, ChevronLeft, ChevronRight, ExternalLink, RefreshCw, RotateCcw, UserPlus, Users } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight, ExternalLink, RefreshCw, RotateCcw, UserPlus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { DataGrid } from '../components/data-grid'
@@ -62,15 +62,13 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
   const debouncedSearch = useDebouncedValue(search)
   const [page, setPage] = useState(initialPage)
   const [selected, setSelected] = useState<PendaftaranItem | null>(null)
-  const [createExistingModalOpen, setCreateExistingModalOpen] = useState(false)
-  const [createNewPatientModalOpen, setCreateNewPatientModalOpen] = useState(false)
-  const [form, setForm] = useState({ idPasien: '', kdDokter: '', keluhan: '' })
-  const [pasienBaruForm, setPasienBaruForm] = useState({ nama: '', nik: '', kdDokter: '', noHp: '' })
-  const [formError, setFormError] = useState<string | null>(null)
-  const [pasienBaruError, setPasienBaruError] = useState<string | null>(null)
+  const [registrationModalOpen, setRegistrationModalOpen] = useState(false)
+  const [registrationForm, setRegistrationForm] = useState({ nik: '', nama: '', kdDokter: '', noHp: '', keluhan: '' })
+  const [registrationError, setRegistrationError] = useState<string | null>(null)
+  const debouncedNik = useDebouncedValue(registrationForm.nik)
   const query = usePendaftaran({ page, pageSize: 20, search: debouncedSearch || undefined }, canFetch)
   const dokterRef = useMasterDokter('', canFetch)
-  const pasienRef = useMasterPasien(1, 100, '', canFetch)
+  const pasienLookup = useMasterPasien(1, 10, debouncedNik, canFetch && registrationModalOpen && debouncedNik.length >= 16)
   const createMutation = useMutation({ mutationFn: createPendaftaran })
   const createPasienBaruMutation = useMutation({ mutationFn: createPendaftaranPasienBaru })
   const detailQuery = useQuery({
@@ -184,6 +182,20 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
     selesai: filteredItems.filter((item) => String(item.status ?? '') === '3').length,
     dibatalkan: filteredItems.filter((item) => String(item.status ?? '') === '4').length,
   }), [filteredItems])
+  const matchedPatient = useMemo(() => {
+    const nik = registrationForm.nik.trim()
+    if (nik.length < 16) return null
+    return (pasienLookup.data?.data.items ?? []).find((item) => item.nik === nik) ?? null
+  }, [pasienLookup.data?.data.items, registrationForm.nik])
+  const nikLookupState = registrationForm.nik.length < 16
+    ? 'idle'
+    : pasienLookup.isLoading || pasienLookup.isFetching
+      ? 'checking'
+      : matchedPatient
+        ? 'found'
+        : 'new'
+  const patientNameValue = matchedPatient?.nama ?? registrationForm.nama
+  const patientPhoneValue = matchedPatient?.noHp ?? registrationForm.noHp
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey) return
@@ -213,67 +225,42 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
     }
   }, [activeLoading, page, totalPage])
 
-  async function submitCreateExisting() {
-    if (!canCreate || createMutation.isPending) return
-    if (!form.idPasien.trim() || !form.kdDokter.trim()) {
-      setFormError(t('registration.error.patientDoctorRequired'))
-      return
-    }
-    const pasienValid = (pasienRef.data?.data.items ?? []).some((item) => item.idPasien === form.idPasien.trim())
-    const dokterValid = (dokterRef.data?.data ?? []).some((item) => item.kdDokter === form.kdDokter.trim())
-    if (!pasienValid || !dokterValid) {
-      setFormError(t('registration.error.patientDoctorInvalid'))
-      return
-    }
-    const confirmed = await confirmThemedAction({
-      title: t('registration.confirm.existingTitle'),
-      text: msg('registration.confirm.existingText', { id: form.idPasien.trim() }),
-      confirmText: t('registration.confirm.save'),
-    })
-    if (!confirmed) return
-    setFormError(null)
-    const result = await runActionWithFeedback(
-      () => createMutation.mutateAsync({ idPasien: form.idPasien.trim(), kdDokter: form.kdDokter.trim(), keluhan: form.keluhan.trim() || undefined }),
-      t('registration.success.existing'),
-    )
-    if (result) {
-      setCreateExistingModalOpen(false)
-      setForm({ idPasien: '', kdDokter: '', keluhan: '' })
-      await query.refetch()
-    }
+  function resetRegistrationForm() {
+    setRegistrationForm({ nik: '', nama: '', kdDokter: '', noHp: '', keluhan: '' })
+    setRegistrationError(null)
   }
 
-  async function submitCreateNewPatient() {
-    if (!canCreate || createPasienBaruMutation.isPending) return
-    if (!pasienBaruForm.nama.trim() || !pasienBaruForm.nik.trim() || !pasienBaruForm.kdDokter.trim()) {
-      setPasienBaruError(t('registration.error.newRequired'))
+  async function submitRegistration() {
+    if (!canCreate || createMutation.isPending || createPasienBaruMutation.isPending || nikLookupState === 'checking') return
+    const nik = registrationForm.nik.trim()
+    const nama = patientNameValue.trim()
+    const kdDokter = registrationForm.kdDokter.trim()
+    if (nik.length < 16 || !kdDokter || (!matchedPatient && !nama)) {
+      setRegistrationError(t('registration.error.unifiedRequired'))
       return
     }
-    const dokterValid = (dokterRef.data?.data ?? []).some((item) => item.kdDokter === pasienBaruForm.kdDokter.trim())
+    const dokterValid = (dokterRef.data?.data ?? []).some((item) => item.kdDokter === kdDokter)
     if (!dokterValid) {
-      setPasienBaruError(t('registration.error.doctorInvalid'))
+      setRegistrationError(t('registration.error.doctorInvalid'))
       return
     }
+    const patientName = matchedPatient?.nama ?? nama
     const confirmed = await confirmThemedAction({
-      title: t('registration.confirm.newTitle'),
-      text: msg('registration.confirm.newText', { name: pasienBaruForm.nama.trim() }),
+      title: matchedPatient ? t('registration.confirm.existingTitle') : t('registration.confirm.newTitle'),
+      text: matchedPatient ? msg('registration.confirm.existingText', { id: patientName }) : msg('registration.confirm.newText', { name: patientName }),
       confirmText: t('registration.confirm.save'),
     })
     if (!confirmed) return
-    setPasienBaruError(null)
+    setRegistrationError(null)
     const result = await runActionWithFeedback(
-      () =>
-        createPasienBaruMutation.mutateAsync({
-          nama: pasienBaruForm.nama.trim(),
-          nik: pasienBaruForm.nik.trim(),
-          kdDokter: pasienBaruForm.kdDokter.trim(),
-          noHp: pasienBaruForm.noHp.trim() || undefined,
-        }),
-      t('registration.success.new'),
+      () => matchedPatient
+        ? createMutation.mutateAsync({ idPasien: matchedPatient.idPasien, kdDokter, keluhan: registrationForm.keluhan.trim() || undefined })
+        : createPasienBaruMutation.mutateAsync({ nama, nik, kdDokter, noHp: patientPhoneValue.trim() || undefined, keluhan: registrationForm.keluhan.trim() || undefined }),
+      matchedPatient ? t('registration.success.existing') : t('registration.success.new'),
     )
     if (result) {
-      setCreateNewPatientModalOpen(false)
-      setPasienBaruForm({ nama: '', nik: '', kdDokter: '', noHp: '' })
+      setRegistrationModalOpen(false)
+      resetRegistrationForm()
       await query.refetch()
     }
   }
@@ -286,8 +273,7 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
         eyebrow={t('pendaftaran.eyebrow')}
         actions={(
           <div className="registration-header-actions">
-            <button className="icon-btn btn-primary" disabled={!canCreate} title={!canCreate ? createAccess.reason : t('pendaftaran.new')} onClick={() => setCreateNewPatientModalOpen(true)}><UserPlus size={16} /> {t('pendaftaran.new')}</button>
-            <button className="icon-btn" disabled={!canCreate} title={!canCreate ? createAccess.reason : t('pendaftaran.existing')} onClick={() => setCreateExistingModalOpen(true)}><Users size={16} /> {t('pendaftaran.existing')}</button>
+            <button className="icon-btn btn-primary" disabled={!canCreate} title={!canCreate ? createAccess.reason : t('pendaftaran.new')} onClick={() => setRegistrationModalOpen(true)}><UserPlus size={16} /> {t('pendaftaran.new')}</button>
           </div>
         )}
       />
@@ -385,153 +371,87 @@ export function PendaftaranPage({ canFetch }: { canFetch: boolean }) {
       </section>
 
       <FormModal
-        open={createExistingModalOpen}
-        title={t('registration.modal.existingTitle')}
-        description={t('registration.modal.existingDesc')}
-        icon={Users}
-        size="sm"
-        className="registration-modal"
-        onClose={() => setCreateExistingModalOpen(false)}
-      >
-        <div className="registration-onboarding compact">
-          <div className="registration-intro-panel">
-            <div className="registration-intro-head">
-              <div className="registration-intro-icon"><Users size={22} /></div>
-              <div>
-                <small>{t('registration.modal.existingKicker')}</small>
-                <strong>{t('registration.modal.existingHeading')}</strong>
-              </div>
-            </div>
-            <p>{t('registration.modal.existingIntro')}</p>
-          </div>
-          <div className="registration-stepper" aria-label={t('registration.modal.existingFlow')}>
-            <span className="registration-step active"><b>1</b> {t('registration.step.patient')}</span>
-            <span className="registration-step active"><b>2</b> {t('registration.step.doctor')}</span>
-            <span className="registration-step"><b>3</b> {t('registration.step.confirm')}</span>
-          </div>
-          <div className="registration-form-panel form-grid">
-            <div className="grid gap-2">
-              <Label htmlFor="pendaftaran-existing-idpasien">{t('registration.field.patientId')}</Label>
-              <StrictMasterComboboxField
-                inputId="pendaftaran-existing-idpasien"
-                value={form.idPasien}
-                onChange={(next) => {
-                  setForm((p) => ({ ...p, idPasien: next }))
-                  setFormError(null)
-                }}
-                placeholder={t('registration.field.patientIdPlaceholder')}
-                options={(pasienRef.data?.data.items ?? []).map((item) => ({ value: item.idPasien, label: item.nama }))}
-                loading={pasienRef.isLoading || pasienRef.isFetching}
-                recentKey="pendaftaran-idpasien"
-                errorMessage={t('registration.error.patientStrict')}
-                onStrictError={setFormError}
-                disabled={!canCreate}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="pendaftaran-existing-kddokter">{t('registration.field.doctorCode')}</Label>
-              <StrictMasterComboboxField
-                inputId="pendaftaran-existing-kddokter"
-                value={form.kdDokter}
-                onChange={(next) => {
-                  setForm((p) => ({ ...p, kdDokter: next }))
-                  setFormError(null)
-                }}
-                placeholder={t('registration.field.doctorCodePlaceholder')}
-                options={(dokterRef.data?.data ?? []).map((item) => ({ value: item.kdDokter, label: item.namaDokter || item.kdDokter }))}
-                loading={dokterRef.isLoading || dokterRef.isFetching}
-                recentKey="pendaftaran-kddokter"
-                errorMessage={t('registration.error.doctorStrict')}
-                onStrictError={setFormError}
-                disabled={!canCreate}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="pendaftaran-existing-keluhan">{t('registration.field.complaint')}</Label>
-              <Input id="pendaftaran-existing-keluhan" placeholder={t('registration.field.complaintPlaceholder')} value={form.keluhan} onChange={(e) => setForm((p) => ({ ...p, keluhan: e.target.value }))} disabled={!canCreate} />
-            </div>
-          </div>
-        </div>
-        <FormFeedback errors={[formError]} />
-        <div className="confirm-actions">
-          <Button variant="secondary" onClick={() => setForm({ idPasien: '', kdDokter: '', keluhan: '' })}>{t('registration.button.resetForm')}</Button>
-          <Button disabled={createMutation.isPending || !canCreate} title={!canCreate ? createAccess.reason : undefined} onClick={submitCreateExisting}>
-            {createMutation.isPending ? t('registration.button.saving') : t('registration.button.saveRegistration')}
-          </Button>
-        </div>
-      </FormModal>
-
-      <FormModal
-        open={createNewPatientModalOpen}
-        title={t('registration.modal.newTitle')}
-        description={t('registration.modal.newDesc')}
+        open={registrationModalOpen}
+        title={t('registration.modal.unifiedTitle')}
+        description={t('registration.modal.unifiedDesc')}
         icon={UserPlus}
         size="lg"
         className="registration-modal"
-        footerNote={t('registration.modal.newFooter')}
-        onClose={() => setCreateNewPatientModalOpen(false)}
+        footerNote={t('registration.modal.unifiedFooter')}
+        onClose={() => { setRegistrationModalOpen(false); resetRegistrationForm() }}
       >
         <div className="registration-onboarding">
-          <aside className="registration-intro-panel">
+          <div className="registration-intro-panel">
             <div className="registration-intro-head">
               <div className="registration-intro-icon"><UserPlus size={22} /></div>
               <div>
-                <small>{t('registration.modal.newKicker')}</small>
-                <strong>{t('registration.modal.newHeading')}</strong>
+                <small>{t('registration.modal.unifiedKicker')}</small>
+                <strong>{t('registration.modal.unifiedHeading')}</strong>
               </div>
             </div>
-            <p>{t('registration.modal.newIntro')}</p>
+            <p>{t('registration.modal.unifiedIntro')}</p>
             <div className="registration-checklist">
               <span>{t('registration.check.nik')}</span>
-              <span>{t('registration.check.doctorRequired')}</span>
+              <span>{t('registration.check.autoPatient')}</span>
               <span>{t('registration.check.confirmBeforeSave')}</span>
             </div>
-          </aside>
+          </div>
           <div className="registration-form-panel">
-            <div className="registration-stepper" aria-label={t('registration.modal.newFlow')}>
-              <span className="registration-step active"><b>1</b> {t('registration.step.patientIdentity')}</span>
-              <span className="registration-step active"><b>2</b> {t('registration.step.doctor')}</span>
-              <span className="registration-step"><b>3</b> {t('registration.step.confirm')}</span>
+            <div className="registration-stepper" aria-label={t('registration.modal.unifiedFlow')}>
+              <span className="registration-step active"><b>1</b> {t('registration.step.nik')}</span>
+              <span className={`registration-step ${registrationForm.nik.length >= 16 ? 'active' : ''}`}><b>2</b> {t('registration.step.patient')}</span>
+              <span className={`registration-step ${registrationForm.kdDokter ? 'active' : ''}`}><b>3</b> {t('registration.step.confirm')}</span>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="pendaftaran-unified-nik">{t('registration.field.nik')}</Label>
+              <Input id="pendaftaran-unified-nik" placeholder={t('registration.field.nikPlaceholder')} value={registrationForm.nik} onChange={(e) => { setRegistrationForm((p) => ({ ...p, nik: formatNik(e.target.value), nama: '', noHp: '' })); setRegistrationError(null) }} disabled={!canCreate} />
+              <div className={`modal-info-card ${nikLookupState === 'found' ? 'success-soft' : nikLookupState === 'new' ? 'info-soft' : ''}`}>
+                <div>
+                  <small>{t('registration.lookup.status')}</small>
+                  <strong>{nikLookupState === 'checking' ? t('registration.lookup.checking') : nikLookupState === 'found' ? t('registration.lookup.found') : nikLookupState === 'new' ? t('registration.lookup.new') : t('registration.lookup.idle')}</strong>
+                  <p>{nikLookupState === 'found' ? msg('registration.lookup.foundDesc', { name: matchedPatient?.nama ?? '-' }) : nikLookupState === 'new' ? t('registration.lookup.newDesc') : t('registration.lookup.idleDesc')}</p>
+                </div>
+              </div>
             </div>
             <div className="form-grid">
               <div className="grid gap-2">
-                <Label htmlFor="pendaftaran-baru-nama">{t('registration.field.patientName')}</Label>
-                <Input id="pendaftaran-baru-nama" placeholder={t('registration.field.patientNamePlaceholder')} value={pasienBaruForm.nama} onChange={(e) => setPasienBaruForm((p) => ({ ...p, nama: e.target.value }))} disabled={!canCreate} />
+                <Label htmlFor="pendaftaran-unified-nama">{t('registration.field.patientName')}</Label>
+                <Input id="pendaftaran-unified-nama" placeholder={t('registration.field.patientNamePlaceholder')} value={patientNameValue} onChange={(e) => { setRegistrationForm((p) => ({ ...p, nama: e.target.value })); setRegistrationError(null) }} disabled={!canCreate || Boolean(matchedPatient)} />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="pendaftaran-baru-nik">{t('registration.field.nik')}</Label>
-                <Input id="pendaftaran-baru-nik" placeholder={t('registration.field.nikPlaceholder')} value={pasienBaruForm.nik} onChange={(e) => setPasienBaruForm((p) => ({ ...p, nik: formatNik(e.target.value) }))} disabled={!canCreate} />
+                <Label htmlFor="pendaftaran-unified-nohp">{t('registration.field.phone')}</Label>
+                <Input id="pendaftaran-unified-nohp" placeholder={t('registration.field.phonePlaceholder')} value={patientPhoneValue} onChange={(e) => setRegistrationForm((p) => ({ ...p, noHp: formatPhone(e.target.value) }))} disabled={!canCreate || Boolean(matchedPatient)} />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="pendaftaran-baru-kddokter">{t('registration.field.doctorCode')}</Label>
+                <Label htmlFor="pendaftaran-unified-kddokter">{t('registration.field.doctorCode')}</Label>
                 <StrictMasterComboboxField
-                  inputId="pendaftaran-baru-kddokter"
-                  value={pasienBaruForm.kdDokter}
+                  inputId="pendaftaran-unified-kddokter"
+                  value={registrationForm.kdDokter}
                   onChange={(next) => {
-                    setPasienBaruForm((p) => ({ ...p, kdDokter: next }))
-                    setPasienBaruError(null)
+                    setRegistrationForm((p) => ({ ...p, kdDokter: next }))
+                    setRegistrationError(null)
                   }}
                   placeholder={t('registration.field.doctorCodePlaceholder')}
                   options={(dokterRef.data?.data ?? []).map((item) => ({ value: item.kdDokter, label: item.namaDokter || item.kdDokter }))}
                   loading={dokterRef.isLoading || dokterRef.isFetching}
-                  recentKey="pendaftaran-baru-kddokter"
+                  recentKey="pendaftaran-unified-kddokter"
                   errorMessage={t('registration.error.doctorStrict')}
-                  onStrictError={setPasienBaruError}
+                  onStrictError={setRegistrationError}
                   disabled={!canCreate}
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="pendaftaran-baru-nohp">{t('registration.field.phone')}</Label>
-                <Input id="pendaftaran-baru-nohp" placeholder={t('registration.field.phonePlaceholder')} value={pasienBaruForm.noHp} onChange={(e) => setPasienBaruForm((p) => ({ ...p, noHp: formatPhone(e.target.value) }))} disabled={!canCreate} />
+                <Label htmlFor="pendaftaran-unified-keluhan">{t('registration.field.complaint')}</Label>
+                <Input id="pendaftaran-unified-keluhan" placeholder={t('registration.field.complaintPlaceholder')} value={registrationForm.keluhan} onChange={(e) => setRegistrationForm((p) => ({ ...p, keluhan: e.target.value }))} disabled={!canCreate} />
               </div>
             </div>
           </div>
         </div>
-        <FormFeedback errors={[pasienBaruError]} />
+        <FormFeedback errors={[registrationError]} />
         <div className="confirm-actions">
-          <Button variant="secondary" onClick={() => setPasienBaruForm({ nama: '', nik: '', kdDokter: '', noHp: '' })}>{t('registration.button.resetForm')}</Button>
-          <Button disabled={createPasienBaruMutation.isPending || !canCreate} title={!canCreate ? createAccess.reason : undefined} onClick={submitCreateNewPatient}>
-            {createPasienBaruMutation.isPending ? t('registration.button.saving') : t('registration.button.saveNewPatient')}
+          <Button variant="secondary" onClick={resetRegistrationForm}>{t('registration.button.resetForm')}</Button>
+          <Button disabled={createMutation.isPending || createPasienBaruMutation.isPending || nikLookupState === 'checking' || !canCreate} title={!canCreate ? createAccess.reason : undefined} onClick={submitRegistration}>
+            {createMutation.isPending || createPasienBaruMutation.isPending ? t('registration.button.saving') : matchedPatient ? t('registration.button.saveRegistration') : t('registration.button.saveNewPatient')}
           </Button>
         </div>
       </FormModal>
